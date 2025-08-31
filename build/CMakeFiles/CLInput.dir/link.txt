@@ -1,0 +1,2 @@
+/usr/bin/ar qc libCLInput.a CMakeFiles/CLInput.dir/src/CLI/CLInavig.cpp.o
+/usr/bin/ranlib libCLInput.a

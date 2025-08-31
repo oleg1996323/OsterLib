@@ -1,0 +1,2 @@
+/usr/bin/ar qc libboost_functional.a CMakeFiles/boost_functional.dir/src/boost_functional/json.cpp.o
+/usr/bin/ranlib libboost_functional.a

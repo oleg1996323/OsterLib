@@ -1,0 +1,2 @@
+/usr/bin/ar qc libtypes.a CMakeFiles/types.dir/src/types/coord.cpp.o CMakeFiles/types.dir/src/types/date.cpp.o CMakeFiles/types.dir/src/types/rect.cpp.o CMakeFiles/types.dir/src/types/size.cpp.o CMakeFiles/types.dir/src/types/time_interval.cpp.o
+/usr/bin/ranlib libtypes.a
