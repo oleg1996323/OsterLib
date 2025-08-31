@@ -57,10 +57,10 @@ RM = /home/oster/CMake/bin/cmake -E rm -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/oster/Mashroom/Oster
+CMAKE_SOURCE_DIR = /home/oster/OsterLib
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/oster/Mashroom/Oster/build
+CMAKE_BINARY_DIR = /home/oster/OsterLib/build
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -132,14 +132,14 @@ install/strip/fast: preinstall/fast
 
 # The main all target
 all: cmake_check_build_system
-	cd /home/oster/Mashroom/Oster/build && $(CMAKE_COMMAND) -E cmake_progress_start /home/oster/Mashroom/Oster/build/CMakeFiles /home/oster/Mashroom/Oster/build/tests//CMakeFiles/progress.marks
-	cd /home/oster/Mashroom/Oster/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 tests/all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/oster/Mashroom/Oster/build/CMakeFiles 0
+	cd /home/oster/OsterLib/build && $(CMAKE_COMMAND) -E cmake_progress_start /home/oster/OsterLib/build/CMakeFiles /home/oster/OsterLib/build/tests//CMakeFiles/progress.marks
+	cd /home/oster/OsterLib/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 tests/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/oster/OsterLib/build/CMakeFiles 0
 .PHONY : all
 
 # The main clean target
 clean:
-	cd /home/oster/Mashroom/Oster/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 tests/clean
+	cd /home/oster/OsterLib/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 tests/clean
 .PHONY : clean
 
 # The main clean target
@@ -148,22 +148,22 @@ clean/fast: clean
 
 # Prepare targets for installation.
 preinstall: all
-	cd /home/oster/Mashroom/Oster/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 tests/preinstall
+	cd /home/oster/OsterLib/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 tests/preinstall
 .PHONY : preinstall
 
 # Prepare targets for installation.
 preinstall/fast:
-	cd /home/oster/Mashroom/Oster/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 tests/preinstall
+	cd /home/oster/OsterLib/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 tests/preinstall
 .PHONY : preinstall/fast
 
 # clear depends
 depend:
-	cd /home/oster/Mashroom/Oster/build && $(CMAKE_COMMAND) -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 1
+	cd /home/oster/OsterLib/build && $(CMAKE_COMMAND) -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 1
 .PHONY : depend
 
 # Convenience name for target.
 tests/CMakeFiles/bytes_test.dir/rule:
-	cd /home/oster/Mashroom/Oster/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 tests/CMakeFiles/bytes_test.dir/rule
+	cd /home/oster/OsterLib/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 tests/CMakeFiles/bytes_test.dir/rule
 .PHONY : tests/CMakeFiles/bytes_test.dir/rule
 
 # Convenience name for target.
@@ -172,12 +172,12 @@ bytes_test: tests/CMakeFiles/bytes_test.dir/rule
 
 # fast build rule for target.
 bytes_test/fast:
-	cd /home/oster/Mashroom/Oster/build && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/bytes_test.dir/build.make tests/CMakeFiles/bytes_test.dir/build
+	cd /home/oster/OsterLib/build && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/bytes_test.dir/build.make tests/CMakeFiles/bytes_test.dir/build
 .PHONY : bytes_test/fast
 
 # Convenience name for target.
 tests/CMakeFiles/serialization_test.dir/rule:
-	cd /home/oster/Mashroom/Oster/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 tests/CMakeFiles/serialization_test.dir/rule
+	cd /home/oster/OsterLib/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 tests/CMakeFiles/serialization_test.dir/rule
 .PHONY : tests/CMakeFiles/serialization_test.dir/rule
 
 # Convenience name for target.
@@ -186,7 +186,7 @@ serialization_test: tests/CMakeFiles/serialization_test.dir/rule
 
 # fast build rule for target.
 serialization_test/fast:
-	cd /home/oster/Mashroom/Oster/build && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/serialization_test.dir/build.make tests/CMakeFiles/serialization_test.dir/build
+	cd /home/oster/OsterLib/build && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/serialization_test.dir/build.make tests/CMakeFiles/serialization_test.dir/build
 .PHONY : serialization_test/fast
 
 bytes.o: bytes.cpp.o
@@ -194,7 +194,7 @@ bytes.o: bytes.cpp.o
 
 # target to build an object file
 bytes.cpp.o:
-	cd /home/oster/Mashroom/Oster/build && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/bytes_test.dir/build.make tests/CMakeFiles/bytes_test.dir/bytes.cpp.o
+	cd /home/oster/OsterLib/build && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/bytes_test.dir/build.make tests/CMakeFiles/bytes_test.dir/bytes.cpp.o
 .PHONY : bytes.cpp.o
 
 bytes.i: bytes.cpp.i
@@ -202,7 +202,7 @@ bytes.i: bytes.cpp.i
 
 # target to preprocess a source file
 bytes.cpp.i:
-	cd /home/oster/Mashroom/Oster/build && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/bytes_test.dir/build.make tests/CMakeFiles/bytes_test.dir/bytes.cpp.i
+	cd /home/oster/OsterLib/build && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/bytes_test.dir/build.make tests/CMakeFiles/bytes_test.dir/bytes.cpp.i
 .PHONY : bytes.cpp.i
 
 bytes.s: bytes.cpp.s
@@ -210,7 +210,7 @@ bytes.s: bytes.cpp.s
 
 # target to generate assembly for a file
 bytes.cpp.s:
-	cd /home/oster/Mashroom/Oster/build && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/bytes_test.dir/build.make tests/CMakeFiles/bytes_test.dir/bytes.cpp.s
+	cd /home/oster/OsterLib/build && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/bytes_test.dir/build.make tests/CMakeFiles/bytes_test.dir/bytes.cpp.s
 .PHONY : bytes.cpp.s
 
 serialization.o: serialization.cpp.o
@@ -218,7 +218,7 @@ serialization.o: serialization.cpp.o
 
 # target to build an object file
 serialization.cpp.o:
-	cd /home/oster/Mashroom/Oster/build && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/serialization_test.dir/build.make tests/CMakeFiles/serialization_test.dir/serialization.cpp.o
+	cd /home/oster/OsterLib/build && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/serialization_test.dir/build.make tests/CMakeFiles/serialization_test.dir/serialization.cpp.o
 .PHONY : serialization.cpp.o
 
 serialization.i: serialization.cpp.i
@@ -226,7 +226,7 @@ serialization.i: serialization.cpp.i
 
 # target to preprocess a source file
 serialization.cpp.i:
-	cd /home/oster/Mashroom/Oster/build && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/serialization_test.dir/build.make tests/CMakeFiles/serialization_test.dir/serialization.cpp.i
+	cd /home/oster/OsterLib/build && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/serialization_test.dir/build.make tests/CMakeFiles/serialization_test.dir/serialization.cpp.i
 .PHONY : serialization.cpp.i
 
 serialization.s: serialization.cpp.s
@@ -234,7 +234,7 @@ serialization.s: serialization.cpp.s
 
 # target to generate assembly for a file
 serialization.cpp.s:
-	cd /home/oster/Mashroom/Oster/build && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/serialization_test.dir/build.make tests/CMakeFiles/serialization_test.dir/serialization.cpp.s
+	cd /home/oster/OsterLib/build && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/serialization_test.dir/build.make tests/CMakeFiles/serialization_test.dir/serialization.cpp.s
 .PHONY : serialization.cpp.s
 
 # Help Target
@@ -268,6 +268,6 @@ help:
 # No rule that depends on this can have commands that come from listfiles
 # because they might be regenerated.
 cmake_check_build_system:
-	cd /home/oster/Mashroom/Oster/build && $(CMAKE_COMMAND) -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 0
+	cd /home/oster/OsterLib/build && $(CMAKE_COMMAND) -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 0
 .PHONY : cmake_check_build_system
 

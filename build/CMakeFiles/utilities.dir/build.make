@@ -53,10 +53,10 @@ RM = /home/oster/CMake/bin/cmake -E rm -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/oster/Mashroom/Oster
+CMAKE_SOURCE_DIR = /home/oster/OsterLib
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/oster/Mashroom/Oster/build
+CMAKE_BINARY_DIR = /home/oster/OsterLib/build
 
 # Include any dependencies generated for this target.
 include CMakeFiles/utilities.dir/depend.make
@@ -73,74 +73,74 @@ CMakeFiles/utilities.dir/codegen:
 .PHONY : CMakeFiles/utilities.dir/codegen
 
 CMakeFiles/utilities.dir/src/directories.cpp.o: CMakeFiles/utilities.dir/flags.make
-CMakeFiles/utilities.dir/src/directories.cpp.o: /home/oster/Mashroom/Oster/src/directories.cpp
+CMakeFiles/utilities.dir/src/directories.cpp.o: /home/oster/OsterLib/src/directories.cpp
 CMakeFiles/utilities.dir/src/directories.cpp.o: CMakeFiles/utilities.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/oster/Mashroom/Oster/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/utilities.dir/src/directories.cpp.o"
-	/home/oster/gcc/gcc-install/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/utilities.dir/src/directories.cpp.o -MF CMakeFiles/utilities.dir/src/directories.cpp.o.d -o CMakeFiles/utilities.dir/src/directories.cpp.o -c /home/oster/Mashroom/Oster/src/directories.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/oster/OsterLib/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/utilities.dir/src/directories.cpp.o"
+	/home/oster/gcc/gcc-install/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/utilities.dir/src/directories.cpp.o -MF CMakeFiles/utilities.dir/src/directories.cpp.o.d -o CMakeFiles/utilities.dir/src/directories.cpp.o -c /home/oster/OsterLib/src/directories.cpp
 
 CMakeFiles/utilities.dir/src/directories.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/utilities.dir/src/directories.cpp.i"
-	/home/oster/gcc/gcc-install/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/oster/Mashroom/Oster/src/directories.cpp > CMakeFiles/utilities.dir/src/directories.cpp.i
+	/home/oster/gcc/gcc-install/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/oster/OsterLib/src/directories.cpp > CMakeFiles/utilities.dir/src/directories.cpp.i
 
 CMakeFiles/utilities.dir/src/directories.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/utilities.dir/src/directories.cpp.s"
-	/home/oster/gcc/gcc-install/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/oster/Mashroom/Oster/src/directories.cpp -o CMakeFiles/utilities.dir/src/directories.cpp.s
+	/home/oster/gcc/gcc-install/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/oster/OsterLib/src/directories.cpp -o CMakeFiles/utilities.dir/src/directories.cpp.s
 
 CMakeFiles/utilities.dir/src/floattoieee.cpp.o: CMakeFiles/utilities.dir/flags.make
-CMakeFiles/utilities.dir/src/floattoieee.cpp.o: /home/oster/Mashroom/Oster/src/floattoieee.cpp
+CMakeFiles/utilities.dir/src/floattoieee.cpp.o: /home/oster/OsterLib/src/floattoieee.cpp
 CMakeFiles/utilities.dir/src/floattoieee.cpp.o: CMakeFiles/utilities.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/oster/Mashroom/Oster/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/utilities.dir/src/floattoieee.cpp.o"
-	/home/oster/gcc/gcc-install/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/utilities.dir/src/floattoieee.cpp.o -MF CMakeFiles/utilities.dir/src/floattoieee.cpp.o.d -o CMakeFiles/utilities.dir/src/floattoieee.cpp.o -c /home/oster/Mashroom/Oster/src/floattoieee.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/oster/OsterLib/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/utilities.dir/src/floattoieee.cpp.o"
+	/home/oster/gcc/gcc-install/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/utilities.dir/src/floattoieee.cpp.o -MF CMakeFiles/utilities.dir/src/floattoieee.cpp.o.d -o CMakeFiles/utilities.dir/src/floattoieee.cpp.o -c /home/oster/OsterLib/src/floattoieee.cpp
 
 CMakeFiles/utilities.dir/src/floattoieee.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/utilities.dir/src/floattoieee.cpp.i"
-	/home/oster/gcc/gcc-install/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/oster/Mashroom/Oster/src/floattoieee.cpp > CMakeFiles/utilities.dir/src/floattoieee.cpp.i
+	/home/oster/gcc/gcc-install/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/oster/OsterLib/src/floattoieee.cpp > CMakeFiles/utilities.dir/src/floattoieee.cpp.i
 
 CMakeFiles/utilities.dir/src/floattoieee.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/utilities.dir/src/floattoieee.cpp.s"
-	/home/oster/gcc/gcc-install/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/oster/Mashroom/Oster/src/floattoieee.cpp -o CMakeFiles/utilities.dir/src/floattoieee.cpp.s
+	/home/oster/gcc/gcc-install/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/oster/OsterLib/src/floattoieee.cpp -o CMakeFiles/utilities.dir/src/floattoieee.cpp.s
 
 CMakeFiles/utilities.dir/src/ibmtofloat.cpp.o: CMakeFiles/utilities.dir/flags.make
-CMakeFiles/utilities.dir/src/ibmtofloat.cpp.o: /home/oster/Mashroom/Oster/src/ibmtofloat.cpp
+CMakeFiles/utilities.dir/src/ibmtofloat.cpp.o: /home/oster/OsterLib/src/ibmtofloat.cpp
 CMakeFiles/utilities.dir/src/ibmtofloat.cpp.o: CMakeFiles/utilities.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/oster/Mashroom/Oster/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/utilities.dir/src/ibmtofloat.cpp.o"
-	/home/oster/gcc/gcc-install/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/utilities.dir/src/ibmtofloat.cpp.o -MF CMakeFiles/utilities.dir/src/ibmtofloat.cpp.o.d -o CMakeFiles/utilities.dir/src/ibmtofloat.cpp.o -c /home/oster/Mashroom/Oster/src/ibmtofloat.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/oster/OsterLib/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/utilities.dir/src/ibmtofloat.cpp.o"
+	/home/oster/gcc/gcc-install/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/utilities.dir/src/ibmtofloat.cpp.o -MF CMakeFiles/utilities.dir/src/ibmtofloat.cpp.o.d -o CMakeFiles/utilities.dir/src/ibmtofloat.cpp.o -c /home/oster/OsterLib/src/ibmtofloat.cpp
 
 CMakeFiles/utilities.dir/src/ibmtofloat.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/utilities.dir/src/ibmtofloat.cpp.i"
-	/home/oster/gcc/gcc-install/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/oster/Mashroom/Oster/src/ibmtofloat.cpp > CMakeFiles/utilities.dir/src/ibmtofloat.cpp.i
+	/home/oster/gcc/gcc-install/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/oster/OsterLib/src/ibmtofloat.cpp > CMakeFiles/utilities.dir/src/ibmtofloat.cpp.i
 
 CMakeFiles/utilities.dir/src/ibmtofloat.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/utilities.dir/src/ibmtofloat.cpp.s"
-	/home/oster/gcc/gcc-install/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/oster/Mashroom/Oster/src/ibmtofloat.cpp -o CMakeFiles/utilities.dir/src/ibmtofloat.cpp.s
+	/home/oster/gcc/gcc-install/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/oster/OsterLib/src/ibmtofloat.cpp -o CMakeFiles/utilities.dir/src/ibmtofloat.cpp.s
 
 CMakeFiles/utilities.dir/src/int_pow.cpp.o: CMakeFiles/utilities.dir/flags.make
-CMakeFiles/utilities.dir/src/int_pow.cpp.o: /home/oster/Mashroom/Oster/src/int_pow.cpp
+CMakeFiles/utilities.dir/src/int_pow.cpp.o: /home/oster/OsterLib/src/int_pow.cpp
 CMakeFiles/utilities.dir/src/int_pow.cpp.o: CMakeFiles/utilities.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/oster/Mashroom/Oster/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object CMakeFiles/utilities.dir/src/int_pow.cpp.o"
-	/home/oster/gcc/gcc-install/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/utilities.dir/src/int_pow.cpp.o -MF CMakeFiles/utilities.dir/src/int_pow.cpp.o.d -o CMakeFiles/utilities.dir/src/int_pow.cpp.o -c /home/oster/Mashroom/Oster/src/int_pow.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/oster/OsterLib/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object CMakeFiles/utilities.dir/src/int_pow.cpp.o"
+	/home/oster/gcc/gcc-install/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/utilities.dir/src/int_pow.cpp.o -MF CMakeFiles/utilities.dir/src/int_pow.cpp.o.d -o CMakeFiles/utilities.dir/src/int_pow.cpp.o -c /home/oster/OsterLib/src/int_pow.cpp
 
 CMakeFiles/utilities.dir/src/int_pow.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/utilities.dir/src/int_pow.cpp.i"
-	/home/oster/gcc/gcc-install/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/oster/Mashroom/Oster/src/int_pow.cpp > CMakeFiles/utilities.dir/src/int_pow.cpp.i
+	/home/oster/gcc/gcc-install/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/oster/OsterLib/src/int_pow.cpp > CMakeFiles/utilities.dir/src/int_pow.cpp.i
 
 CMakeFiles/utilities.dir/src/int_pow.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/utilities.dir/src/int_pow.cpp.s"
-	/home/oster/gcc/gcc-install/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/oster/Mashroom/Oster/src/int_pow.cpp -o CMakeFiles/utilities.dir/src/int_pow.cpp.s
+	/home/oster/gcc/gcc-install/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/oster/OsterLib/src/int_pow.cpp -o CMakeFiles/utilities.dir/src/int_pow.cpp.s
 
 CMakeFiles/utilities.dir/src/interpolation.cpp.o: CMakeFiles/utilities.dir/flags.make
-CMakeFiles/utilities.dir/src/interpolation.cpp.o: /home/oster/Mashroom/Oster/src/interpolation.cpp
+CMakeFiles/utilities.dir/src/interpolation.cpp.o: /home/oster/OsterLib/src/interpolation.cpp
 CMakeFiles/utilities.dir/src/interpolation.cpp.o: CMakeFiles/utilities.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/oster/Mashroom/Oster/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object CMakeFiles/utilities.dir/src/interpolation.cpp.o"
-	/home/oster/gcc/gcc-install/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/utilities.dir/src/interpolation.cpp.o -MF CMakeFiles/utilities.dir/src/interpolation.cpp.o.d -o CMakeFiles/utilities.dir/src/interpolation.cpp.o -c /home/oster/Mashroom/Oster/src/interpolation.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/oster/OsterLib/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object CMakeFiles/utilities.dir/src/interpolation.cpp.o"
+	/home/oster/gcc/gcc-install/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/utilities.dir/src/interpolation.cpp.o -MF CMakeFiles/utilities.dir/src/interpolation.cpp.o.d -o CMakeFiles/utilities.dir/src/interpolation.cpp.o -c /home/oster/OsterLib/src/interpolation.cpp
 
 CMakeFiles/utilities.dir/src/interpolation.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/utilities.dir/src/interpolation.cpp.i"
-	/home/oster/gcc/gcc-install/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/oster/Mashroom/Oster/src/interpolation.cpp > CMakeFiles/utilities.dir/src/interpolation.cpp.i
+	/home/oster/gcc/gcc-install/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/oster/OsterLib/src/interpolation.cpp > CMakeFiles/utilities.dir/src/interpolation.cpp.i
 
 CMakeFiles/utilities.dir/src/interpolation.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/utilities.dir/src/interpolation.cpp.s"
-	/home/oster/gcc/gcc-install/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/oster/Mashroom/Oster/src/interpolation.cpp -o CMakeFiles/utilities.dir/src/interpolation.cpp.s
+	/home/oster/gcc/gcc-install/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/oster/OsterLib/src/interpolation.cpp -o CMakeFiles/utilities.dir/src/interpolation.cpp.s
 
 # Object files for target utilities
 utilities_OBJECTS = \
@@ -160,7 +160,7 @@ libutilities.a: CMakeFiles/utilities.dir/src/int_pow.cpp.o
 libutilities.a: CMakeFiles/utilities.dir/src/interpolation.cpp.o
 libutilities.a: CMakeFiles/utilities.dir/build.make
 libutilities.a: CMakeFiles/utilities.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/oster/Mashroom/Oster/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Linking CXX static library libutilities.a"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/oster/OsterLib/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Linking CXX static library libutilities.a"
 	$(CMAKE_COMMAND) -P CMakeFiles/utilities.dir/cmake_clean_target.cmake
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/utilities.dir/link.txt --verbose=$(VERBOSE)
 
@@ -173,6 +173,6 @@ CMakeFiles/utilities.dir/clean:
 .PHONY : CMakeFiles/utilities.dir/clean
 
 CMakeFiles/utilities.dir/depend:
-	cd /home/oster/Mashroom/Oster/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/oster/Mashroom/Oster /home/oster/Mashroom/Oster /home/oster/Mashroom/Oster/build /home/oster/Mashroom/Oster/build /home/oster/Mashroom/Oster/build/CMakeFiles/utilities.dir/DependInfo.cmake "--color=$(COLOR)" utilities
+	cd /home/oster/OsterLib/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/oster/OsterLib /home/oster/OsterLib /home/oster/OsterLib/build /home/oster/OsterLib/build /home/oster/OsterLib/build/CMakeFiles/utilities.dir/DependInfo.cmake "--color=$(COLOR)" utilities
 .PHONY : CMakeFiles/utilities.dir/depend
 

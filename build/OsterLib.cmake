@@ -50,14 +50,14 @@ unset(_cmake_expected_targets)
 add_library(OsterLib::bytes INTERFACE IMPORTED)
 
 set_target_properties(OsterLib::bytes PROPERTIES
-  INTERFACE_INCLUDE_DIRECTORIES "/home/oster/Mashroom/Oster/include"
+  INTERFACE_INCLUDE_DIRECTORIES "/home/oster/OsterLib/include"
 )
 
 # Create imported target OsterLib::serial
 add_library(OsterLib::serial INTERFACE IMPORTED)
 
 set_target_properties(OsterLib::serial PROPERTIES
-  INTERFACE_INCLUDE_DIRECTORIES "/home/oster/Mashroom/Oster/include"
+  INTERFACE_INCLUDE_DIRECTORIES "/home/oster/OsterLib/include"
   INTERFACE_LINK_LIBRARIES "OsterLib::bytes"
 )
 
@@ -65,14 +65,14 @@ set_target_properties(OsterLib::serial PROPERTIES
 add_library(OsterLib::lineNoise STATIC IMPORTED)
 
 set_target_properties(OsterLib::lineNoise PROPERTIES
-  INTERFACE_INCLUDE_DIRECTORIES "/home/oster/Mashroom/Oster/linenoise"
+  INTERFACE_INCLUDE_DIRECTORIES "/home/oster/OsterLib/linenoise"
 )
 
 # Create imported target OsterLib::CLInput
 add_library(OsterLib::CLInput STATIC IMPORTED)
 
 set_target_properties(OsterLib::CLInput PROPERTIES
-  INTERFACE_INCLUDE_DIRECTORIES "/home/oster/Mashroom/Oster/include"
+  INTERFACE_INCLUDE_DIRECTORIES "/home/oster/OsterLib/include"
   INTERFACE_LINK_LIBRARIES "\$<LINK_ONLY:OsterLib::lineNoise>"
 )
 
@@ -80,7 +80,7 @@ set_target_properties(OsterLib::CLInput PROPERTIES
 add_library(OsterLib::compressor INTERFACE IMPORTED)
 
 set_target_properties(OsterLib::compressor PROPERTIES
-  INTERFACE_INCLUDE_DIRECTORIES "/home/oster/Mashroom/Oster/include"
+  INTERFACE_INCLUDE_DIRECTORIES "/home/oster/OsterLib/include"
   INTERFACE_LINK_LIBRARIES "/usr/lib/x86_64-linux-gnu/libz.so"
 )
 
@@ -88,7 +88,7 @@ set_target_properties(OsterLib::compressor PROPERTIES
 add_library(OsterLib::boost_functional STATIC IMPORTED)
 
 set_target_properties(OsterLib::boost_functional PROPERTIES
-  INTERFACE_INCLUDE_DIRECTORIES "/home/oster/Mashroom/Oster/include/boost_functional"
+  INTERFACE_INCLUDE_DIRECTORIES "/home/oster/OsterLib/include/boost_functional"
   INTERFACE_LINK_LIBRARIES "\$<LINK_ONLY:Boost::json>"
 )
 
@@ -96,7 +96,7 @@ set_target_properties(OsterLib::boost_functional PROPERTIES
 add_library(OsterLib::images INTERFACE IMPORTED)
 
 set_target_properties(OsterLib::images PROPERTIES
-  INTERFACE_INCLUDE_DIRECTORIES "/home/oster/Mashroom/Oster/include/images"
+  INTERFACE_INCLUDE_DIRECTORIES "/home/oster/OsterLib/include/images"
   INTERFACE_LINK_LIBRARIES "PNG::PNG"
 )
 
@@ -104,49 +104,49 @@ set_target_properties(OsterLib::images PROPERTIES
 add_library(OsterLib::types STATIC IMPORTED)
 
 set_target_properties(OsterLib::types PROPERTIES
-  INTERFACE_INCLUDE_DIRECTORIES "/home/oster/Mashroom/Oster/include"
+  INTERFACE_INCLUDE_DIRECTORIES "/home/oster/OsterLib/include"
 )
 
 # Create imported target OsterLib::utilities
 add_library(OsterLib::utilities STATIC IMPORTED)
 
 set_target_properties(OsterLib::utilities PROPERTIES
-  INTERFACE_INCLUDE_DIRECTORIES "/home/oster/Mashroom/Oster/include"
+  INTERFACE_INCLUDE_DIRECTORIES "/home/oster/OsterLib/include"
 )
 
 # Import target "OsterLib::lineNoise" for configuration ""
 set_property(TARGET OsterLib::lineNoise APPEND PROPERTY IMPORTED_CONFIGURATIONS NOCONFIG)
 set_target_properties(OsterLib::lineNoise PROPERTIES
   IMPORTED_LINK_INTERFACE_LANGUAGES_NOCONFIG "C"
-  IMPORTED_LOCATION_NOCONFIG "/home/oster/Mashroom/Oster/build/liblineNoise.a"
+  IMPORTED_LOCATION_NOCONFIG "/home/oster/OsterLib/build/liblineNoise.a"
   )
 
 # Import target "OsterLib::CLInput" for configuration ""
 set_property(TARGET OsterLib::CLInput APPEND PROPERTY IMPORTED_CONFIGURATIONS NOCONFIG)
 set_target_properties(OsterLib::CLInput PROPERTIES
   IMPORTED_LINK_INTERFACE_LANGUAGES_NOCONFIG "CXX"
-  IMPORTED_LOCATION_NOCONFIG "/home/oster/Mashroom/Oster/build/libCLInput.a"
+  IMPORTED_LOCATION_NOCONFIG "/home/oster/OsterLib/build/libCLInput.a"
   )
 
 # Import target "OsterLib::boost_functional" for configuration ""
 set_property(TARGET OsterLib::boost_functional APPEND PROPERTY IMPORTED_CONFIGURATIONS NOCONFIG)
 set_target_properties(OsterLib::boost_functional PROPERTIES
   IMPORTED_LINK_INTERFACE_LANGUAGES_NOCONFIG "CXX"
-  IMPORTED_LOCATION_NOCONFIG "/home/oster/Mashroom/Oster/build/libboost_functional.a"
+  IMPORTED_LOCATION_NOCONFIG "/home/oster/OsterLib/build/libboost_functional.a"
   )
 
 # Import target "OsterLib::types" for configuration ""
 set_property(TARGET OsterLib::types APPEND PROPERTY IMPORTED_CONFIGURATIONS NOCONFIG)
 set_target_properties(OsterLib::types PROPERTIES
   IMPORTED_LINK_INTERFACE_LANGUAGES_NOCONFIG "CXX"
-  IMPORTED_LOCATION_NOCONFIG "/home/oster/Mashroom/Oster/build/libtypes.a"
+  IMPORTED_LOCATION_NOCONFIG "/home/oster/OsterLib/build/libtypes.a"
   )
 
 # Import target "OsterLib::utilities" for configuration ""
 set_property(TARGET OsterLib::utilities APPEND PROPERTY IMPORTED_CONFIGURATIONS NOCONFIG)
 set_target_properties(OsterLib::utilities PROPERTIES
   IMPORTED_LINK_INTERFACE_LANGUAGES_NOCONFIG "CXX"
-  IMPORTED_LOCATION_NOCONFIG "/home/oster/Mashroom/Oster/build/libutilities.a"
+  IMPORTED_LOCATION_NOCONFIG "/home/oster/OsterLib/build/libutilities.a"
   )
 
 # This file does not depend on other imported targets which have

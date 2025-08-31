@@ -1,5 +1,5 @@
-if(EXISTS "/home/oster/Mashroom/Oster/build/tests/serialization_test[1]_tests.cmake")
-  include("/home/oster/Mashroom/Oster/build/tests/serialization_test[1]_tests.cmake")
+if(EXISTS "/home/oster/OsterLib/build/tests/serialization_test[1]_tests.cmake")
+  include("/home/oster/OsterLib/build/tests/serialization_test[1]_tests.cmake")
 else()
   add_test(serialization_test_NOT_BUILT serialization_test_NOT_BUILT)
 endif()

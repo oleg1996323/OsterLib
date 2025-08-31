@@ -8,7 +8,7 @@ set(CMAKE_DEPENDS_LANGUAGES
 
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
-  "/home/oster/Mashroom/Oster/linenoise/linenoise.c" "CMakeFiles/lineNoise.dir/linenoise/linenoise.c.o" "gcc" "CMakeFiles/lineNoise.dir/linenoise/linenoise.c.o.d"
+  "/home/oster/OsterLib/linenoise/linenoise.c" "CMakeFiles/lineNoise.dir/linenoise/linenoise.c.o" "gcc" "CMakeFiles/lineNoise.dir/linenoise/linenoise.c.o.d"
   )
 
 # Targets to which this target links which contain Fortran sources.

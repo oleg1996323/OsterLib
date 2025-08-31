@@ -9,7 +9,7 @@
 #include <unordered_map>
 #include <algorithm>
 #include <utility>
-#include "../../utility/random_char.h"
+#include "random_char.h"
 
 class SerializableItems:public testing::Test{
     protected:

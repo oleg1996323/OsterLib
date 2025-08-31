@@ -53,10 +53,10 @@ RM = /home/oster/CMake/bin/cmake -E rm -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/oster/Mashroom/Oster
+CMAKE_SOURCE_DIR = /home/oster/OsterLib
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/oster/Mashroom/Oster/build
+CMAKE_BINARY_DIR = /home/oster/OsterLib/build
 
 # Include any dependencies generated for this target.
 include CMakeFiles/lineNoise.dir/depend.make
@@ -73,18 +73,18 @@ CMakeFiles/lineNoise.dir/codegen:
 .PHONY : CMakeFiles/lineNoise.dir/codegen
 
 CMakeFiles/lineNoise.dir/linenoise/linenoise.c.o: CMakeFiles/lineNoise.dir/flags.make
-CMakeFiles/lineNoise.dir/linenoise/linenoise.c.o: /home/oster/Mashroom/Oster/linenoise/linenoise.c
+CMakeFiles/lineNoise.dir/linenoise/linenoise.c.o: /home/oster/OsterLib/linenoise/linenoise.c
 CMakeFiles/lineNoise.dir/linenoise/linenoise.c.o: CMakeFiles/lineNoise.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/oster/Mashroom/Oster/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building C object CMakeFiles/lineNoise.dir/linenoise/linenoise.c.o"
-	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/lineNoise.dir/linenoise/linenoise.c.o -MF CMakeFiles/lineNoise.dir/linenoise/linenoise.c.o.d -o CMakeFiles/lineNoise.dir/linenoise/linenoise.c.o -c /home/oster/Mashroom/Oster/linenoise/linenoise.c
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/oster/OsterLib/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building C object CMakeFiles/lineNoise.dir/linenoise/linenoise.c.o"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/lineNoise.dir/linenoise/linenoise.c.o -MF CMakeFiles/lineNoise.dir/linenoise/linenoise.c.o.d -o CMakeFiles/lineNoise.dir/linenoise/linenoise.c.o -c /home/oster/OsterLib/linenoise/linenoise.c
 
 CMakeFiles/lineNoise.dir/linenoise/linenoise.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing C source to CMakeFiles/lineNoise.dir/linenoise/linenoise.c.i"
-	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/oster/Mashroom/Oster/linenoise/linenoise.c > CMakeFiles/lineNoise.dir/linenoise/linenoise.c.i
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/oster/OsterLib/linenoise/linenoise.c > CMakeFiles/lineNoise.dir/linenoise/linenoise.c.i
 
 CMakeFiles/lineNoise.dir/linenoise/linenoise.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling C source to assembly CMakeFiles/lineNoise.dir/linenoise/linenoise.c.s"
-	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/oster/Mashroom/Oster/linenoise/linenoise.c -o CMakeFiles/lineNoise.dir/linenoise/linenoise.c.s
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/oster/OsterLib/linenoise/linenoise.c -o CMakeFiles/lineNoise.dir/linenoise/linenoise.c.s
 
 # Object files for target lineNoise
 lineNoise_OBJECTS = \
@@ -96,7 +96,7 @@ lineNoise_EXTERNAL_OBJECTS =
 liblineNoise.a: CMakeFiles/lineNoise.dir/linenoise/linenoise.c.o
 liblineNoise.a: CMakeFiles/lineNoise.dir/build.make
 liblineNoise.a: CMakeFiles/lineNoise.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/oster/Mashroom/Oster/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Linking C static library liblineNoise.a"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/oster/OsterLib/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Linking C static library liblineNoise.a"
 	$(CMAKE_COMMAND) -P CMakeFiles/lineNoise.dir/cmake_clean_target.cmake
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/lineNoise.dir/link.txt --verbose=$(VERBOSE)
 
@@ -109,6 +109,6 @@ CMakeFiles/lineNoise.dir/clean:
 .PHONY : CMakeFiles/lineNoise.dir/clean
 
 CMakeFiles/lineNoise.dir/depend:
-	cd /home/oster/Mashroom/Oster/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/oster/Mashroom/Oster /home/oster/Mashroom/Oster /home/oster/Mashroom/Oster/build /home/oster/Mashroom/Oster/build /home/oster/Mashroom/Oster/build/CMakeFiles/lineNoise.dir/DependInfo.cmake "--color=$(COLOR)" lineNoise
+	cd /home/oster/OsterLib/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/oster/OsterLib /home/oster/OsterLib /home/oster/OsterLib/build /home/oster/OsterLib/build /home/oster/OsterLib/build/CMakeFiles/lineNoise.dir/DependInfo.cmake "--color=$(COLOR)" lineNoise
 .PHONY : CMakeFiles/lineNoise.dir/depend
 

@@ -1,8 +1,8 @@
 {
 	"InstallScripts" : 
 	[
-		"/home/oster/Mashroom/Oster/build/cmake_install.cmake",
-		"/home/oster/Mashroom/Oster/build/tests/cmake_install.cmake"
+		"/home/oster/OsterLib/build/cmake_install.cmake",
+		"/home/oster/OsterLib/build/tests/cmake_install.cmake"
 	],
 	"Parallel" : false
 }

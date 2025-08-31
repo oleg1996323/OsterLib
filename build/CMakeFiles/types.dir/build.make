@@ -53,10 +53,10 @@ RM = /home/oster/CMake/bin/cmake -E rm -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/oster/Mashroom/Oster
+CMAKE_SOURCE_DIR = /home/oster/OsterLib
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/oster/Mashroom/Oster/build
+CMAKE_BINARY_DIR = /home/oster/OsterLib/build
 
 # Include any dependencies generated for this target.
 include CMakeFiles/types.dir/depend.make
@@ -73,74 +73,74 @@ CMakeFiles/types.dir/codegen:
 .PHONY : CMakeFiles/types.dir/codegen
 
 CMakeFiles/types.dir/src/types/coord.cpp.o: CMakeFiles/types.dir/flags.make
-CMakeFiles/types.dir/src/types/coord.cpp.o: /home/oster/Mashroom/Oster/src/types/coord.cpp
+CMakeFiles/types.dir/src/types/coord.cpp.o: /home/oster/OsterLib/src/types/coord.cpp
 CMakeFiles/types.dir/src/types/coord.cpp.o: CMakeFiles/types.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/oster/Mashroom/Oster/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/types.dir/src/types/coord.cpp.o"
-	/home/oster/gcc/gcc-install/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/types.dir/src/types/coord.cpp.o -MF CMakeFiles/types.dir/src/types/coord.cpp.o.d -o CMakeFiles/types.dir/src/types/coord.cpp.o -c /home/oster/Mashroom/Oster/src/types/coord.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/oster/OsterLib/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/types.dir/src/types/coord.cpp.o"
+	/home/oster/gcc/gcc-install/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/types.dir/src/types/coord.cpp.o -MF CMakeFiles/types.dir/src/types/coord.cpp.o.d -o CMakeFiles/types.dir/src/types/coord.cpp.o -c /home/oster/OsterLib/src/types/coord.cpp
 
 CMakeFiles/types.dir/src/types/coord.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/types.dir/src/types/coord.cpp.i"
-	/home/oster/gcc/gcc-install/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/oster/Mashroom/Oster/src/types/coord.cpp > CMakeFiles/types.dir/src/types/coord.cpp.i
+	/home/oster/gcc/gcc-install/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/oster/OsterLib/src/types/coord.cpp > CMakeFiles/types.dir/src/types/coord.cpp.i
 
 CMakeFiles/types.dir/src/types/coord.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/types.dir/src/types/coord.cpp.s"
-	/home/oster/gcc/gcc-install/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/oster/Mashroom/Oster/src/types/coord.cpp -o CMakeFiles/types.dir/src/types/coord.cpp.s
+	/home/oster/gcc/gcc-install/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/oster/OsterLib/src/types/coord.cpp -o CMakeFiles/types.dir/src/types/coord.cpp.s
 
 CMakeFiles/types.dir/src/types/date.cpp.o: CMakeFiles/types.dir/flags.make
-CMakeFiles/types.dir/src/types/date.cpp.o: /home/oster/Mashroom/Oster/src/types/date.cpp
+CMakeFiles/types.dir/src/types/date.cpp.o: /home/oster/OsterLib/src/types/date.cpp
 CMakeFiles/types.dir/src/types/date.cpp.o: CMakeFiles/types.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/oster/Mashroom/Oster/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/types.dir/src/types/date.cpp.o"
-	/home/oster/gcc/gcc-install/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/types.dir/src/types/date.cpp.o -MF CMakeFiles/types.dir/src/types/date.cpp.o.d -o CMakeFiles/types.dir/src/types/date.cpp.o -c /home/oster/Mashroom/Oster/src/types/date.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/oster/OsterLib/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/types.dir/src/types/date.cpp.o"
+	/home/oster/gcc/gcc-install/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/types.dir/src/types/date.cpp.o -MF CMakeFiles/types.dir/src/types/date.cpp.o.d -o CMakeFiles/types.dir/src/types/date.cpp.o -c /home/oster/OsterLib/src/types/date.cpp
 
 CMakeFiles/types.dir/src/types/date.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/types.dir/src/types/date.cpp.i"
-	/home/oster/gcc/gcc-install/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/oster/Mashroom/Oster/src/types/date.cpp > CMakeFiles/types.dir/src/types/date.cpp.i
+	/home/oster/gcc/gcc-install/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/oster/OsterLib/src/types/date.cpp > CMakeFiles/types.dir/src/types/date.cpp.i
 
 CMakeFiles/types.dir/src/types/date.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/types.dir/src/types/date.cpp.s"
-	/home/oster/gcc/gcc-install/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/oster/Mashroom/Oster/src/types/date.cpp -o CMakeFiles/types.dir/src/types/date.cpp.s
+	/home/oster/gcc/gcc-install/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/oster/OsterLib/src/types/date.cpp -o CMakeFiles/types.dir/src/types/date.cpp.s
 
 CMakeFiles/types.dir/src/types/rect.cpp.o: CMakeFiles/types.dir/flags.make
-CMakeFiles/types.dir/src/types/rect.cpp.o: /home/oster/Mashroom/Oster/src/types/rect.cpp
+CMakeFiles/types.dir/src/types/rect.cpp.o: /home/oster/OsterLib/src/types/rect.cpp
 CMakeFiles/types.dir/src/types/rect.cpp.o: CMakeFiles/types.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/oster/Mashroom/Oster/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/types.dir/src/types/rect.cpp.o"
-	/home/oster/gcc/gcc-install/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/types.dir/src/types/rect.cpp.o -MF CMakeFiles/types.dir/src/types/rect.cpp.o.d -o CMakeFiles/types.dir/src/types/rect.cpp.o -c /home/oster/Mashroom/Oster/src/types/rect.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/oster/OsterLib/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/types.dir/src/types/rect.cpp.o"
+	/home/oster/gcc/gcc-install/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/types.dir/src/types/rect.cpp.o -MF CMakeFiles/types.dir/src/types/rect.cpp.o.d -o CMakeFiles/types.dir/src/types/rect.cpp.o -c /home/oster/OsterLib/src/types/rect.cpp
 
 CMakeFiles/types.dir/src/types/rect.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/types.dir/src/types/rect.cpp.i"
-	/home/oster/gcc/gcc-install/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/oster/Mashroom/Oster/src/types/rect.cpp > CMakeFiles/types.dir/src/types/rect.cpp.i
+	/home/oster/gcc/gcc-install/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/oster/OsterLib/src/types/rect.cpp > CMakeFiles/types.dir/src/types/rect.cpp.i
 
 CMakeFiles/types.dir/src/types/rect.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/types.dir/src/types/rect.cpp.s"
-	/home/oster/gcc/gcc-install/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/oster/Mashroom/Oster/src/types/rect.cpp -o CMakeFiles/types.dir/src/types/rect.cpp.s
+	/home/oster/gcc/gcc-install/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/oster/OsterLib/src/types/rect.cpp -o CMakeFiles/types.dir/src/types/rect.cpp.s
 
 CMakeFiles/types.dir/src/types/size.cpp.o: CMakeFiles/types.dir/flags.make
-CMakeFiles/types.dir/src/types/size.cpp.o: /home/oster/Mashroom/Oster/src/types/size.cpp
+CMakeFiles/types.dir/src/types/size.cpp.o: /home/oster/OsterLib/src/types/size.cpp
 CMakeFiles/types.dir/src/types/size.cpp.o: CMakeFiles/types.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/oster/Mashroom/Oster/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object CMakeFiles/types.dir/src/types/size.cpp.o"
-	/home/oster/gcc/gcc-install/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/types.dir/src/types/size.cpp.o -MF CMakeFiles/types.dir/src/types/size.cpp.o.d -o CMakeFiles/types.dir/src/types/size.cpp.o -c /home/oster/Mashroom/Oster/src/types/size.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/oster/OsterLib/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object CMakeFiles/types.dir/src/types/size.cpp.o"
+	/home/oster/gcc/gcc-install/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/types.dir/src/types/size.cpp.o -MF CMakeFiles/types.dir/src/types/size.cpp.o.d -o CMakeFiles/types.dir/src/types/size.cpp.o -c /home/oster/OsterLib/src/types/size.cpp
 
 CMakeFiles/types.dir/src/types/size.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/types.dir/src/types/size.cpp.i"
-	/home/oster/gcc/gcc-install/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/oster/Mashroom/Oster/src/types/size.cpp > CMakeFiles/types.dir/src/types/size.cpp.i
+	/home/oster/gcc/gcc-install/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/oster/OsterLib/src/types/size.cpp > CMakeFiles/types.dir/src/types/size.cpp.i
 
 CMakeFiles/types.dir/src/types/size.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/types.dir/src/types/size.cpp.s"
-	/home/oster/gcc/gcc-install/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/oster/Mashroom/Oster/src/types/size.cpp -o CMakeFiles/types.dir/src/types/size.cpp.s
+	/home/oster/gcc/gcc-install/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/oster/OsterLib/src/types/size.cpp -o CMakeFiles/types.dir/src/types/size.cpp.s
 
 CMakeFiles/types.dir/src/types/time_interval.cpp.o: CMakeFiles/types.dir/flags.make
-CMakeFiles/types.dir/src/types/time_interval.cpp.o: /home/oster/Mashroom/Oster/src/types/time_interval.cpp
+CMakeFiles/types.dir/src/types/time_interval.cpp.o: /home/oster/OsterLib/src/types/time_interval.cpp
 CMakeFiles/types.dir/src/types/time_interval.cpp.o: CMakeFiles/types.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/oster/Mashroom/Oster/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object CMakeFiles/types.dir/src/types/time_interval.cpp.o"
-	/home/oster/gcc/gcc-install/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/types.dir/src/types/time_interval.cpp.o -MF CMakeFiles/types.dir/src/types/time_interval.cpp.o.d -o CMakeFiles/types.dir/src/types/time_interval.cpp.o -c /home/oster/Mashroom/Oster/src/types/time_interval.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/oster/OsterLib/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object CMakeFiles/types.dir/src/types/time_interval.cpp.o"
+	/home/oster/gcc/gcc-install/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/types.dir/src/types/time_interval.cpp.o -MF CMakeFiles/types.dir/src/types/time_interval.cpp.o.d -o CMakeFiles/types.dir/src/types/time_interval.cpp.o -c /home/oster/OsterLib/src/types/time_interval.cpp
 
 CMakeFiles/types.dir/src/types/time_interval.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/types.dir/src/types/time_interval.cpp.i"
-	/home/oster/gcc/gcc-install/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/oster/Mashroom/Oster/src/types/time_interval.cpp > CMakeFiles/types.dir/src/types/time_interval.cpp.i
+	/home/oster/gcc/gcc-install/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/oster/OsterLib/src/types/time_interval.cpp > CMakeFiles/types.dir/src/types/time_interval.cpp.i
 
 CMakeFiles/types.dir/src/types/time_interval.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/types.dir/src/types/time_interval.cpp.s"
-	/home/oster/gcc/gcc-install/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/oster/Mashroom/Oster/src/types/time_interval.cpp -o CMakeFiles/types.dir/src/types/time_interval.cpp.s
+	/home/oster/gcc/gcc-install/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/oster/OsterLib/src/types/time_interval.cpp -o CMakeFiles/types.dir/src/types/time_interval.cpp.s
 
 # Object files for target types
 types_OBJECTS = \
@@ -160,7 +160,7 @@ libtypes.a: CMakeFiles/types.dir/src/types/size.cpp.o
 libtypes.a: CMakeFiles/types.dir/src/types/time_interval.cpp.o
 libtypes.a: CMakeFiles/types.dir/build.make
 libtypes.a: CMakeFiles/types.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/oster/Mashroom/Oster/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Linking CXX static library libtypes.a"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/oster/OsterLib/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Linking CXX static library libtypes.a"
 	$(CMAKE_COMMAND) -P CMakeFiles/types.dir/cmake_clean_target.cmake
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/types.dir/link.txt --verbose=$(VERBOSE)
 
@@ -173,6 +173,6 @@ CMakeFiles/types.dir/clean:
 .PHONY : CMakeFiles/types.dir/clean
 
 CMakeFiles/types.dir/depend:
-	cd /home/oster/Mashroom/Oster/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/oster/Mashroom/Oster /home/oster/Mashroom/Oster /home/oster/Mashroom/Oster/build /home/oster/Mashroom/Oster/build /home/oster/Mashroom/Oster/build/CMakeFiles/types.dir/DependInfo.cmake "--color=$(COLOR)" types
+	cd /home/oster/OsterLib/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/oster/OsterLib /home/oster/OsterLib /home/oster/OsterLib/build /home/oster/OsterLib/build /home/oster/OsterLib/build/CMakeFiles/types.dir/DependInfo.cmake "--color=$(COLOR)" types
 .PHONY : CMakeFiles/types.dir/depend
 

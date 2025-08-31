@@ -4,7 +4,7 @@
 # compile CXX with /home/oster/gcc/gcc-install/bin/g++
 CXX_DEFINES = 
 
-CXX_INCLUDES = -I/home/oster/Mashroom/Oster/build/tests -I/home/oster/Mashroom/Oster/tests -I/home/oster/Mashroom/Oster/include
+CXX_INCLUDES = -I/home/oster/OsterLib/build/tests -I/home/oster/OsterLib/tests -I/home/oster/OsterLib/include
 
 CXX_FLAGS =  -lzip -static-libstdc++ -std=c++23 -fPIC -O0 -fconcepts-diagnostics-depth=10
 

@@ -4,7 +4,7 @@
 # compile CXX with /home/oster/gcc/gcc-install/bin/g++
 CXX_DEFINES = -DBOOST_CONTAINER_DYN_LINK -DBOOST_CONTAINER_NO_LIB -DBOOST_JSON_DYN_LINK -DBOOST_JSON_NO_LIB
 
-CXX_INCLUDES = -I/home/oster/Mashroom/Oster/build -I/home/oster/Mashroom/Oster -I/home/oster/Mashroom/Oster/include/boost_functional
+CXX_INCLUDES = -I/home/oster/OsterLib/build -I/home/oster/OsterLib -I/home/oster/OsterLib/include/boost_functional
 
 CXX_FLAGS =  -lzip -static-libstdc++ -std=c++23 -fPIC -O0 -fconcepts-diagnostics-depth=10
 

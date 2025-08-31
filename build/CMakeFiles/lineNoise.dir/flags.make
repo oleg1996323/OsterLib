@@ -4,7 +4,7 @@
 # compile C with /usr/bin/cc
 C_DEFINES = 
 
-C_INCLUDES = -I/home/oster/Mashroom/Oster/build -I/home/oster/Mashroom/Oster -I/home/oster/Mashroom/Oster/linenoise
+C_INCLUDES = -I/home/oster/OsterLib/build -I/home/oster/OsterLib -I/home/oster/OsterLib/linenoise
 
 C_FLAGS = -std=gnu2x -fPIC -O0 -fconcepts-diagnostics-depth=10
 

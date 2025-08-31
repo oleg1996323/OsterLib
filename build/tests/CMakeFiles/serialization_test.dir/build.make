@@ -53,10 +53,10 @@ RM = /home/oster/CMake/bin/cmake -E rm -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/oster/Mashroom/Oster
+CMAKE_SOURCE_DIR = /home/oster/OsterLib
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/oster/Mashroom/Oster/build
+CMAKE_BINARY_DIR = /home/oster/OsterLib/build
 
 # Include any dependencies generated for this target.
 include tests/CMakeFiles/serialization_test.dir/depend.make
@@ -73,18 +73,18 @@ tests/CMakeFiles/serialization_test.dir/codegen:
 .PHONY : tests/CMakeFiles/serialization_test.dir/codegen
 
 tests/CMakeFiles/serialization_test.dir/serialization.cpp.o: tests/CMakeFiles/serialization_test.dir/flags.make
-tests/CMakeFiles/serialization_test.dir/serialization.cpp.o: /home/oster/Mashroom/Oster/tests/serialization.cpp
+tests/CMakeFiles/serialization_test.dir/serialization.cpp.o: /home/oster/OsterLib/tests/serialization.cpp
 tests/CMakeFiles/serialization_test.dir/serialization.cpp.o: tests/CMakeFiles/serialization_test.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/oster/Mashroom/Oster/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object tests/CMakeFiles/serialization_test.dir/serialization.cpp.o"
-	cd /home/oster/Mashroom/Oster/build/tests && /home/oster/gcc/gcc-install/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT tests/CMakeFiles/serialization_test.dir/serialization.cpp.o -MF CMakeFiles/serialization_test.dir/serialization.cpp.o.d -o CMakeFiles/serialization_test.dir/serialization.cpp.o -c /home/oster/Mashroom/Oster/tests/serialization.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/oster/OsterLib/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object tests/CMakeFiles/serialization_test.dir/serialization.cpp.o"
+	cd /home/oster/OsterLib/build/tests && /home/oster/gcc/gcc-install/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT tests/CMakeFiles/serialization_test.dir/serialization.cpp.o -MF CMakeFiles/serialization_test.dir/serialization.cpp.o.d -o CMakeFiles/serialization_test.dir/serialization.cpp.o -c /home/oster/OsterLib/tests/serialization.cpp
 
 tests/CMakeFiles/serialization_test.dir/serialization.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/serialization_test.dir/serialization.cpp.i"
-	cd /home/oster/Mashroom/Oster/build/tests && /home/oster/gcc/gcc-install/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/oster/Mashroom/Oster/tests/serialization.cpp > CMakeFiles/serialization_test.dir/serialization.cpp.i
+	cd /home/oster/OsterLib/build/tests && /home/oster/gcc/gcc-install/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/oster/OsterLib/tests/serialization.cpp > CMakeFiles/serialization_test.dir/serialization.cpp.i
 
 tests/CMakeFiles/serialization_test.dir/serialization.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/serialization_test.dir/serialization.cpp.s"
-	cd /home/oster/Mashroom/Oster/build/tests && /home/oster/gcc/gcc-install/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/oster/Mashroom/Oster/tests/serialization.cpp -o CMakeFiles/serialization_test.dir/serialization.cpp.s
+	cd /home/oster/OsterLib/build/tests && /home/oster/gcc/gcc-install/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/oster/OsterLib/tests/serialization.cpp -o CMakeFiles/serialization_test.dir/serialization.cpp.s
 
 # Object files for target serialization_test
 serialization_test_OBJECTS = \
@@ -98,19 +98,19 @@ tests/serialization_test: tests/CMakeFiles/serialization_test.dir/build.make
 tests/serialization_test: tests/CMakeFiles/serialization_test.dir/compiler_depend.ts
 tests/serialization_test: /usr/local/lib/libgtest.a
 tests/serialization_test: tests/CMakeFiles/serialization_test.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/oster/Mashroom/Oster/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Linking CXX executable serialization_test"
-	cd /home/oster/Mashroom/Oster/build/tests && $(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/serialization_test.dir/link.txt --verbose=$(VERBOSE)
-	cd /home/oster/Mashroom/Oster/build/tests && /home/oster/CMake/bin/cmake -D TEST_TARGET=serialization_test -D TEST_EXECUTABLE=/home/oster/Mashroom/Oster/build/tests/serialization_test -D TEST_EXECUTOR= -D TEST_WORKING_DIR=/home/oster/Mashroom/Oster/build/tests -D TEST_EXTRA_ARGS= -D TEST_PROPERTIES= -D TEST_PREFIX= -D TEST_SUFFIX= -D TEST_FILTER= -D NO_PRETTY_TYPES=FALSE -D NO_PRETTY_VALUES=FALSE -D TEST_LIST=serialization_test_TESTS -D CTEST_FILE=/home/oster/Mashroom/Oster/build/tests/serialization_test[1]_tests.cmake -D TEST_DISCOVERY_TIMEOUT=5 -D TEST_DISCOVERY_EXTRA_ARGS= -D TEST_XML_OUTPUT_DIR= -P /home/oster/CMake/Modules/GoogleTestAddTests.cmake
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/oster/OsterLib/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Linking CXX executable serialization_test"
+	cd /home/oster/OsterLib/build/tests && $(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/serialization_test.dir/link.txt --verbose=$(VERBOSE)
+	cd /home/oster/OsterLib/build/tests && /home/oster/CMake/bin/cmake -D TEST_TARGET=serialization_test -D TEST_EXECUTABLE=/home/oster/OsterLib/build/tests/serialization_test -D TEST_EXECUTOR= -D TEST_WORKING_DIR=/home/oster/OsterLib/build/tests -D TEST_EXTRA_ARGS= -D TEST_PROPERTIES= -D TEST_PREFIX= -D TEST_SUFFIX= -D TEST_FILTER= -D NO_PRETTY_TYPES=FALSE -D NO_PRETTY_VALUES=FALSE -D TEST_LIST=serialization_test_TESTS -D CTEST_FILE=/home/oster/OsterLib/build/tests/serialization_test[1]_tests.cmake -D TEST_DISCOVERY_TIMEOUT=5 -D TEST_DISCOVERY_EXTRA_ARGS= -D TEST_XML_OUTPUT_DIR= -P /home/oster/CMake/Modules/GoogleTestAddTests.cmake
 
 # Rule to build all files generated by this target.
 tests/CMakeFiles/serialization_test.dir/build: tests/serialization_test
 .PHONY : tests/CMakeFiles/serialization_test.dir/build
 
 tests/CMakeFiles/serialization_test.dir/clean:
-	cd /home/oster/Mashroom/Oster/build/tests && $(CMAKE_COMMAND) -P CMakeFiles/serialization_test.dir/cmake_clean.cmake
+	cd /home/oster/OsterLib/build/tests && $(CMAKE_COMMAND) -P CMakeFiles/serialization_test.dir/cmake_clean.cmake
 .PHONY : tests/CMakeFiles/serialization_test.dir/clean
 
 tests/CMakeFiles/serialization_test.dir/depend:
-	cd /home/oster/Mashroom/Oster/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/oster/Mashroom/Oster /home/oster/Mashroom/Oster/tests /home/oster/Mashroom/Oster/build /home/oster/Mashroom/Oster/build/tests /home/oster/Mashroom/Oster/build/tests/CMakeFiles/serialization_test.dir/DependInfo.cmake "--color=$(COLOR)" serialization_test
+	cd /home/oster/OsterLib/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/oster/OsterLib /home/oster/OsterLib/tests /home/oster/OsterLib/build /home/oster/OsterLib/build/tests /home/oster/OsterLib/build/tests/CMakeFiles/serialization_test.dir/DependInfo.cmake "--color=$(COLOR)" serialization_test
 .PHONY : tests/CMakeFiles/serialization_test.dir/depend
 

@@ -53,10 +53,10 @@ RM = /home/oster/CMake/bin/cmake -E rm -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/oster/Mashroom/Oster
+CMAKE_SOURCE_DIR = /home/oster/OsterLib
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/oster/Mashroom/Oster/build
+CMAKE_BINARY_DIR = /home/oster/OsterLib/build
 
 # Include any dependencies generated for this target.
 include CMakeFiles/CLInput.dir/depend.make
@@ -73,18 +73,18 @@ CMakeFiles/CLInput.dir/codegen:
 .PHONY : CMakeFiles/CLInput.dir/codegen
 
 CMakeFiles/CLInput.dir/src/CLI/CLInavig.cpp.o: CMakeFiles/CLInput.dir/flags.make
-CMakeFiles/CLInput.dir/src/CLI/CLInavig.cpp.o: /home/oster/Mashroom/Oster/src/CLI/CLInavig.cpp
+CMakeFiles/CLInput.dir/src/CLI/CLInavig.cpp.o: /home/oster/OsterLib/src/CLI/CLInavig.cpp
 CMakeFiles/CLInput.dir/src/CLI/CLInavig.cpp.o: CMakeFiles/CLInput.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/oster/Mashroom/Oster/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/CLInput.dir/src/CLI/CLInavig.cpp.o"
-	/home/oster/gcc/gcc-install/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/CLInput.dir/src/CLI/CLInavig.cpp.o -MF CMakeFiles/CLInput.dir/src/CLI/CLInavig.cpp.o.d -o CMakeFiles/CLInput.dir/src/CLI/CLInavig.cpp.o -c /home/oster/Mashroom/Oster/src/CLI/CLInavig.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/oster/OsterLib/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/CLInput.dir/src/CLI/CLInavig.cpp.o"
+	/home/oster/gcc/gcc-install/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/CLInput.dir/src/CLI/CLInavig.cpp.o -MF CMakeFiles/CLInput.dir/src/CLI/CLInavig.cpp.o.d -o CMakeFiles/CLInput.dir/src/CLI/CLInavig.cpp.o -c /home/oster/OsterLib/src/CLI/CLInavig.cpp
 
 CMakeFiles/CLInput.dir/src/CLI/CLInavig.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/CLInput.dir/src/CLI/CLInavig.cpp.i"
-	/home/oster/gcc/gcc-install/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/oster/Mashroom/Oster/src/CLI/CLInavig.cpp > CMakeFiles/CLInput.dir/src/CLI/CLInavig.cpp.i
+	/home/oster/gcc/gcc-install/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/oster/OsterLib/src/CLI/CLInavig.cpp > CMakeFiles/CLInput.dir/src/CLI/CLInavig.cpp.i
 
 CMakeFiles/CLInput.dir/src/CLI/CLInavig.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/CLInput.dir/src/CLI/CLInavig.cpp.s"
-	/home/oster/gcc/gcc-install/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/oster/Mashroom/Oster/src/CLI/CLInavig.cpp -o CMakeFiles/CLInput.dir/src/CLI/CLInavig.cpp.s
+	/home/oster/gcc/gcc-install/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/oster/OsterLib/src/CLI/CLInavig.cpp -o CMakeFiles/CLInput.dir/src/CLI/CLInavig.cpp.s
 
 # Object files for target CLInput
 CLInput_OBJECTS = \
@@ -96,7 +96,7 @@ CLInput_EXTERNAL_OBJECTS =
 libCLInput.a: CMakeFiles/CLInput.dir/src/CLI/CLInavig.cpp.o
 libCLInput.a: CMakeFiles/CLInput.dir/build.make
 libCLInput.a: CMakeFiles/CLInput.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/oster/Mashroom/Oster/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Linking CXX static library libCLInput.a"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/oster/OsterLib/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Linking CXX static library libCLInput.a"
 	$(CMAKE_COMMAND) -P CMakeFiles/CLInput.dir/cmake_clean_target.cmake
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/CLInput.dir/link.txt --verbose=$(VERBOSE)
 
@@ -109,6 +109,6 @@ CMakeFiles/CLInput.dir/clean:
 .PHONY : CMakeFiles/CLInput.dir/clean
 
 CMakeFiles/CLInput.dir/depend:
-	cd /home/oster/Mashroom/Oster/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/oster/Mashroom/Oster /home/oster/Mashroom/Oster /home/oster/Mashroom/Oster/build /home/oster/Mashroom/Oster/build /home/oster/Mashroom/Oster/build/CMakeFiles/CLInput.dir/DependInfo.cmake "--color=$(COLOR)" CLInput
+	cd /home/oster/OsterLib/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/oster/OsterLib /home/oster/OsterLib /home/oster/OsterLib/build /home/oster/OsterLib/build /home/oster/OsterLib/build/CMakeFiles/CLInput.dir/DependInfo.cmake "--color=$(COLOR)" CLInput
 .PHONY : CMakeFiles/CLInput.dir/depend
 
