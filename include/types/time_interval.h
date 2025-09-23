@@ -129,7 +129,6 @@ bool intervals_intersect(const utc_tp& from_1, const utc_tp& to_1,const utc_tp& 
 std::pair<uint16_t,uint16_t> interval_intersection_pos(const TimeInterval& to_seek, const TimeInterval& initial, const utc_diff& discret) noexcept;
 
 namespace serialization{
-
     template<bool NETWORK_ORDER>
     struct Serialize<NETWORK_ORDER,TimePeriod>{
         auto operator()(const TimePeriod& val,std::vector<char>& buf) const noexcept{
@@ -166,6 +165,45 @@ namespace serialization{
         static constexpr size_t value = []()
         {
             return max_serial_size<decltype(type::years_),decltype(type::months_),decltype(type::days_),decltype(type::hours_),decltype(type::minutes_),decltype(type::seconds_)>();
+        }();
+    };
+
+    template<bool NETWORK_ORDER>
+    struct Serialize<NETWORK_ORDER,TimeInterval>{
+        auto operator()(const TimeInterval& val,std::vector<char>& buf) const noexcept{
+            return serialize<NETWORK_ORDER>(val,buf,val.from_,val.to_);
+        }
+    };
+
+    template<bool NETWORK_ORDER>
+    struct Deserialize<NETWORK_ORDER,TimeInterval>{
+        auto operator()(TimeInterval& val,std::span<const char> buf) const noexcept{
+            return deserialize<NETWORK_ORDER>(val,buf,val.from_,val.to_);
+        }
+    };
+
+    template<>
+    struct Serial_size<TimeInterval>{
+        size_t operator()(const TimeInterval& val) const noexcept{
+            return serial_size(val.from_,val.to_);
+        }
+    };
+
+    template<>
+    struct Min_serial_size<TimeInterval>{
+        using type = TimeInterval;
+        static constexpr size_t value = []()
+        {
+            return min_serial_size<decltype(type::from_),decltype(type::to_)>();
+        }();
+    };
+     
+    template<>
+    struct Max_serial_size<TimeInterval>{
+        using type = TimeInterval;
+        static constexpr size_t value = []()
+        {
+            return max_serial_size<decltype(type::from_),decltype(type::to_)>();
         }();
     };
 }
