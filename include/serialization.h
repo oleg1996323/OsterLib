@@ -16,7 +16,6 @@
 #include <variant>
 #include <cassert>
 #include "concepts.h"
-#include "types/pseudo.h"
 #include "variant.h"
 
 namespace serialization{

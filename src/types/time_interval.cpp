@@ -1,229 +1,21 @@
-#include "types/time_interval.h"
-TimePeriod::TimePeriod(years y,months mo,days d,hours h,minutes m,std::chrono::seconds s) noexcept:
-    years_(y),
-    months_(mo),
-    days_(d),
-    hours_(h),
-    minutes_(m),
-    seconds_(s)
-{
-    if(seconds_>std::chrono::seconds(0)){
-        if(seconds_>std::chrono::seconds(59)){
-            days_=days(seconds_/std::chrono::seconds(86400));
-            seconds_%=86400;
-            hours_=hours(seconds_/std::chrono::seconds(3600));
-            seconds_%=3600;
-            minutes_=minutes(seconds_/std::chrono::seconds(60));
-            seconds_%=60;
-        }
-    }
-    if(minutes_>minutes(0)){
-        if(minutes_>=std::chrono::hours(1)){
-            days_=days(minutes_/days(1));
-            minutes_%=days(1);
-            hours_=hours(minutes_/hours(1));
-            minutes_%=hours(1);
-        }
-    }
-    if(hours_>hours(0)){
-        if(hours_>=std::chrono::days(1)){
-            days_=days(hours_/days(1));
-            hours_%=days(1);
-        }
-    }
-}
-TimePeriod::TimePeriod(const TimePeriod& other) noexcept{
-    if(this!=&other){
-        years_ = other.years_;
-        months_ = other.months_;
-        days_ = other.days_;
-        hours_ = other.hours_;
-        minutes_ = other.minutes_;
-        seconds_ = other.seconds_;
-    }
-}
-TimePeriod::TimePeriod(TimePeriod&& other) noexcept{
-    if(this!=&other){
-        years_ = std::move(other.years_);
-        months_ = std::move(other.months_);
-        days_ = std::move(other.days_);
-        hours_ = std::move(other.hours_);
-        minutes_ = std::move(other.minutes_);
-        seconds_ = std::move(other.seconds_);
-    }
-}
-TimePeriod& TimePeriod::operator=(const TimePeriod& other) noexcept{
-    if(this!=&other){
-        years_ = other.years_;
-        months_ = other.months_;
-        days_ = other.days_;
-        hours_ = other.hours_;
-        minutes_ = other.minutes_;
-        seconds_ = other.seconds_;
-    }
-    return *this;
-}
-TimePeriod& TimePeriod::operator=(TimePeriod&& other) noexcept{
-    if(this!=&other){
-        years_ = std::move(other.years_);
-        months_ = std::move(other.months_);
-        days_ = std::move(other.days_);
-        hours_ = std::move(other.hours_);
-        minutes_ = std::move(other.minutes_);
-        seconds_ = std::move(other.seconds_);
-    }
-    return *this;
-}
+#include "time_interval.h"
 
-/**
- * @return Next time-point from current time-point by set time-offset
- */
-utc_tp TimePeriod::get_next_tp(utc_tp current_time) const noexcept{
-    using namespace std::chrono;
-    auto ymd = year_month_day(floor<days>(current_time));
-    ymd+=years_;
-    ymd+=months_;
-    auto sd = utc_tp(sys_days(ymd));
-    sd+=days_+hours_;
-    return sd;
-}
-/**
- * @return The time-point aligned to the lesser defined time-unit
- */
-utc_tp TimePeriod::get_null_aligned_tp(utc_tp current_time, utc_tp from_initial_interval) const noexcept{
-    using namespace std::chrono;
-    auto ymd_current = year_month_day(floor<days>(current_time));
-    auto ymd_initial = year_month_day(floor<days>(from_initial_interval));
-    years year;
-    if(seconds_>std::chrono::seconds(0))
-
-    if(years_!=years(0)){
-        year = ((ymd_current.year()-ymd_initial.year())/years_)*years_;
-        if(year==years(0))
-            return from_initial_interval;
-    }
-    months month;
-    if(months_!=months(0)){
-        if(months_>months(11)){
-            year=years_+years(months_/months(12));
-            month=months(months_%months(12));
-        }
-        if(years_!=years(0)){
-            year = ((ymd_current.year()-ymd_initial.year())/year)*year;
-            if(year==years(0))
-                return from_initial_interval;
-        }
-        month=(ymd_current.month()-ymd_initial.month())/month*month;
-        if(month==months(0))
-            return from_initial_interval;
-    }
-    days day;
-    if(days_>days(0)){
-        day=(sys_days(floor<days>(current_time))-sys_days(ymd_initial+year+month))/days_*days_;
-        if(day==days(0))
-            return from_initial_interval;
-    }
-    utc_tp result = sys_days(ymd_initial+year+month)+day;
-    hours hour;
-    if(hours_>hours(0)){
-        hour=(current_time-result)/hours_*hours_;
-        if(hour==hours(0))
-            return from_initial_interval;
-        else result+=hour;
-    }
-    minutes minute;
-    if(minutes_>minutes(0)){
-        minute=(current_time-result)/minutes_*minutes_;
-        if(minute==minutes(0))
-            return from_initial_interval;
-        else result+=minute;
-    }
-    std::chrono::seconds second;
-    if(seconds_>std::chrono::seconds(0)){
-        second=(current_time-result)/seconds_*seconds_;
-        if(second==std::chrono::seconds(0))
-            return from_initial_interval;
-        else result+=second;
-    }
-    return result;
-}
-
-template<>
-boost::json::value to_json(const TimePeriod& val){
-    boost::json::object result;
-    result["years"] = val.years_.count();
-    result["months"] = val.months_.count();
-    result["days"] = val.days_.count();
-    result["hours"] = val.hours_.count();
-    result["minutes"] = val.minutes_.count();
-    result["seconds"] = val.seconds_.count();
-    return result;
-}
-
-template<>
-std::expected<TimePeriod,std::exception> from_json(const boost::json::value& val){
-    TimePeriod result;
-    try{
-        result.years_=years(val.at("years").as_int64());
-        result.months_=months(val.at("months").as_int64());
-        result.days_=days(val.at("days").as_int64());
-        result.hours_=hours(val.at("hours").as_int64());
-        result.minutes_=minutes(val.at("minutes").as_int64());
-        result.seconds_=std::chrono::seconds(val.at("seconds").as_int64());
-    }
-    catch(const std::invalid_argument& err){
-        return std::unexpected(err);
-    }
-    return result;
-}
-
-#include "parsing.h"
-#include <iostream>
-
-template<>
-TimePeriod boost::lexical_cast(const std::string& input){
-    using namespace std::string_literals;
-    TimePeriod result;
-    std::vector<std::string_view> tokens = split<std::string_view>(std::string_view(input),":");
-    if(!tokens.empty()){
-        for(std::string_view token:tokens){
-            auto tmp(from_chars<int>(token.substr(1)));
-            if(!tmp.has_value())
-                throw std::invalid_argument(input);
-            else{
-                if(tmp.value()<0){
-                    throw std::invalid_argument("Invalid time offset token input "s+std::string(token));
-                }
-                else if(tmp.value()==0){
-                    std::cout<<"Ignored value: "s<<token<<std::endl;
-                    continue;
-                }
-            }
-            if(token.size()>0){
-                if(iend_with(token,std::string_view("h")))
-                    result.hours_ = hours(tmp.value());
-                else if(iend_with(token,std::string_view("y")))
-                    result.years_ = years(tmp.value());
-                else if(iend_with(token,std::string_view("m")))
-                    result.months_ = months(tmp.value());
-                else if(iend_with(token,std::string_view("d")))
-                    result.days_ = days(tmp.value());
-                else{
-                    std::cout<<"Unknown time offset token"<<std::endl;
-                    throw std::invalid_argument(input);
-                }
-            }
-            else{
-                std::cout<<"Missed time offset token"<<std::endl;
-                throw std::invalid_argument(input);
-            }
-        }
+std::optional<TimeInterval> interval_instersection(const TimeInterval& lhs,const TimeInterval& rhs) noexcept{
+    if(lhs.from_<rhs.from_){
+        TimeInterval result{.from_ = rhs.from_};
+        if(lhs.to_<rhs.to_)
+            result.to_ = lhs.to_;
+        else result.to_ = rhs.to_;
         return result;
     }
     else{
-        std::cout<<"Empty string at time offset definition"<<std::endl;
-        throw std::invalid_argument(input);
+        TimeInterval result{.from_ = lhs.from_};
+        if(lhs.to_<rhs.to_)
+            result.to_ = lhs.to_;
+        else result.to_ = rhs.to_;
+        return result;
     }
+    return std::nullopt;
 }
 
 template<>
@@ -241,16 +33,31 @@ template<>
 std::string boost::lexical_cast(const utc_tp& input){
     return std::format("{:%D-%T}",input);
 }
-template<>
-std::string boost::lexical_cast(const TimePeriod& input){
-    std::string result;
-    if(input.years_.count()>0)
-        result+=std::to_string(input.years_.count())+"y";
-    if(input.months_.count()>0)
-        result+=std::to_string(input.months_.count())+"m";
-    if(input.days_.count()>0)
-        result+=std::to_string(input.days_.count())+"d";
-    if(input.hours_.count()>0)
-        result+=std::to_string(input.hours_.count())+"h";    
+
+bool is_correct_interval(const std::chrono::system_clock::time_point& from,const std::chrono::system_clock::time_point& to){
+    return (to-from).count()>0;
+}
+bool intervals_intersect(const TimeInterval& lhs, const TimeInterval& rhs){
+    return !(lhs.from_>rhs.to_  || lhs.to_<rhs.from_);
+}
+bool intervals_intersect(const utc_tp& from_1, const utc_tp& to_1,const utc_tp& from_2, const utc_tp& to_2){
+    return !(from_1>to_2  || to_1<from_2);
+}
+#include <iostream>
+std::pair<uint16_t,uint16_t> interval_intersection_pos(const TimeInterval& to_seek, const TimeInterval& initial, const utc_diff& discret) noexcept{
+    std::pair<uint16_t,uint16_t> result{0,0};
+    if(discret.count()==0)
+        return result;
+    if(to_seek.from_<=initial.from_)
+        result.first = 0;
+    else
+        result.first = (to_seek.from_.time_since_epoch()-initial.from_.time_since_epoch())/discret+1;
+
+    if(to_seek.to_>=initial.to_)
+        result.second = (initial.to_.time_since_epoch()-initial.from_.time_since_epoch())/discret+1;
+    else{
+        result.second = (initial.to_.time_since_epoch()-to_seek.to_.time_since_epoch())/discret+1;
+    }
+    //result.first = to_seek.from_<=initial.from_?0:(to_seek.from_-initial.from_)/discret;
     return result;
 }

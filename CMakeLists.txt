@@ -61,12 +61,13 @@ target_include_directories(boost_functional PUBLIC
                 "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/boost_functional>")
 
 add_library(types STATIC src/types/coord.cpp
-                src/types/date.cpp
                 src/types/rect.cpp
                 src/types/size.cpp
-                src/types/time_interval.cpp)
+                src/types/time_interval.cpp
+                src/types/time_period.cpp)
 target_include_directories(types PUBLIC 
-                                "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+                                "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/types>"
+                                "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/>"
                                 "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>")
 add_library(utilities STATIC    src/directories.cpp
                                 src/floattoieee.cpp

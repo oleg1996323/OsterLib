@@ -1,0 +1,2 @@
+/home/oster/binutils-gdb/gdb-install/bin/ar qc libCLInput.a CMakeFiles/CLInput.dir/src/CLI/CLInavig.cpp.o
+/home/oster/binutils-gdb/gdb-install/bin/ranlib libCLInput.a

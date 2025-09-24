@@ -1,0 +1,8 @@
+{
+	"InstallScripts" : 
+	[
+		"/home/oster/OsterLib/cmake_install.cmake",
+		"/home/oster/OsterLib/tests/cmake_install.cmake"
+	],
+	"Parallel" : false
+}

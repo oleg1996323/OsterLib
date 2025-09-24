@@ -6,12 +6,12 @@
 /home/oster/OsterLib-install/include/byte_read.h
 /home/oster/OsterLib-install/include/int_pow.h
 /home/oster/OsterLib-install/include/floattoieee.h
+/home/oster/OsterLib-install/include/types/time_period.h
 /home/oster/OsterLib-install/include/types/size.h
 /home/oster/OsterLib-install/include/types/time_interval.h
 /home/oster/OsterLib-install/include/types/array.h
 /home/oster/OsterLib-install/include/types/rect.h
 /home/oster/OsterLib-install/include/types/coord.h
-/home/oster/OsterLib-install/include/types/pseudo.h
 /home/oster/OsterLib-install/include/concepts.h
 /home/oster/OsterLib-install/include/interpolation.h
 /home/oster/OsterLib-install/include/byte_order.h

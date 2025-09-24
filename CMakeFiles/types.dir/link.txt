@@ -1,0 +1,2 @@
+/home/oster/binutils-gdb/gdb-install/bin/ar qc libtypes.a CMakeFiles/types.dir/src/types/coord.cpp.o CMakeFiles/types.dir/src/types/rect.cpp.o CMakeFiles/types.dir/src/types/size.cpp.o CMakeFiles/types.dir/src/types/time_interval.cpp.o CMakeFiles/types.dir/src/types/time_period.cpp.o
+/home/oster/binutils-gdb/gdb-install/bin/ranlib libtypes.a

@@ -1,0 +1,148 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"childIndexes" : 
+					[
+						1
+					],
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-.-Debug-e1c22f1c04fd3923d53d.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.16"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						3,
+						5,
+						6
+					]
+				},
+				{
+					"build" : "tests",
+					"jsonFile" : "directory-tests-Debug-fc22f5d5a3f9cc5eca30.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.16"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 1,
+					"source" : "tests",
+					"targetIndexes" : 
+					[
+						2,
+						4
+					]
+				}
+			],
+			"name" : "Debug",
+			"projects" : 
+			[
+				{
+					"childIndexes" : 
+					[
+						1
+					],
+					"directoryIndexes" : 
+					[
+						0
+					],
+					"name" : "OsterLib",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						3,
+						5,
+						6
+					]
+				},
+				{
+					"directoryIndexes" : 
+					[
+						1
+					],
+					"name" : "tests",
+					"parentIndex" : 0,
+					"targetIndexes" : 
+					[
+						2,
+						4
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 0,
+					"id" : "CLInput::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-CLInput-Debug-db8ed9ae1037e91362c1.json",
+					"name" : "CLInput",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "boost_functional::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-boost_functional-Debug-92ba3f39a037f2cbca73.json",
+					"name" : "boost_functional",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 1,
+					"id" : "bytes_test::@a44f0ac069e85531cdee",
+					"jsonFile" : "target-bytes_test-Debug-28b8b2fc202c49fe4241.json",
+					"name" : "bytes_test",
+					"projectIndex" : 1
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "lineNoise::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-lineNoise-Debug-bb837de4efda37bd3d30.json",
+					"name" : "lineNoise",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 1,
+					"id" : "serialization_test::@a44f0ac069e85531cdee",
+					"jsonFile" : "target-serialization_test-Debug-63267e0fead0e00ca210.json",
+					"name" : "serialization_test",
+					"projectIndex" : 1
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "types::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-types-Debug-f5729dd7e6fd6b97534b.json",
+					"name" : "types",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "utilities::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-utilities-Debug-3576d9ad74dfc18da9a4.json",
+					"name" : "utilities",
+					"projectIndex" : 0
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "/home/oster/OsterLib",
+		"source" : "/home/oster/OsterLib"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 9
+	}
+}

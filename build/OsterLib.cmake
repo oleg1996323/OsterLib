@@ -104,7 +104,7 @@ set_target_properties(OsterLib::images PROPERTIES
 add_library(OsterLib::types STATIC IMPORTED)
 
 set_target_properties(OsterLib::types PROPERTIES
-  INTERFACE_INCLUDE_DIRECTORIES "/home/oster/OsterLib/include"
+  INTERFACE_INCLUDE_DIRECTORIES "/home/oster/OsterLib/include/types;/home/oster/OsterLib/include/"
 )
 
 # Create imported target OsterLib::utilities

@@ -468,30 +468,6 @@ src/types/coord.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/types.dir/build.make CMakeFiles/types.dir/src/types/coord.cpp.s
 .PHONY : src/types/coord.cpp.s
 
-src/types/date.o: src/types/date.cpp.o
-.PHONY : src/types/date.o
-
-# target to build an object file
-src/types/date.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/types.dir/build.make CMakeFiles/types.dir/src/types/date.cpp.o
-.PHONY : src/types/date.cpp.o
-
-src/types/date.i: src/types/date.cpp.i
-.PHONY : src/types/date.i
-
-# target to preprocess a source file
-src/types/date.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/types.dir/build.make CMakeFiles/types.dir/src/types/date.cpp.i
-.PHONY : src/types/date.cpp.i
-
-src/types/date.s: src/types/date.cpp.s
-.PHONY : src/types/date.s
-
-# target to generate assembly for a file
-src/types/date.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/types.dir/build.make CMakeFiles/types.dir/src/types/date.cpp.s
-.PHONY : src/types/date.cpp.s
-
 src/types/rect.o: src/types/rect.cpp.o
 .PHONY : src/types/rect.o
 
@@ -564,6 +540,30 @@ src/types/time_interval.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/types.dir/build.make CMakeFiles/types.dir/src/types/time_interval.cpp.s
 .PHONY : src/types/time_interval.cpp.s
 
+src/types/time_period.o: src/types/time_period.cpp.o
+.PHONY : src/types/time_period.o
+
+# target to build an object file
+src/types/time_period.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/types.dir/build.make CMakeFiles/types.dir/src/types/time_period.cpp.o
+.PHONY : src/types/time_period.cpp.o
+
+src/types/time_period.i: src/types/time_period.cpp.i
+.PHONY : src/types/time_period.i
+
+# target to preprocess a source file
+src/types/time_period.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/types.dir/build.make CMakeFiles/types.dir/src/types/time_period.cpp.i
+.PHONY : src/types/time_period.cpp.i
+
+src/types/time_period.s: src/types/time_period.cpp.s
+.PHONY : src/types/time_period.s
+
+# target to generate assembly for a file
+src/types/time_period.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/types.dir/build.make CMakeFiles/types.dir/src/types/time_period.cpp.s
+.PHONY : src/types/time_period.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -610,9 +610,6 @@ help:
 	@echo "... src/types/coord.o"
 	@echo "... src/types/coord.i"
 	@echo "... src/types/coord.s"
-	@echo "... src/types/date.o"
-	@echo "... src/types/date.i"
-	@echo "... src/types/date.s"
 	@echo "... src/types/rect.o"
 	@echo "... src/types/rect.i"
 	@echo "... src/types/rect.s"
@@ -622,6 +619,9 @@ help:
 	@echo "... src/types/time_interval.o"
 	@echo "... src/types/time_interval.i"
 	@echo "... src/types/time_interval.s"
+	@echo "... src/types/time_period.o"
+	@echo "... src/types/time_period.i"
+	@echo "... src/types/time_period.s"
 .PHONY : help
 
 
