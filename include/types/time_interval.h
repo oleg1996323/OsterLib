@@ -14,11 +14,17 @@ using utc_diff = std::chrono::system_clock::duration;
 struct TimeInterval{
     utc_tp from_;
     utc_tp to_;
+
+    bool operator==(const TimeInterval& other) const;
+    bool operator<(const TimeInterval& other) const;
 };
 
 struct TimeSequence{
     TimeInterval interval_;
     utc_diff discret_;
+
+    bool operator==(const TimeSequence& other) const;
+    bool operator<(const TimeSequence& other) const;
 };
 
 template<>
@@ -39,6 +45,27 @@ template<>
 struct std::less<TimeInterval>{
     bool operator()(const TimeInterval& lhs,const TimeInterval& rhs) const{
         return (lhs.from_<rhs.from_)?true:(lhs.from_==rhs.from_?lhs.to_-lhs.from_<rhs.to_-rhs.from_:false);
+    }
+};
+
+template<>
+struct std::hash<TimeSequence>{
+    size_t operator()(const TimeSequence& val){
+        return std::hash<TimeInterval>{}(val.interval_)^(static_cast<size_t>(val.discret_.count()<<1));
+    }
+};
+
+template<>
+struct std::equal_to<TimeSequence>{
+    bool operator()(const TimeSequence& lhs,const TimeSequence& rhs) const{
+        return lhs.interval_==rhs.interval_;
+    }
+};
+
+template<>
+struct std::less<TimeSequence>{
+    bool operator()(const TimeSequence& lhs,const TimeSequence& rhs) const{
+        return lhs.interval_<rhs.interval_;
     }
 };
 
@@ -89,41 +116,41 @@ namespace serialization{
     };
 
     template<bool NETWORK_ORDER>
-    struct Serialize<NETWORK_ORDER,TimeInterval>{
-        auto operator()(const TimeInterval& val,std::vector<char>& buf) const noexcept{
-            return serialize<NETWORK_ORDER>(val,buf,val.from_,val.to_);
+    struct Serialize<NETWORK_ORDER,TimeSequence>{
+        auto operator()(const TimeSequence& val,std::vector<char>& buf) const noexcept{
+            return serialize<NETWORK_ORDER>(val,buf,val.interval_,val.discret_);
         }
     };
 
     template<bool NETWORK_ORDER>
-    struct Deserialize<NETWORK_ORDER,TimeInterval>{
-        auto operator()(TimeInterval& val,std::span<const char> buf) const noexcept{
-            return deserialize<NETWORK_ORDER>(val,buf,val.from_,val.to_);
+    struct Deserialize<NETWORK_ORDER,TimeSequence>{
+        auto operator()(TimeSequence& val,std::span<const char> buf) const noexcept{
+            return deserialize<NETWORK_ORDER>(val,buf,val.interval_,val.discret_);
         }
     };
 
     template<>
-    struct Serial_size<TimeInterval>{
-        size_t operator()(const TimeInterval& val) const noexcept{
-            return serial_size(val.from_,val.to_);
+    struct Serial_size<TimeSequence>{
+        size_t operator()(const TimeSequence& val) const noexcept{
+            return serial_size(val.interval_,val.discret_);
         }
     };
 
     template<>
-    struct Min_serial_size<TimeInterval>{
-        using type = TimeInterval;
+    struct Min_serial_size<TimeSequence>{
+        using type = TimeSequence;
         static constexpr size_t value = []()
         {
-            return min_serial_size<decltype(type::from_),decltype(type::to_)>();
+            return min_serial_size<decltype(type::interval_),decltype(type::discret_)>();
         }();
     };
      
     template<>
-    struct Max_serial_size<TimeInterval>{
-        using type = TimeInterval;
+    struct Max_serial_size<TimeSequence>{
+        using type = TimeSequence;
         static constexpr size_t value = []()
         {
-            return max_serial_size<decltype(type::from_),decltype(type::to_)>();
+            return max_serial_size<decltype(type::interval_),decltype(type::discret_)>();
         }();
     };
 }

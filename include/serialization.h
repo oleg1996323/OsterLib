@@ -225,7 +225,7 @@ namespace serialization{
                     return SerializationEC::NONE;
                 }
                 else{
-                    using IntType = ::detail::to_integer_type<sizeof(std::decay_t<T>)>;
+                    using IntType = oster::detail::to_integer_type<sizeof(std::decay_t<T>)>;
                     IntType int_val;
                     if(auto code = deserialize<NETWORK_ORDER>(int_val,buf);code==SerializationEC::NONE){
                         to_deserialize = to_float(int_val);

@@ -28,7 +28,7 @@ requires ((std::is_same_v<std::remove_cv_t<ARGS>,char> && ...) ||
         (std::is_same_v<std::remove_cv_t<ARGS>,unsigned char> && ...))
 inline auto read_bytes(ARGS&&... args){
     /// @todo verify/test
-    using type = decltype(detail::to_integer_type<sizeof...(args),signed_t>());
+    using type = decltype(oster::detail::to_integer_type<sizeof...(args),signed_t>());
     type result = 0;
     unsigned shift = 0;
     if(is_little_endian()){
@@ -62,7 +62,7 @@ inline auto read_bytes(unsigned char* ptr){
     }
     else */{
         /// @todo verify/test
-        using type = decltype(detail::to_integer_type<sz,signed_t>());
+        using type = decltype(oster::detail::to_integer_type<sz,signed_t>());
         type result=0;
         if(is_little_endian()){
             for(int8_t i=0;i<sz;++i)

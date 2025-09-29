@@ -1,21 +1,17 @@
 #include "time_interval.h"
 
-std::optional<TimeInterval> interval_instersection(const TimeInterval& lhs,const TimeInterval& rhs) noexcept{
-    if(lhs.from_<rhs.from_){
-        TimeInterval result{.from_ = rhs.from_};
-        if(lhs.to_<rhs.to_)
-            result.to_ = lhs.to_;
-        else result.to_ = rhs.to_;
-        return result;
-    }
-    else{
-        TimeInterval result{.from_ = lhs.from_};
-        if(lhs.to_<rhs.to_)
-            result.to_ = lhs.to_;
-        else result.to_ = rhs.to_;
-        return result;
-    }
-    return std::nullopt;
+bool TimeInterval::operator==(const TimeInterval& other) const{
+    return std::equal_to<TimeInterval>()(*this,other);
+}
+bool TimeInterval::operator<(const TimeInterval& other) const{
+    return std::less<TimeInterval>()(*this,other);
+}
+
+bool TimeSequence::operator==(const TimeSequence& other) const{
+    return std::equal_to<TimeSequence>()(*this,other);
+}
+bool TimeSequence::operator<(const TimeSequence& other) const{
+    return std::less<TimeSequence>()(*this,other);
 }
 
 template<>
@@ -60,4 +56,14 @@ std::pair<uint16_t,uint16_t> interval_intersection_pos(const TimeInterval& to_se
     }
     //result.first = to_seek.from_<=initial.from_?0:(to_seek.from_-initial.from_)/discret;
     return result;
+}
+
+std::optional<TimeInterval> interval_instersection(const TimeInterval& lhs,const TimeInterval& rhs) noexcept{
+    if(intervals_intersect(lhs,rhs)){
+        if(lhs.from_<rhs.from_)
+            return TimeInterval{.from_ = rhs.from_,.to_ = (lhs.to_<rhs.to_?lhs.to_:rhs.to_)};
+        else
+            return TimeInterval{.from_ = lhs.from_,.to_ = (lhs.to_<rhs.to_?lhs.to_:rhs.to_)};
+    }
+    else return std::nullopt;
 }
