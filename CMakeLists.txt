@@ -69,6 +69,7 @@ target_include_directories(types PUBLIC
                                 "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/types>"
                                 "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/>"
                                 "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>")
+target_link_libraries(types PUBLIC boost_functional)
 add_library(utilities STATIC    src/directories.cpp
                                 src/floattoieee.cpp
                                 src/ibmtofloat.cpp

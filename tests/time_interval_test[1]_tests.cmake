@@ -1,0 +1,5 @@
+add_test([=[TimeIntervalTest.interval_intersection_pos_test]=]  /home/oster/OsterLib/tests/time_interval_test [==[--gtest_filter=TimeIntervalTest.interval_intersection_pos_test]==] --gtest_also_run_disabled_tests)
+set_tests_properties([=[TimeIntervalTest.interval_intersection_pos_test]=]  PROPERTIES DEF_SOURCE_LINE /home/oster/OsterLib/tests/time_interval.cpp:6 WORKING_DIRECTORY /home/oster/OsterLib/tests SKIP_REGULAR_EXPRESSION [==[\[  SKIPPED \]]==])
+add_test([=[TimeIntervalTest.interval_instersection_test]=]  /home/oster/OsterLib/tests/time_interval_test [==[--gtest_filter=TimeIntervalTest.interval_instersection_test]==] --gtest_also_run_disabled_tests)
+set_tests_properties([=[TimeIntervalTest.interval_instersection_test]=]  PROPERTIES DEF_SOURCE_LINE /home/oster/OsterLib/tests/time_interval.cpp:21 WORKING_DIRECTORY /home/oster/OsterLib/tests SKIP_REGULAR_EXPRESSION [==[\[  SKIPPED \]]==])
+set(  time_interval_test_TESTS TimeIntervalTest.interval_intersection_pos_test TimeIntervalTest.interval_instersection_test)

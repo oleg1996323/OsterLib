@@ -19,31 +19,31 @@
 },
 {
   "directory": "/home/oster/OsterLib",
-  "command": "/home/oster/gcc/gcc-install/bin/g++  -I/home/oster/OsterLib -I/home/oster/OsterLib/include/types -I/home/oster/OsterLib/include  -lzip -static-libstdc++ -g -std=c++23 -fPIC -O0 -fconcepts-diagnostics-depth=10 -o CMakeFiles/types.dir/src/types/coord.cpp.o -c /home/oster/OsterLib/src/types/coord.cpp",
+  "command": "/home/oster/gcc/gcc-install/bin/g++  -I/home/oster/OsterLib -I/home/oster/OsterLib/include/types -I/home/oster/OsterLib/include -I/home/oster/OsterLib/include/boost_functional  -lzip -static-libstdc++ -g -std=c++23 -fPIC -O0 -fconcepts-diagnostics-depth=10 -o CMakeFiles/types.dir/src/types/coord.cpp.o -c /home/oster/OsterLib/src/types/coord.cpp",
   "file": "/home/oster/OsterLib/src/types/coord.cpp",
   "output": "CMakeFiles/types.dir/src/types/coord.cpp.o"
 },
 {
   "directory": "/home/oster/OsterLib",
-  "command": "/home/oster/gcc/gcc-install/bin/g++  -I/home/oster/OsterLib -I/home/oster/OsterLib/include/types -I/home/oster/OsterLib/include  -lzip -static-libstdc++ -g -std=c++23 -fPIC -O0 -fconcepts-diagnostics-depth=10 -o CMakeFiles/types.dir/src/types/rect.cpp.o -c /home/oster/OsterLib/src/types/rect.cpp",
+  "command": "/home/oster/gcc/gcc-install/bin/g++  -I/home/oster/OsterLib -I/home/oster/OsterLib/include/types -I/home/oster/OsterLib/include -I/home/oster/OsterLib/include/boost_functional  -lzip -static-libstdc++ -g -std=c++23 -fPIC -O0 -fconcepts-diagnostics-depth=10 -o CMakeFiles/types.dir/src/types/rect.cpp.o -c /home/oster/OsterLib/src/types/rect.cpp",
   "file": "/home/oster/OsterLib/src/types/rect.cpp",
   "output": "CMakeFiles/types.dir/src/types/rect.cpp.o"
 },
 {
   "directory": "/home/oster/OsterLib",
-  "command": "/home/oster/gcc/gcc-install/bin/g++  -I/home/oster/OsterLib -I/home/oster/OsterLib/include/types -I/home/oster/OsterLib/include  -lzip -static-libstdc++ -g -std=c++23 -fPIC -O0 -fconcepts-diagnostics-depth=10 -o CMakeFiles/types.dir/src/types/size.cpp.o -c /home/oster/OsterLib/src/types/size.cpp",
+  "command": "/home/oster/gcc/gcc-install/bin/g++  -I/home/oster/OsterLib -I/home/oster/OsterLib/include/types -I/home/oster/OsterLib/include -I/home/oster/OsterLib/include/boost_functional  -lzip -static-libstdc++ -g -std=c++23 -fPIC -O0 -fconcepts-diagnostics-depth=10 -o CMakeFiles/types.dir/src/types/size.cpp.o -c /home/oster/OsterLib/src/types/size.cpp",
   "file": "/home/oster/OsterLib/src/types/size.cpp",
   "output": "CMakeFiles/types.dir/src/types/size.cpp.o"
 },
 {
   "directory": "/home/oster/OsterLib",
-  "command": "/home/oster/gcc/gcc-install/bin/g++  -I/home/oster/OsterLib -I/home/oster/OsterLib/include/types -I/home/oster/OsterLib/include  -lzip -static-libstdc++ -g -std=c++23 -fPIC -O0 -fconcepts-diagnostics-depth=10 -o CMakeFiles/types.dir/src/types/time_interval.cpp.o -c /home/oster/OsterLib/src/types/time_interval.cpp",
+  "command": "/home/oster/gcc/gcc-install/bin/g++  -I/home/oster/OsterLib -I/home/oster/OsterLib/include/types -I/home/oster/OsterLib/include -I/home/oster/OsterLib/include/boost_functional  -lzip -static-libstdc++ -g -std=c++23 -fPIC -O0 -fconcepts-diagnostics-depth=10 -o CMakeFiles/types.dir/src/types/time_interval.cpp.o -c /home/oster/OsterLib/src/types/time_interval.cpp",
   "file": "/home/oster/OsterLib/src/types/time_interval.cpp",
   "output": "CMakeFiles/types.dir/src/types/time_interval.cpp.o"
 },
 {
   "directory": "/home/oster/OsterLib",
-  "command": "/home/oster/gcc/gcc-install/bin/g++  -I/home/oster/OsterLib -I/home/oster/OsterLib/include/types -I/home/oster/OsterLib/include  -lzip -static-libstdc++ -g -std=c++23 -fPIC -O0 -fconcepts-diagnostics-depth=10 -o CMakeFiles/types.dir/src/types/time_period.cpp.o -c /home/oster/OsterLib/src/types/time_period.cpp",
+  "command": "/home/oster/gcc/gcc-install/bin/g++  -I/home/oster/OsterLib -I/home/oster/OsterLib/include/types -I/home/oster/OsterLib/include -I/home/oster/OsterLib/include/boost_functional  -lzip -static-libstdc++ -g -std=c++23 -fPIC -O0 -fconcepts-diagnostics-depth=10 -o CMakeFiles/types.dir/src/types/time_period.cpp.o -c /home/oster/OsterLib/src/types/time_period.cpp",
   "file": "/home/oster/OsterLib/src/types/time_period.cpp",
   "output": "CMakeFiles/types.dir/src/types/time_period.cpp.o"
 },
@@ -88,5 +88,11 @@
   "command": "/home/oster/gcc/gcc-install/bin/g++  -I/home/oster/OsterLib/tests -I/home/oster/OsterLib/include  -lzip -static-libstdc++ -g -std=c++23 -fPIC -O0 -fconcepts-diagnostics-depth=10 -o CMakeFiles/serialization_test.dir/serialization.cpp.o -c /home/oster/OsterLib/tests/serialization.cpp",
   "file": "/home/oster/OsterLib/tests/serialization.cpp",
   "output": "tests/CMakeFiles/serialization_test.dir/serialization.cpp.o"
+},
+{
+  "directory": "/home/oster/OsterLib/tests",
+  "command": "/home/oster/gcc/gcc-install/bin/g++  -I/home/oster/OsterLib/tests -I/home/oster/OsterLib/include/types -I/home/oster/OsterLib/include -I/home/oster/OsterLib/include/boost_functional  -lzip -static-libstdc++ -g -std=c++23 -fPIC -O0 -fconcepts-diagnostics-depth=10 -o CMakeFiles/time_interval_test.dir/time_interval.cpp.o -c /home/oster/OsterLib/tests/time_interval.cpp",
+  "file": "/home/oster/OsterLib/tests/time_interval.cpp",
+  "output": "tests/CMakeFiles/time_interval_test.dir/time_interval.cpp.o"
 }
 ]

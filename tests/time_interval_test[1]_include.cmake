@@ -1,0 +1,5 @@
+if(EXISTS "/home/oster/OsterLib/tests/time_interval_test[1]_tests.cmake")
+  include("/home/oster/OsterLib/tests/time_interval_test[1]_tests.cmake")
+else()
+  add_test(time_interval_test_NOT_BUILT time_interval_test_NOT_BUILT)
+endif()

@@ -1,100 +1,20 @@
 {
-  "tests": 18,
+  "tests": 2,
   "name": "AllTests",
   "testsuites": [
     {
-      "name": "Serialization",
-      "tests": 18,
+      "name": "TimeIntervalTest",
+      "tests": 2,
       "testsuite": [
         {
-          "name": "SerializeInt",
-          "file": "\/home\/oster\/OsterLib\/tests\/serialization.cpp",
-          "line": 80
+          "name": "interval_intersection_pos_test",
+          "file": "\/home\/oster\/OsterLib\/tests\/time_interval.cpp",
+          "line": 6
         },
         {
-          "name": "SerializeFloatingPoint",
-          "file": "\/home\/oster\/OsterLib\/tests\/serialization.cpp",
-          "line": 105
-        },
-        {
-          "name": "SerializeTimePoint",
-          "file": "\/home\/oster\/OsterLib\/tests\/serialization.cpp",
-          "line": 128
-        },
-        {
-          "name": "SerializeDuration",
-          "file": "\/home\/oster\/OsterLib\/tests\/serialization.cpp",
-          "line": 144
-        },
-        {
-          "name": "SerializeUniquePtr",
-          "file": "\/home\/oster\/OsterLib\/tests\/serialization.cpp",
-          "line": 160
-        },
-        {
-          "name": "SerializeSharedPtr",
-          "file": "\/home\/oster\/OsterLib\/tests\/serialization.cpp",
-          "line": 186
-        },
-        {
-          "name": "SerializePair",
-          "file": "\/home\/oster\/OsterLib\/tests\/serialization.cpp",
-          "line": 212
-        },
-        {
-          "name": "SerializeOptional",
-          "file": "\/home\/oster\/OsterLib\/tests\/serialization.cpp",
-          "line": 228
-        },
-        {
-          "name": "SerializeList",
-          "file": "\/home\/oster\/OsterLib\/tests\/serialization.cpp",
-          "line": 254
-        },
-        {
-          "name": "SerializeVector",
-          "file": "\/home\/oster\/OsterLib\/tests\/serialization.cpp",
-          "line": 276
-        },
-        {
-          "name": "SerializeString",
-          "file": "\/home\/oster\/OsterLib\/tests\/serialization.cpp",
-          "line": 299
-        },
-        {
-          "name": "SerializeDeque",
-          "file": "\/home\/oster\/OsterLib\/tests\/serialization.cpp",
-          "line": 316
-        },
-        {
-          "name": "SerializeSet",
-          "file": "\/home\/oster\/OsterLib\/tests\/serialization.cpp",
-          "line": 338
-        },
-        {
-          "name": "SerializeUnorderedSet",
-          "file": "\/home\/oster\/OsterLib\/tests\/serialization.cpp",
-          "line": 365
-        },
-        {
-          "name": "SerializeMap",
-          "file": "\/home\/oster\/OsterLib\/tests\/serialization.cpp",
-          "line": 392
-        },
-        {
-          "name": "SerializeUMap",
-          "file": "\/home\/oster\/OsterLib\/tests\/serialization.cpp",
-          "line": 420
-        },
-        {
-          "name": "Variant",
-          "file": "\/home\/oster\/OsterLib\/tests\/serialization.cpp",
-          "line": 447
-        },
-        {
-          "name": "SerialLimits",
-          "file": "\/home\/oster\/OsterLib\/tests\/serialization.cpp",
-          "line": 511
+          "name": "interval_instersection_test",
+          "file": "\/home\/oster\/OsterLib\/tests\/time_interval.cpp",
+          "line": 21
         }
       ]
     }

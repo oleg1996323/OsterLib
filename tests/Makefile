@@ -189,6 +189,20 @@ serialization_test/fast:
 	cd /home/oster/OsterLib && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/serialization_test.dir/build.make tests/CMakeFiles/serialization_test.dir/build
 .PHONY : serialization_test/fast
 
+# Convenience name for target.
+tests/CMakeFiles/time_interval_test.dir/rule:
+	cd /home/oster/OsterLib && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 tests/CMakeFiles/time_interval_test.dir/rule
+.PHONY : tests/CMakeFiles/time_interval_test.dir/rule
+
+# Convenience name for target.
+time_interval_test: tests/CMakeFiles/time_interval_test.dir/rule
+.PHONY : time_interval_test
+
+# fast build rule for target.
+time_interval_test/fast:
+	cd /home/oster/OsterLib && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/time_interval_test.dir/build.make tests/CMakeFiles/time_interval_test.dir/build
+.PHONY : time_interval_test/fast
+
 bytes.o: bytes.cpp.o
 .PHONY : bytes.o
 
@@ -237,6 +251,30 @@ serialization.cpp.s:
 	cd /home/oster/OsterLib && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/serialization_test.dir/build.make tests/CMakeFiles/serialization_test.dir/serialization.cpp.s
 .PHONY : serialization.cpp.s
 
+time_interval.o: time_interval.cpp.o
+.PHONY : time_interval.o
+
+# target to build an object file
+time_interval.cpp.o:
+	cd /home/oster/OsterLib && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/time_interval_test.dir/build.make tests/CMakeFiles/time_interval_test.dir/time_interval.cpp.o
+.PHONY : time_interval.cpp.o
+
+time_interval.i: time_interval.cpp.i
+.PHONY : time_interval.i
+
+# target to preprocess a source file
+time_interval.cpp.i:
+	cd /home/oster/OsterLib && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/time_interval_test.dir/build.make tests/CMakeFiles/time_interval_test.dir/time_interval.cpp.i
+.PHONY : time_interval.cpp.i
+
+time_interval.s: time_interval.cpp.s
+.PHONY : time_interval.s
+
+# target to generate assembly for a file
+time_interval.cpp.s:
+	cd /home/oster/OsterLib && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/time_interval_test.dir/build.make tests/CMakeFiles/time_interval_test.dir/time_interval.cpp.s
+.PHONY : time_interval.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -251,12 +289,16 @@ help:
 	@echo "... rebuild_cache"
 	@echo "... bytes_test"
 	@echo "... serialization_test"
+	@echo "... time_interval_test"
 	@echo "... bytes.o"
 	@echo "... bytes.i"
 	@echo "... bytes.s"
 	@echo "... serialization.o"
 	@echo "... serialization.i"
 	@echo "... serialization.s"
+	@echo "... time_interval.o"
+	@echo "... time_interval.i"
+	@echo "... time_interval.s"
 .PHONY : help
 
 

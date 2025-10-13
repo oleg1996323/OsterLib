@@ -1,0 +1,26 @@
+BytesTest.FloatToInteger 6 0.00059516
+BytesTest.DoubleToLongInteger 6 0.000693128
+BytesTest.IntegerToFloat 6 0.000910562
+BytesTest.LongIntegerToDouble 6 0.000914413
+BytesTest.DetectLittleEndian 6 0.00105862
+Serialization.SerializeInt 6 0.00169285
+Serialization.SerializeFloatingPoint 6 0.00159056
+Serialization.SerializeTimePoint 6 0.00158115
+Serialization.SerializeDuration 6 0.00155528
+Serialization.SerializeUniquePtr 6 0.00154424
+Serialization.SerializeSharedPtr 6 0.00170728
+Serialization.SerializePair 6 0.00154464
+Serialization.SerializeOptional 6 0.00171647
+Serialization.SerializeList 6 0.00161025
+Serialization.SerializeVector 6 0.00186472
+Serialization.SerializeString 6 0.0018825
+Serialization.SerializeDeque 6 0.00159372
+Serialization.SerializeSet 6 0.00161878
+Serialization.SerializeUnorderedSet 6 0.00159504
+Serialization.SerializeMap 6 0.001742
+Serialization.SerializeUMap 6 0.00156736
+Serialization.Variant 6 0.00162434
+Serialization.SerialLimits 6 0.00154914
+TimeIntervalTest.interval_intersection_pos_test 2 0.00638357
+TimeIntervalTest.interval_instersection_test 2 0.00627371
+---

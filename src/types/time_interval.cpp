@@ -47,18 +47,18 @@ std::pair<uint16_t,uint16_t> interval_intersection_pos(const TimeInterval& to_se
     if(to_seek.from_<=initial.from_)
         result.first = 0;
     else
-        result.first = (to_seek.from_.time_since_epoch()-initial.from_.time_since_epoch())/discret+1;
+        result.first = (to_seek.from_-initial.from_)/discret;
 
     if(to_seek.to_>=initial.to_)
-        result.second = (initial.to_.time_since_epoch()-initial.from_.time_since_epoch())/discret+1;
+        result.second = (initial.to_-initial.from_)/discret;
     else{
-        result.second = (initial.to_.time_since_epoch()-to_seek.to_.time_since_epoch())/discret+1;
+        result.second = (to_seek.to_-initial.from_)/discret;
     }
     //result.first = to_seek.from_<=initial.from_?0:(to_seek.from_-initial.from_)/discret;
     return result;
 }
 
-std::optional<TimeInterval> interval_instersection(const TimeInterval& lhs,const TimeInterval& rhs) noexcept{
+std::optional<TimeInterval> interval_intersection(const TimeInterval& lhs,const TimeInterval& rhs) noexcept{
     if(intervals_intersect(lhs,rhs)){
         if(lhs.from_<rhs.from_)
             return TimeInterval{.from_ = rhs.from_,.to_ = (lhs.to_<rhs.to_?lhs.to_:rhs.to_)};

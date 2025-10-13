@@ -8,5 +8,9 @@ target_link_libraries(bytes_test GTest::gtest bytes)
 add_executable(serialization_test serialization.cpp)
 target_link_libraries(serialization_test GTest::gtest serial)
 
+add_executable(time_interval_test time_interval.cpp)
+target_link_libraries(time_interval_test GTest::gtest types)
+
 gtest_discover_tests(bytes_test WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 gtest_discover_tests(serialization_test WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+gtest_discover_tests(time_interval_test WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})

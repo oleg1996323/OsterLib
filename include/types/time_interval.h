@@ -72,7 +72,7 @@ struct std::less<TimeSequence>{
 bool is_correct_interval(const utc_tp& from,const utc_tp& to);
 bool intervals_intersect(const TimeInterval& lhs, const TimeInterval& rhs);
 bool intervals_intersect(const utc_tp& from_1, const utc_tp& to_1,const utc_tp& from_2, const utc_tp& to_2);
-std::optional<TimeInterval> interval_instersection(const TimeInterval&,const TimeInterval&) noexcept;
+std::optional<TimeInterval> interval_intersection(const TimeInterval&,const TimeInterval&) noexcept;
 std::pair<uint16_t,uint16_t> interval_intersection_pos(const TimeInterval& to_seek, const TimeInterval& initial, const utc_diff& discret) noexcept;
 
 namespace serialization{

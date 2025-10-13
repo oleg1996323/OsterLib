@@ -1,0 +1,653 @@
+Start testing: Oct 14 01:22 MSK
+----------------------------------------------------------
+1/25 Testing: BytesTest.FloatToInteger
+1/25 Test: BytesTest.FloatToInteger
+Command: "/home/oster/OsterLib/tests/bytes_test" "--gtest_filter=BytesTest.FloatToInteger" "--gtest_also_run_disabled_tests"
+Directory: /home/oster/OsterLib/tests
+"BytesTest.FloatToInteger" start time: Oct 14 01:22 MSK
+Output:
+----------------------------------------------------------
+Note: Google Test filter = BytesTest.FloatToInteger
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from BytesTest
+[ RUN      ] BytesTest.FloatToInteger
+[       OK ] BytesTest.FloatToInteger (0 ms)
+[----------] 1 test from BytesTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"BytesTest.FloatToInteger" end time: Oct 14 01:22 MSK
+"BytesTest.FloatToInteger" time elapsed: 00:00:00
+----------------------------------------------------------
+
+2/25 Testing: BytesTest.DoubleToLongInteger
+2/25 Test: BytesTest.DoubleToLongInteger
+Command: "/home/oster/OsterLib/tests/bytes_test" "--gtest_filter=BytesTest.DoubleToLongInteger" "--gtest_also_run_disabled_tests"
+Directory: /home/oster/OsterLib/tests
+"BytesTest.DoubleToLongInteger" start time: Oct 14 01:22 MSK
+Output:
+----------------------------------------------------------
+Note: Google Test filter = BytesTest.DoubleToLongInteger
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from BytesTest
+[ RUN      ] BytesTest.DoubleToLongInteger
+[       OK ] BytesTest.DoubleToLongInteger (0 ms)
+[----------] 1 test from BytesTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"BytesTest.DoubleToLongInteger" end time: Oct 14 01:22 MSK
+"BytesTest.DoubleToLongInteger" time elapsed: 00:00:00
+----------------------------------------------------------
+
+3/25 Testing: BytesTest.IntegerToFloat
+3/25 Test: BytesTest.IntegerToFloat
+Command: "/home/oster/OsterLib/tests/bytes_test" "--gtest_filter=BytesTest.IntegerToFloat" "--gtest_also_run_disabled_tests"
+Directory: /home/oster/OsterLib/tests
+"BytesTest.IntegerToFloat" start time: Oct 14 01:22 MSK
+Output:
+----------------------------------------------------------
+Note: Google Test filter = BytesTest.IntegerToFloat
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from BytesTest
+[ RUN      ] BytesTest.IntegerToFloat
+[       OK ] BytesTest.IntegerToFloat (0 ms)
+[----------] 1 test from BytesTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"BytesTest.IntegerToFloat" end time: Oct 14 01:22 MSK
+"BytesTest.IntegerToFloat" time elapsed: 00:00:00
+----------------------------------------------------------
+
+4/25 Testing: BytesTest.LongIntegerToDouble
+4/25 Test: BytesTest.LongIntegerToDouble
+Command: "/home/oster/OsterLib/tests/bytes_test" "--gtest_filter=BytesTest.LongIntegerToDouble" "--gtest_also_run_disabled_tests"
+Directory: /home/oster/OsterLib/tests
+"BytesTest.LongIntegerToDouble" start time: Oct 14 01:22 MSK
+Output:
+----------------------------------------------------------
+Note: Google Test filter = BytesTest.LongIntegerToDouble
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from BytesTest
+[ RUN      ] BytesTest.LongIntegerToDouble
+[       OK ] BytesTest.LongIntegerToDouble (0 ms)
+[----------] 1 test from BytesTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"BytesTest.LongIntegerToDouble" end time: Oct 14 01:22 MSK
+"BytesTest.LongIntegerToDouble" time elapsed: 00:00:00
+----------------------------------------------------------
+
+5/25 Testing: BytesTest.DetectLittleEndian
+5/25 Test: BytesTest.DetectLittleEndian
+Command: "/home/oster/OsterLib/tests/bytes_test" "--gtest_filter=BytesTest.DetectLittleEndian" "--gtest_also_run_disabled_tests"
+Directory: /home/oster/OsterLib/tests
+"BytesTest.DetectLittleEndian" start time: Oct 14 01:22 MSK
+Output:
+----------------------------------------------------------
+Note: Google Test filter = BytesTest.DetectLittleEndian
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from BytesTest
+[ RUN      ] BytesTest.DetectLittleEndian
+[       OK ] BytesTest.DetectLittleEndian (0 ms)
+[----------] 1 test from BytesTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"BytesTest.DetectLittleEndian" end time: Oct 14 01:22 MSK
+"BytesTest.DetectLittleEndian" time elapsed: 00:00:00
+----------------------------------------------------------
+
+6/25 Testing: Serialization.SerializeInt
+6/25 Test: Serialization.SerializeInt
+Command: "/home/oster/OsterLib/tests/serialization_test" "--gtest_filter=Serialization.SerializeInt" "--gtest_also_run_disabled_tests"
+Directory: /home/oster/OsterLib/tests
+"Serialization.SerializeInt" start time: Oct 14 01:22 MSK
+Output:
+----------------------------------------------------------
+Note: Google Test filter = Serialization.SerializeInt
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from Serialization
+[ RUN      ] Serialization.SerializeInt
+[       OK ] Serialization.SerializeInt (0 ms)
+[----------] 1 test from Serialization (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"Serialization.SerializeInt" end time: Oct 14 01:22 MSK
+"Serialization.SerializeInt" time elapsed: 00:00:00
+----------------------------------------------------------
+
+7/25 Testing: Serialization.SerializeFloatingPoint
+7/25 Test: Serialization.SerializeFloatingPoint
+Command: "/home/oster/OsterLib/tests/serialization_test" "--gtest_filter=Serialization.SerializeFloatingPoint" "--gtest_also_run_disabled_tests"
+Directory: /home/oster/OsterLib/tests
+"Serialization.SerializeFloatingPoint" start time: Oct 14 01:22 MSK
+Output:
+----------------------------------------------------------
+Note: Google Test filter = Serialization.SerializeFloatingPoint
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from Serialization
+[ RUN      ] Serialization.SerializeFloatingPoint
+[       OK ] Serialization.SerializeFloatingPoint (0 ms)
+[----------] 1 test from Serialization (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"Serialization.SerializeFloatingPoint" end time: Oct 14 01:22 MSK
+"Serialization.SerializeFloatingPoint" time elapsed: 00:00:00
+----------------------------------------------------------
+
+8/25 Testing: Serialization.SerializeTimePoint
+8/25 Test: Serialization.SerializeTimePoint
+Command: "/home/oster/OsterLib/tests/serialization_test" "--gtest_filter=Serialization.SerializeTimePoint" "--gtest_also_run_disabled_tests"
+Directory: /home/oster/OsterLib/tests
+"Serialization.SerializeTimePoint" start time: Oct 14 01:22 MSK
+Output:
+----------------------------------------------------------
+Note: Google Test filter = Serialization.SerializeTimePoint
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from Serialization
+[ RUN      ] Serialization.SerializeTimePoint
+[       OK ] Serialization.SerializeTimePoint (0 ms)
+[----------] 1 test from Serialization (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"Serialization.SerializeTimePoint" end time: Oct 14 01:22 MSK
+"Serialization.SerializeTimePoint" time elapsed: 00:00:00
+----------------------------------------------------------
+
+9/25 Testing: Serialization.SerializeDuration
+9/25 Test: Serialization.SerializeDuration
+Command: "/home/oster/OsterLib/tests/serialization_test" "--gtest_filter=Serialization.SerializeDuration" "--gtest_also_run_disabled_tests"
+Directory: /home/oster/OsterLib/tests
+"Serialization.SerializeDuration" start time: Oct 14 01:22 MSK
+Output:
+----------------------------------------------------------
+Note: Google Test filter = Serialization.SerializeDuration
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from Serialization
+[ RUN      ] Serialization.SerializeDuration
+[       OK ] Serialization.SerializeDuration (0 ms)
+[----------] 1 test from Serialization (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"Serialization.SerializeDuration" end time: Oct 14 01:22 MSK
+"Serialization.SerializeDuration" time elapsed: 00:00:00
+----------------------------------------------------------
+
+10/25 Testing: Serialization.SerializeUniquePtr
+10/25 Test: Serialization.SerializeUniquePtr
+Command: "/home/oster/OsterLib/tests/serialization_test" "--gtest_filter=Serialization.SerializeUniquePtr" "--gtest_also_run_disabled_tests"
+Directory: /home/oster/OsterLib/tests
+"Serialization.SerializeUniquePtr" start time: Oct 14 01:22 MSK
+Output:
+----------------------------------------------------------
+Note: Google Test filter = Serialization.SerializeUniquePtr
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from Serialization
+[ RUN      ] Serialization.SerializeUniquePtr
+[       OK ] Serialization.SerializeUniquePtr (0 ms)
+[----------] 1 test from Serialization (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"Serialization.SerializeUniquePtr" end time: Oct 14 01:22 MSK
+"Serialization.SerializeUniquePtr" time elapsed: 00:00:00
+----------------------------------------------------------
+
+11/25 Testing: Serialization.SerializeSharedPtr
+11/25 Test: Serialization.SerializeSharedPtr
+Command: "/home/oster/OsterLib/tests/serialization_test" "--gtest_filter=Serialization.SerializeSharedPtr" "--gtest_also_run_disabled_tests"
+Directory: /home/oster/OsterLib/tests
+"Serialization.SerializeSharedPtr" start time: Oct 14 01:22 MSK
+Output:
+----------------------------------------------------------
+Note: Google Test filter = Serialization.SerializeSharedPtr
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from Serialization
+[ RUN      ] Serialization.SerializeSharedPtr
+[       OK ] Serialization.SerializeSharedPtr (0 ms)
+[----------] 1 test from Serialization (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"Serialization.SerializeSharedPtr" end time: Oct 14 01:22 MSK
+"Serialization.SerializeSharedPtr" time elapsed: 00:00:00
+----------------------------------------------------------
+
+12/25 Testing: Serialization.SerializePair
+12/25 Test: Serialization.SerializePair
+Command: "/home/oster/OsterLib/tests/serialization_test" "--gtest_filter=Serialization.SerializePair" "--gtest_also_run_disabled_tests"
+Directory: /home/oster/OsterLib/tests
+"Serialization.SerializePair" start time: Oct 14 01:22 MSK
+Output:
+----------------------------------------------------------
+Note: Google Test filter = Serialization.SerializePair
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from Serialization
+[ RUN      ] Serialization.SerializePair
+[       OK ] Serialization.SerializePair (0 ms)
+[----------] 1 test from Serialization (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"Serialization.SerializePair" end time: Oct 14 01:22 MSK
+"Serialization.SerializePair" time elapsed: 00:00:00
+----------------------------------------------------------
+
+13/25 Testing: Serialization.SerializeOptional
+13/25 Test: Serialization.SerializeOptional
+Command: "/home/oster/OsterLib/tests/serialization_test" "--gtest_filter=Serialization.SerializeOptional" "--gtest_also_run_disabled_tests"
+Directory: /home/oster/OsterLib/tests
+"Serialization.SerializeOptional" start time: Oct 14 01:22 MSK
+Output:
+----------------------------------------------------------
+Note: Google Test filter = Serialization.SerializeOptional
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from Serialization
+[ RUN      ] Serialization.SerializeOptional
+[       OK ] Serialization.SerializeOptional (0 ms)
+[----------] 1 test from Serialization (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"Serialization.SerializeOptional" end time: Oct 14 01:22 MSK
+"Serialization.SerializeOptional" time elapsed: 00:00:00
+----------------------------------------------------------
+
+14/25 Testing: Serialization.SerializeList
+14/25 Test: Serialization.SerializeList
+Command: "/home/oster/OsterLib/tests/serialization_test" "--gtest_filter=Serialization.SerializeList" "--gtest_also_run_disabled_tests"
+Directory: /home/oster/OsterLib/tests
+"Serialization.SerializeList" start time: Oct 14 01:22 MSK
+Output:
+----------------------------------------------------------
+Note: Google Test filter = Serialization.SerializeList
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from Serialization
+[ RUN      ] Serialization.SerializeList
+[       OK ] Serialization.SerializeList (0 ms)
+[----------] 1 test from Serialization (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"Serialization.SerializeList" end time: Oct 14 01:22 MSK
+"Serialization.SerializeList" time elapsed: 00:00:00
+----------------------------------------------------------
+
+15/25 Testing: Serialization.SerializeVector
+15/25 Test: Serialization.SerializeVector
+Command: "/home/oster/OsterLib/tests/serialization_test" "--gtest_filter=Serialization.SerializeVector" "--gtest_also_run_disabled_tests"
+Directory: /home/oster/OsterLib/tests
+"Serialization.SerializeVector" start time: Oct 14 01:22 MSK
+Output:
+----------------------------------------------------------
+Note: Google Test filter = Serialization.SerializeVector
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from Serialization
+[ RUN      ] Serialization.SerializeVector
+[       OK ] Serialization.SerializeVector (0 ms)
+[----------] 1 test from Serialization (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"Serialization.SerializeVector" end time: Oct 14 01:22 MSK
+"Serialization.SerializeVector" time elapsed: 00:00:00
+----------------------------------------------------------
+
+16/25 Testing: Serialization.SerializeString
+16/25 Test: Serialization.SerializeString
+Command: "/home/oster/OsterLib/tests/serialization_test" "--gtest_filter=Serialization.SerializeString" "--gtest_also_run_disabled_tests"
+Directory: /home/oster/OsterLib/tests
+"Serialization.SerializeString" start time: Oct 14 01:22 MSK
+Output:
+----------------------------------------------------------
+Note: Google Test filter = Serialization.SerializeString
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from Serialization
+[ RUN      ] Serialization.SerializeString
+[       OK ] Serialization.SerializeString (1 ms)
+[----------] 1 test from Serialization (1 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (2 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"Serialization.SerializeString" end time: Oct 14 01:22 MSK
+"Serialization.SerializeString" time elapsed: 00:00:00
+----------------------------------------------------------
+
+17/25 Testing: Serialization.SerializeDeque
+17/25 Test: Serialization.SerializeDeque
+Command: "/home/oster/OsterLib/tests/serialization_test" "--gtest_filter=Serialization.SerializeDeque" "--gtest_also_run_disabled_tests"
+Directory: /home/oster/OsterLib/tests
+"Serialization.SerializeDeque" start time: Oct 14 01:22 MSK
+Output:
+----------------------------------------------------------
+Note: Google Test filter = Serialization.SerializeDeque
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from Serialization
+[ RUN      ] Serialization.SerializeDeque
+[       OK ] Serialization.SerializeDeque (0 ms)
+[----------] 1 test from Serialization (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"Serialization.SerializeDeque" end time: Oct 14 01:22 MSK
+"Serialization.SerializeDeque" time elapsed: 00:00:00
+----------------------------------------------------------
+
+18/25 Testing: Serialization.SerializeSet
+18/25 Test: Serialization.SerializeSet
+Command: "/home/oster/OsterLib/tests/serialization_test" "--gtest_filter=Serialization.SerializeSet" "--gtest_also_run_disabled_tests"
+Directory: /home/oster/OsterLib/tests
+"Serialization.SerializeSet" start time: Oct 14 01:22 MSK
+Output:
+----------------------------------------------------------
+Note: Google Test filter = Serialization.SerializeSet
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from Serialization
+[ RUN      ] Serialization.SerializeSet
+[       OK ] Serialization.SerializeSet (0 ms)
+[----------] 1 test from Serialization (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"Serialization.SerializeSet" end time: Oct 14 01:22 MSK
+"Serialization.SerializeSet" time elapsed: 00:00:00
+----------------------------------------------------------
+
+19/25 Testing: Serialization.SerializeUnorderedSet
+19/25 Test: Serialization.SerializeUnorderedSet
+Command: "/home/oster/OsterLib/tests/serialization_test" "--gtest_filter=Serialization.SerializeUnorderedSet" "--gtest_also_run_disabled_tests"
+Directory: /home/oster/OsterLib/tests
+"Serialization.SerializeUnorderedSet" start time: Oct 14 01:22 MSK
+Output:
+----------------------------------------------------------
+Note: Google Test filter = Serialization.SerializeUnorderedSet
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from Serialization
+[ RUN      ] Serialization.SerializeUnorderedSet
+[       OK ] Serialization.SerializeUnorderedSet (0 ms)
+[----------] 1 test from Serialization (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"Serialization.SerializeUnorderedSet" end time: Oct 14 01:22 MSK
+"Serialization.SerializeUnorderedSet" time elapsed: 00:00:00
+----------------------------------------------------------
+
+20/25 Testing: Serialization.SerializeMap
+20/25 Test: Serialization.SerializeMap
+Command: "/home/oster/OsterLib/tests/serialization_test" "--gtest_filter=Serialization.SerializeMap" "--gtest_also_run_disabled_tests"
+Directory: /home/oster/OsterLib/tests
+"Serialization.SerializeMap" start time: Oct 14 01:22 MSK
+Output:
+----------------------------------------------------------
+Note: Google Test filter = Serialization.SerializeMap
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from Serialization
+[ RUN      ] Serialization.SerializeMap
+[       OK ] Serialization.SerializeMap (0 ms)
+[----------] 1 test from Serialization (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"Serialization.SerializeMap" end time: Oct 14 01:22 MSK
+"Serialization.SerializeMap" time elapsed: 00:00:00
+----------------------------------------------------------
+
+21/25 Testing: Serialization.SerializeUMap
+21/25 Test: Serialization.SerializeUMap
+Command: "/home/oster/OsterLib/tests/serialization_test" "--gtest_filter=Serialization.SerializeUMap" "--gtest_also_run_disabled_tests"
+Directory: /home/oster/OsterLib/tests
+"Serialization.SerializeUMap" start time: Oct 14 01:22 MSK
+Output:
+----------------------------------------------------------
+Note: Google Test filter = Serialization.SerializeUMap
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from Serialization
+[ RUN      ] Serialization.SerializeUMap
+[       OK ] Serialization.SerializeUMap (0 ms)
+[----------] 1 test from Serialization (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"Serialization.SerializeUMap" end time: Oct 14 01:22 MSK
+"Serialization.SerializeUMap" time elapsed: 00:00:00
+----------------------------------------------------------
+
+22/25 Testing: Serialization.Variant
+22/25 Test: Serialization.Variant
+Command: "/home/oster/OsterLib/tests/serialization_test" "--gtest_filter=Serialization.Variant" "--gtest_also_run_disabled_tests"
+Directory: /home/oster/OsterLib/tests
+"Serialization.Variant" start time: Oct 14 01:22 MSK
+Output:
+----------------------------------------------------------
+Note: Google Test filter = Serialization.Variant
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from Serialization
+[ RUN      ] Serialization.Variant
+[       OK ] Serialization.Variant (0 ms)
+[----------] 1 test from Serialization (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"Serialization.Variant" end time: Oct 14 01:22 MSK
+"Serialization.Variant" time elapsed: 00:00:00
+----------------------------------------------------------
+
+23/25 Testing: Serialization.SerialLimits
+23/25 Test: Serialization.SerialLimits
+Command: "/home/oster/OsterLib/tests/serialization_test" "--gtest_filter=Serialization.SerialLimits" "--gtest_also_run_disabled_tests"
+Directory: /home/oster/OsterLib/tests
+"Serialization.SerialLimits" start time: Oct 14 01:22 MSK
+Output:
+----------------------------------------------------------
+Note: Google Test filter = Serialization.SerialLimits
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from Serialization
+[ RUN      ] Serialization.SerialLimits
+[       OK ] Serialization.SerialLimits (0 ms)
+[----------] 1 test from Serialization (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"Serialization.SerialLimits" end time: Oct 14 01:22 MSK
+"Serialization.SerialLimits" time elapsed: 00:00:00
+----------------------------------------------------------
+
+24/25 Testing: TimeIntervalTest.interval_intersection_pos_test
+24/25 Test: TimeIntervalTest.interval_intersection_pos_test
+Command: "/home/oster/OsterLib/tests/time_interval_test" "--gtest_filter=TimeIntervalTest.interval_intersection_pos_test" "--gtest_also_run_disabled_tests"
+Directory: /home/oster/OsterLib/tests
+"TimeIntervalTest.interval_intersection_pos_test" start time: Oct 14 01:22 MSK
+Output:
+----------------------------------------------------------
+Note: Google Test filter = TimeIntervalTest.interval_intersection_pos_test
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from TimeIntervalTest
+[ RUN      ] TimeIntervalTest.interval_intersection_pos_test
+[       OK ] TimeIntervalTest.interval_intersection_pos_test (0 ms)
+[----------] 1 test from TimeIntervalTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"TimeIntervalTest.interval_intersection_pos_test" end time: Oct 14 01:22 MSK
+"TimeIntervalTest.interval_intersection_pos_test" time elapsed: 00:00:00
+----------------------------------------------------------
+
+25/25 Testing: TimeIntervalTest.interval_instersection_test
+25/25 Test: TimeIntervalTest.interval_instersection_test
+Command: "/home/oster/OsterLib/tests/time_interval_test" "--gtest_filter=TimeIntervalTest.interval_instersection_test" "--gtest_also_run_disabled_tests"
+Directory: /home/oster/OsterLib/tests
+"TimeIntervalTest.interval_instersection_test" start time: Oct 14 01:22 MSK
+Output:
+----------------------------------------------------------
+Note: Google Test filter = TimeIntervalTest.interval_instersection_test
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from TimeIntervalTest
+[ RUN      ] TimeIntervalTest.interval_instersection_test
+[       OK ] TimeIntervalTest.interval_instersection_test (0 ms)
+[----------] 1 test from TimeIntervalTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"TimeIntervalTest.interval_instersection_test" end time: Oct 14 01:22 MSK
+"TimeIntervalTest.interval_instersection_test" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Oct 14 01:22 MSK

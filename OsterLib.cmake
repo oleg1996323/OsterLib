@@ -105,6 +105,7 @@ add_library(OsterLib::types STATIC IMPORTED)
 
 set_target_properties(OsterLib::types PROPERTIES
   INTERFACE_INCLUDE_DIRECTORIES "/home/oster/OsterLib/include/types;/home/oster/OsterLib/include/"
+  INTERFACE_LINK_LIBRARIES "OsterLib::boost_functional"
 )
 
 # Create imported target OsterLib::utilities
