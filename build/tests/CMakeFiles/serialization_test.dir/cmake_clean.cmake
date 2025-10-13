@@ -1,5 +1,4 @@
 file(REMOVE_RECURSE
-  "CMakeFiles/serialization_test.dir/link.d"
   "CMakeFiles/serialization_test.dir/serialization.cpp.o"
   "CMakeFiles/serialization_test.dir/serialization.cpp.o.d"
   "serialization_test"
