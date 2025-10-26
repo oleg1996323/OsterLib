@@ -203,6 +203,20 @@ time_interval_test/fast:
 	cd /home/oster/OsterLib && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/time_interval_test.dir/build.make tests/CMakeFiles/time_interval_test.dir/build
 .PHONY : time_interval_test/fast
 
+# Convenience name for target.
+tests/CMakeFiles/time_sequence_test.dir/rule:
+	cd /home/oster/OsterLib && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 tests/CMakeFiles/time_sequence_test.dir/rule
+.PHONY : tests/CMakeFiles/time_sequence_test.dir/rule
+
+# Convenience name for target.
+time_sequence_test: tests/CMakeFiles/time_sequence_test.dir/rule
+.PHONY : time_sequence_test
+
+# fast build rule for target.
+time_sequence_test/fast:
+	cd /home/oster/OsterLib && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/time_sequence_test.dir/build.make tests/CMakeFiles/time_sequence_test.dir/build
+.PHONY : time_sequence_test/fast
+
 bytes.o: bytes.cpp.o
 .PHONY : bytes.o
 
@@ -275,6 +289,30 @@ time_interval.cpp.s:
 	cd /home/oster/OsterLib && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/time_interval_test.dir/build.make tests/CMakeFiles/time_interval_test.dir/time_interval.cpp.s
 .PHONY : time_interval.cpp.s
 
+time_sequence.o: time_sequence.cpp.o
+.PHONY : time_sequence.o
+
+# target to build an object file
+time_sequence.cpp.o:
+	cd /home/oster/OsterLib && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/time_sequence_test.dir/build.make tests/CMakeFiles/time_sequence_test.dir/time_sequence.cpp.o
+.PHONY : time_sequence.cpp.o
+
+time_sequence.i: time_sequence.cpp.i
+.PHONY : time_sequence.i
+
+# target to preprocess a source file
+time_sequence.cpp.i:
+	cd /home/oster/OsterLib && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/time_sequence_test.dir/build.make tests/CMakeFiles/time_sequence_test.dir/time_sequence.cpp.i
+.PHONY : time_sequence.cpp.i
+
+time_sequence.s: time_sequence.cpp.s
+.PHONY : time_sequence.s
+
+# target to generate assembly for a file
+time_sequence.cpp.s:
+	cd /home/oster/OsterLib && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/time_sequence_test.dir/build.make tests/CMakeFiles/time_sequence_test.dir/time_sequence.cpp.s
+.PHONY : time_sequence.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -290,6 +328,7 @@ help:
 	@echo "... bytes_test"
 	@echo "... serialization_test"
 	@echo "... time_interval_test"
+	@echo "... time_sequence_test"
 	@echo "... bytes.o"
 	@echo "... bytes.i"
 	@echo "... bytes.s"
@@ -299,6 +338,9 @@ help:
 	@echo "... time_interval.o"
 	@echo "... time_interval.i"
 	@echo "... time_interval.s"
+	@echo "... time_sequence.o"
+	@echo "... time_sequence.i"
+	@echo "... time_sequence.s"
 .PHONY : help
 
 

@@ -1,20 +1,35 @@
 {
-  "tests": 2,
+  "tests": 5,
   "name": "AllTests",
   "testsuites": [
     {
-      "name": "TimeIntervalTest",
-      "tests": 2,
+      "name": "TimeSequence",
+      "tests": 5,
       "testsuite": [
         {
-          "name": "interval_intersection_pos_test",
-          "file": "\/home\/oster\/OsterLib\/tests\/time_interval.cpp",
-          "line": 6
+          "name": "ConstructionTest",
+          "file": "\/home\/oster\/OsterLib\/tests\/time_sequence.cpp",
+          "line": 4
         },
         {
-          "name": "interval_instersection_test",
-          "file": "\/home\/oster\/OsterLib\/tests\/time_interval.cpp",
-          "line": 21
+          "name": "MakeFromRangeTest",
+          "file": "\/home\/oster\/OsterLib\/tests\/time_sequence.cpp",
+          "line": 26
+        },
+        {
+          "name": "PushTimeTest",
+          "file": "\/home\/oster\/OsterLib\/tests\/time_sequence.cpp",
+          "line": 71
+        },
+        {
+          "name": "ExtendableTest",
+          "file": "\/home\/oster\/OsterLib\/tests\/time_sequence.cpp",
+          "line": 87
+        },
+        {
+          "name": "ExtendByIntervalTest",
+          "file": "\/home\/oster\/OsterLib\/tests\/time_sequence.cpp",
+          "line": 102
         }
       ]
     }

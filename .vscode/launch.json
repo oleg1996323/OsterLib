@@ -4,7 +4,7 @@
         "name": "(gdb) Launch",
         "type": "cppdbg",
         "request": "launch",
-        "program": "${workspaceFolder}/tests/time_interval_test",
+        "program": "${workspaceFolder}/tests/time_sequence_test",
         "args": [],
         "stopAtEntry": false,
         "cwd": "${fileDirname}",

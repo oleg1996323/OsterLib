@@ -1,10 +1,10 @@
 #include "time_interval.h"
 
 bool TimeInterval::operator==(const TimeInterval& other) const{
-    return std::equal_to<TimeInterval>()(*this,other);
+    return from_==other.from_ && to_==other.to_;
 }
 bool TimeInterval::operator<(const TimeInterval& other) const{
-    return std::less<TimeInterval>()(*this,other);
+    return (from_<other.from_)?true:(from_==other.from_?to_-from_<other.to_-other.from_:false);
 }
 
 bool TimeSequence::operator==(const TimeSequence& other) const{
@@ -31,28 +31,35 @@ std::string boost::lexical_cast(const utc_tp& input){
 }
 
 bool is_correct_interval(const std::chrono::system_clock::time_point& from,const std::chrono::system_clock::time_point& to){
-    return (to-from).count()>0;
+    return (to-from).count()>=0;
+}
+bool is_correct_interval(const TimeInterval& interval) noexcept{
+    return is_correct_interval(interval.from(),interval.to());
 }
 bool intervals_intersect(const TimeInterval& lhs, const TimeInterval& rhs){
-    return !(lhs.from_>rhs.to_  || lhs.to_<rhs.from_);
+    return !(lhs.from()>rhs.to()  || lhs.to()<rhs.from());
 }
 bool intervals_intersect(const utc_tp& from_1, const utc_tp& to_1,const utc_tp& from_2, const utc_tp& to_2){
     return !(from_1>to_2  || to_1<from_2);
 }
 #include <iostream>
-std::pair<uint16_t,uint16_t> interval_intersection_pos(const TimeInterval& to_seek, const TimeInterval& initial, const utc_diff& discret) noexcept{
-    std::pair<uint16_t,uint16_t> result{0,0};
-    if(discret.count()==0)
+//А если не пересекаются?
+//@brief При отсутствии пересечения интервалов возвращает 0,0
+std::optional<std::pair<uint64_t,uint64_t>> interval_intersection_pos(const TimeInterval& to_seek, const TimeSequence& initial) noexcept{
+    std::pair<int64_t,int64_t> result{0,0};
+    if(!intervals_intersect(to_seek,initial.get_interval()))
+        return std::nullopt;
+    if(initial.discret().count()==0)
         return result;
-    if(to_seek.from_<=initial.from_)
+    if(to_seek.from()<=initial.get_interval().from())
         result.first = 0;
     else
-        result.first = (to_seek.from_-initial.from_)/discret;
+        result.first = (to_seek.from()-initial.get_interval().from())/initial.discret();
 
-    if(to_seek.to_>=initial.to_)
-        result.second = (initial.to_-initial.from_)/discret;
+    if(to_seek.to()>=initial.get_interval().to())
+        result.second = (initial.get_interval().to()-initial.get_interval().from())/initial.discret();
     else{
-        result.second = (to_seek.to_-initial.from_)/discret;
+        result.second = (to_seek.to()-initial.get_interval().from())/initial.discret();
     }
     //result.first = to_seek.from_<=initial.from_?0:(to_seek.from_-initial.from_)/discret;
     return result;
@@ -60,10 +67,10 @@ std::pair<uint16_t,uint16_t> interval_intersection_pos(const TimeInterval& to_se
 
 std::optional<TimeInterval> interval_intersection(const TimeInterval& lhs,const TimeInterval& rhs) noexcept{
     if(intervals_intersect(lhs,rhs)){
-        if(lhs.from_<rhs.from_)
-            return TimeInterval{.from_ = rhs.from_,.to_ = (lhs.to_<rhs.to_?lhs.to_:rhs.to_)};
+        if(lhs.from()<rhs.from())
+            return TimeInterval(rhs.from(),lhs.to()<rhs.to()?lhs.to():rhs.to());
         else
-            return TimeInterval{.from_ = lhs.from_,.to_ = (lhs.to_<rhs.to_?lhs.to_:rhs.to_)};
+            return TimeInterval(lhs.from(),lhs.to()<rhs.to()?lhs.to():rhs.to());
     }
     else return std::nullopt;
 }
