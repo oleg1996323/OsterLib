@@ -9,6 +9,7 @@
 namespace fs = std::filesystem;
 
 std::expected<boost::json::value,std::error_code> parse_json(const fs::path& path) noexcept;
+std::expected<boost::json::value,std::error_code> parse_json(const std::string& input) noexcept;
 
 template<typename T>
 std::expected<T,std::exception> from_json(const boost::json::value& val);

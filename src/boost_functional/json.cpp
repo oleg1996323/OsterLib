@@ -28,3 +28,17 @@ std::expected<boost::json::value,std::error_code> parse_json(const fs::path& pat
     }
     else return std::unexpected(std::make_error_code(std::errc::no_such_file_or_directory));
 }
+
+std::expected<boost::json::value,std::error_code> parse_json(const std::string& input) noexcept{
+    using namespace boost;
+        json::stream_parser parser;
+        json::error_code err_code;
+        parser.write(input.data(),input.size(),err_code);
+        if(err_code)
+            return std::unexpected(std::make_error_code(std::errc::bad_message));
+        if(!parser.done())
+            return std::unexpected(std::make_error_code(std::errc::bad_message));
+        else
+            parser.finish();
+        return parser.release();
+}
