@@ -217,6 +217,20 @@ time_sequence_test/fast:
 	cd /home/oster/OsterLib && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/time_sequence_test.dir/build.make tests/CMakeFiles/time_sequence_test.dir/build
 .PHONY : time_sequence_test/fast
 
+# Convenience name for target.
+tests/CMakeFiles/parse_json_test.dir/rule:
+	cd /home/oster/OsterLib && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 tests/CMakeFiles/parse_json_test.dir/rule
+.PHONY : tests/CMakeFiles/parse_json_test.dir/rule
+
+# Convenience name for target.
+parse_json_test: tests/CMakeFiles/parse_json_test.dir/rule
+.PHONY : parse_json_test
+
+# fast build rule for target.
+parse_json_test/fast:
+	cd /home/oster/OsterLib && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/parse_json_test.dir/build.make tests/CMakeFiles/parse_json_test.dir/build
+.PHONY : parse_json_test/fast
+
 bytes.o: bytes.cpp.o
 .PHONY : bytes.o
 
@@ -240,6 +254,30 @@ bytes.s: bytes.cpp.s
 bytes.cpp.s:
 	cd /home/oster/OsterLib && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/bytes_test.dir/build.make tests/CMakeFiles/bytes_test.dir/bytes.cpp.s
 .PHONY : bytes.cpp.s
+
+parse_json.o: parse_json.cpp.o
+.PHONY : parse_json.o
+
+# target to build an object file
+parse_json.cpp.o:
+	cd /home/oster/OsterLib && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/parse_json_test.dir/build.make tests/CMakeFiles/parse_json_test.dir/parse_json.cpp.o
+.PHONY : parse_json.cpp.o
+
+parse_json.i: parse_json.cpp.i
+.PHONY : parse_json.i
+
+# target to preprocess a source file
+parse_json.cpp.i:
+	cd /home/oster/OsterLib && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/parse_json_test.dir/build.make tests/CMakeFiles/parse_json_test.dir/parse_json.cpp.i
+.PHONY : parse_json.cpp.i
+
+parse_json.s: parse_json.cpp.s
+.PHONY : parse_json.s
+
+# target to generate assembly for a file
+parse_json.cpp.s:
+	cd /home/oster/OsterLib && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/parse_json_test.dir/build.make tests/CMakeFiles/parse_json_test.dir/parse_json.cpp.s
+.PHONY : parse_json.cpp.s
 
 serialization.o: serialization.cpp.o
 .PHONY : serialization.o
@@ -326,12 +364,16 @@ help:
 	@echo "... list_install_components"
 	@echo "... rebuild_cache"
 	@echo "... bytes_test"
+	@echo "... parse_json_test"
 	@echo "... serialization_test"
 	@echo "... time_interval_test"
 	@echo "... time_sequence_test"
 	@echo "... bytes.o"
 	@echo "... bytes.i"
 	@echo "... bytes.s"
+	@echo "... parse_json.o"
+	@echo "... parse_json.i"
+	@echo "... parse_json.s"
 	@echo "... serialization.o"
 	@echo "... serialization.i"
 	@echo "... serialization.s"

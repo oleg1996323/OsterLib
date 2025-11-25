@@ -100,5 +100,11 @@
   "command": "/home/oster/gcc/gcc-install/bin/g++  -I/home/oster/OsterLib/tests -I/home/oster/OsterLib/include/types -I/home/oster/OsterLib/include -I/home/oster/OsterLib/include/boost_functional  -lzip -static-libstdc++ -g -std=c++23 -fPIC -O0 -fconcepts-diagnostics-depth=10 -o CMakeFiles/time_sequence_test.dir/time_sequence.cpp.o -c /home/oster/OsterLib/tests/time_sequence.cpp",
   "file": "/home/oster/OsterLib/tests/time_sequence.cpp",
   "output": "tests/CMakeFiles/time_sequence_test.dir/time_sequence.cpp.o"
+},
+{
+  "directory": "/home/oster/OsterLib/tests",
+  "command": "/home/oster/gcc/gcc-install/bin/g++  -I/home/oster/OsterLib/tests -I/home/oster/OsterLib/include/types -I/home/oster/OsterLib/include -I/home/oster/OsterLib/include/boost_functional  -lzip -static-libstdc++ -g -std=c++23 -fPIC -O0 -fconcepts-diagnostics-depth=10 -o CMakeFiles/parse_json_test.dir/parse_json.cpp.o -c /home/oster/OsterLib/tests/parse_json.cpp",
+  "file": "/home/oster/OsterLib/tests/parse_json.cpp",
+  "output": "tests/CMakeFiles/parse_json_test.dir/parse_json.cpp.o"
 }
 ]
