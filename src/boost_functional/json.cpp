@@ -1,6 +1,6 @@
 #include "json.h"
 
-std::expected<boost::json::value,std::error_code> parse_json(const fs::path& path) noexcept{
+std::expected<boost::json::value,std::error_code> parse_json_from_file(const fs::path& path) noexcept{
     using namespace boost;
     if(fs::exists(path)){
         std::ifstream file(path,std::ifstream::in);
@@ -29,7 +29,7 @@ std::expected<boost::json::value,std::error_code> parse_json(const fs::path& pat
     else return std::unexpected(std::make_error_code(std::errc::no_such_file_or_directory));
 }
 
-std::expected<boost::json::value,std::error_code> parse_json(const std::string& input) noexcept{
+std::expected<boost::json::value,std::error_code> parse_json_from_buffer(std::string_view input) noexcept{
     using namespace boost;
         json::stream_parser parser;
         json::error_code err_code;
@@ -41,4 +41,8 @@ std::expected<boost::json::value,std::error_code> parse_json(const std::string& 
         else
             parser.finish();
         return parser.release();
+}
+
+std::expected<boost::json::value,std::error_code> parse_json_from_buffer(const std::string& input) noexcept{
+    return parse_json_from_buffer(std::string_view(input));
 }

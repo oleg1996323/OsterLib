@@ -2,7 +2,7 @@
 #include "boost_functional/json.h"
 
 TEST(JsonParse,JsonArrayParseTest){
-    auto result = parse_json(std::string("[1,2,3]"));
+    auto result = parse_json_from_buffer(std::string("[1,2,3]"));
     ASSERT_TRUE(result.has_value());
     ASSERT_TRUE(result->is_array());
     ASSERT_EQ(result->as_array().size(),3);
