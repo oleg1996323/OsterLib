@@ -50,6 +50,8 @@ std::expected<RANGE<VAL>,std::exception> from_json(const boost::json::value& val
 
 template<typename T>
 std::expected<T,std::exception> from_json(const boost::json::value& val){
+    if constexpr (std::is_enum_v<T>)
+        return from_json<std::underlying_type_t<T>>(val);
     if constexpr (std::is_integral_v<T>){
         if constexpr(std::is_floating_point_v<T>){
             if(val.is_double())

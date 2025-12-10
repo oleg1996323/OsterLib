@@ -1,15 +1,30 @@
 {
-  "tests": 1,
+  "tests": 4,
   "name": "AllTests",
   "testsuites": [
     {
-      "name": "JsonParse",
-      "tests": 1,
+      "name": "TimeIntervalTest",
+      "tests": 4,
       "testsuite": [
         {
-          "name": "JsonArrayParseTest",
-          "file": "\/home\/oster\/OsterLib\/tests\/parse_json.cpp",
-          "line": 4
+          "name": "TimeIntervalInitTest",
+          "file": "\/home\/oster\/OsterLib\/tests\/time_interval.cpp",
+          "line": 6
+        },
+        {
+          "name": "intervals_intersect_test",
+          "file": "\/home\/oster\/OsterLib\/tests\/time_interval.cpp",
+          "line": 27
+        },
+        {
+          "name": "interval_intersection_pos_test",
+          "file": "\/home\/oster\/OsterLib\/tests\/time_interval.cpp",
+          "line": 44
+        },
+        {
+          "name": "interval_instersection_test",
+          "file": "\/home\/oster\/OsterLib\/tests\/time_interval.cpp",
+          "line": 79
         }
       ]
     }
