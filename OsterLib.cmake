@@ -88,7 +88,7 @@ set_target_properties(OsterLib::compressor PROPERTIES
 add_library(OsterLib::boost_functional STATIC IMPORTED)
 
 set_target_properties(OsterLib::boost_functional PROPERTIES
-  INTERFACE_INCLUDE_DIRECTORIES "/home/oster/OsterLib/include/boost_functional"
+  INTERFACE_INCLUDE_DIRECTORIES "/home/oster/OsterLib/include/boost_functional;/home/oster/OsterLib/include/"
   INTERFACE_LINK_LIBRARIES "\$<LINK_ONLY:Boost::json>"
 )
 

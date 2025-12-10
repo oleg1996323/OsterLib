@@ -13,7 +13,7 @@
 },
 {
   "directory": "/home/oster/OsterLib",
-  "command": "/home/oster/gcc/gcc-install/bin/g++ -DBOOST_CONTAINER_DYN_LINK -DBOOST_CONTAINER_NO_LIB -DBOOST_JSON_DYN_LINK -DBOOST_JSON_NO_LIB -I/home/oster/OsterLib -I/home/oster/OsterLib/include/boost_functional  -lzip -static-libstdc++ -g -std=c++23 -fPIC -O0 -fconcepts-diagnostics-depth=10 -o CMakeFiles/boost_functional.dir/src/boost_functional/json.cpp.o -c /home/oster/OsterLib/src/boost_functional/json.cpp",
+  "command": "/home/oster/gcc/gcc-install/bin/g++ -DBOOST_CONTAINER_DYN_LINK -DBOOST_CONTAINER_NO_LIB -DBOOST_JSON_DYN_LINK -DBOOST_JSON_NO_LIB -I/home/oster/OsterLib -I/home/oster/OsterLib/include/boost_functional -I/home/oster/OsterLib/include  -lzip -static-libstdc++ -g -std=c++23 -fPIC -O0 -fconcepts-diagnostics-depth=10 -o CMakeFiles/boost_functional.dir/src/boost_functional/json.cpp.o -c /home/oster/OsterLib/src/boost_functional/json.cpp",
   "file": "/home/oster/OsterLib/src/boost_functional/json.cpp",
   "output": "CMakeFiles/boost_functional.dir/src/boost_functional/json.cpp.o"
 },

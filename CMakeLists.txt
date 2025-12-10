@@ -58,7 +58,9 @@ add_library(boost_functional STATIC ${CMAKE_CURRENT_SOURCE_DIR}/src/boost_functi
 target_link_libraries(boost_functional PRIVATE Boost::json)
 target_include_directories(boost_functional PUBLIC
                 "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/boost_functional>"
-                "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/boost_functional>")
+                "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/>"
+                "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/boost_functional>"
+                "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>")
 
 add_library(types STATIC src/types/coord.cpp
                 src/types/rect.cpp
