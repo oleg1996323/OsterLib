@@ -50,15 +50,19 @@ std::expected<RANGE<VAL>,std::exception> from_json(const boost::json::value& val
 
 template<typename T>
 std::expected<T,std::exception> from_json(const boost::json::value& val){
-    if constexpr (std::is_enum_v<T>)
-        return from_json<std::underlying_type_t<T>>(val);
-    if constexpr (std::is_integral_v<T>){
-        if constexpr(std::is_floating_point_v<T>){
+    if constexpr (std::is_enum_v<T>){
+	if(auto tmp = from_json<std::underlying_type_t<T>>(val);!tmp.has_value())
+		return std::unexpected(tmp.error());
+	else return static_cast<T>(tmp.value());
+    }
+    else if constexpr(std::is_floating_point_v<T>){
             if(val.is_double())
                 return val.to_number<T>();
             else return std::unexpected(std::invalid_argument("Not floating point data type"));
-        }
-        else if constexpr(!std::is_signed_v<T>){
+	}
+    else if constexpr (std::is_integral_v<T>){
+
+        if constexpr(!std::is_signed_v<T>){
             if(val.is_uint64())
                 return val.to_number<T>();
             else return std::unexpected(std::invalid_argument("Not unsigned integer data type"));
