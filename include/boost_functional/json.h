@@ -16,32 +16,50 @@ std::expected<boost::json::value,std::error_code> parse_json_from_buffer(std::st
 
 template<typename T>
 std::expected<T,std::exception> from_json(const boost::json::value& val);
-template<template<typename VAL> typename RANGE,typename VAL>
-std::expected<RANGE<VAL>,std::exception> from_json(const boost::json::value& val) requires(std::ranges::range<RANGE<VAL>>);
+template<typename RANGE>
+std::expected<RANGE,std::exception> from_json(const boost::json::value& val) requires(std::ranges::range<RANGE>);
 
-template<template<typename VAL> typename RANGE,typename VAL>
-std::expected<RANGE<VAL>,std::exception> from_json(const boost::json::value& val) requires(std::ranges::range<RANGE<VAL>>){
-    if constexpr(is_associative_container_v<RANGE<VAL>>){
-        RANGE<VAL> result;
+template<typename RANGE>
+std::expected<RANGE,std::exception> from_json(const boost::json::value& val) requires(std::ranges::range<RANGE>){
+    if constexpr(is_associative_container_v<RANGE>){
+        RANGE result;
         if(val.is_array()){
-            for(auto arr_val:val.as_array())
-                result.insert(from_json<VAL>(arr_val));
+            for(const auto& arr_val:val.as_array()){
+                if(arr_val.is_array()){
+                    if(arr_val.as_array().size()==2){
+                        if(auto tmp = from_json<typename RANGE::value_type>(arr_val);tmp.has_value())
+                            result.insert(std::move(tmp.value()));
+                        return std::unexpected(std::invalid_argument("Invalid range value type"));
+                    }
+                    else return std::unexpected(std::invalid_argument("Invalid size of key-value range segment"));
+                }
+                else return std::unexpected(std::invalid_argument("Invalid type in mapped structure"));
+            }
             return result;
         }
         else if(val.is_object()){
-            for(auto arr_val:val.as_object())
-                result.insert(from_json<VAL>(arr_val));
-            return result;
+            if constexpr(String<typename RANGE::key_value>){
+                for(const auto& [key,value]:val.as_object()){
+                    if(auto tmp = from_json<typename RANGE::value_type>(value);tmp.has_value())
+                        result.insert(std::make_pair<std::decay_t<decltype(key)>,typename std::decay_t<decltype(tmp)>::value_type>(key,std::move(tmp.value())));
+                    return std::unexpected(std::invalid_argument("Invalid range value type"));
+                }
+                return result;
+            }
+            else return std::unexpected(std::invalid_argument("Invalid key type: must be string"));
         }
         else return std::unexpected(std::invalid_argument("Not structured data type"));
     }
     else{
-        RANGE<VAL> result;
+        RANGE result;
         if(val.is_array()){
-            if constexpr(requires{std::declval<RANGE<VAL>>().reserve();})
+            if constexpr(requires{std::declval<RANGE>().reserve();})
                 result.reserve(val.as_array().size());
-            for(auto arr_val:val.as_array())
-                result.insert(result.end(),from_json<VAL>(arr_val));
+            for(const auto& arr_val:val.as_array()){
+                if(auto tmp = from_json<typename RANGE::value_type>(arr_val);tmp.has_value())
+                    result.insert(result.end(),std::move(tmp.value()));
+                else return std::unexpected(std::invalid_argument("Invalid range value type"));
+            }
             return result;
         }
         else return std::unexpected(std::invalid_argument("Not structured data type"));
@@ -77,6 +95,15 @@ std::expected<T,std::exception> from_json(const boost::json::value& val){
         if(val.is_string())
             return val.as_string();
         else return std::unexpected(std::invalid_argument("Not string data type"));
+    }
+    else if constexpr (pair_concept<T>){
+        std::pair<typename T::first_type,typename T::second_type> result;
+        if(auto first_result = from_json<typename T::first_type>(val);first_result.has_value()){
+            if(auto second_result = from_json<typename T::second_type>(val);second_result.has_value())
+                return std::make_pair<typename T::first_type,typename T::second_type>(std::move(first_result.value()),std::move(second_result.value()));
+            else return std::unexpected(second_result.error());
+        }
+        else return std::unexpected(first_result.error());
     }
     else static_assert(false,"Not implemented from_json function");
 }
