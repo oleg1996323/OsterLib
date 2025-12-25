@@ -91,19 +91,22 @@ std::expected<T,std::exception> from_json(const boost::json::value& val){
             else return std::unexpected(std::invalid_argument("Not signed integer data type"));
         }
     }
-    else if constexpr (std::is_same_v<std::string,T> || std::is_same_v<boost::json::string,T>){
+    else if constexpr (std::is_same_v<std::string,T> || std::is_same_v<std::string_view,T>){
         if(val.is_string())
             return val.as_string();
         else return std::unexpected(std::invalid_argument("Not string data type"));
     }
     else if constexpr (pair_concept<T>){
         std::pair<typename T::first_type,typename T::second_type> result;
-        if(auto first_result = from_json<typename T::first_type>(val);first_result.has_value()){
-            if(auto second_result = from_json<typename T::second_type>(val);second_result.has_value())
-                return std::make_pair<typename T::first_type,typename T::second_type>(std::move(first_result.value()),std::move(second_result.value()));
-            else return std::unexpected(second_result.error());
+        if(val.is_array() && val.as_array().size()<3){
+            if(auto first_result = from_json<typename T::first_type>(val.as_array()[0]);first_result.has_value()){
+                if(auto second_result = from_json<typename T::second_type>(val.as_array()[1]);second_result.has_value())
+                    return std::make_pair<typename T::first_type,typename T::second_type>(std::move(first_result.value()),std::move(second_result.value()));
+                else return std::unexpected(second_result.error());
+            }
+            else return std::unexpected(first_result.error());
         }
-        else return std::unexpected(first_result.error());
+        else return std::unexpected(std::exception());
     }
     else static_assert(false,"Not implemented from_json function");
 }
@@ -136,10 +139,15 @@ std::expected<std::optional<T>,std::exception> to_json(const boost::json::value&
 template<typename T>
 boost::json::value to_json(const T& val){
     if constexpr (std::is_enum_v<T>){
-        return to_json(static_cast<T>(val));
+        return to_json(static_cast<std::underlying_type_t<T>>(val));
     }
-    else if constexpr(std::is_floating_point_v<T> || std::is_integral_v<T> || std::is_same_v<std::string,T> || std::is_same_v<std::string_view,T>){
+    else if constexpr(std::is_floating_point_v<T> || std::is_integral_v<T>){
         return val;
+    }
+    else if constexpr (std::is_same_v<std::decay_t<T>, std::string> ||
+                       std::is_same_v<std::decay_t<T>, std::string_view> ||
+                       std::is_same_v<std::decay_t<T>, const char*>){
+        return boost::json::value(std::string(val));
     }
     else if constexpr (pair_concept<T>){
         boost::json::array result;
