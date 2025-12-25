@@ -110,3 +110,42 @@ std::expected<T,std::exception> from_json(const boost::json::value& val){
 
 template<typename T>
 boost::json::value to_json(const T& val);
+
+template<typename T>
+boost::json::value to_json(const std::optional<T>& val){
+    boost::json::value result;
+    if(val.has_value())
+        result = to_json(val.value());
+    return result;
+}
+
+template<typename T>
+std::expected<std::optional<T>,std::exception> to_json(const boost::json::value& val){
+    if(val.is_null())
+        return std::unexpected(std::exception());
+    else{
+        if(auto opt_res = from_json<T>(val);!opt_res.has_value())
+            return std::unexpected(std::exception());
+        else{
+            std::optional<T> result = std::move(opt_res.value());
+            return result;
+        }
+    }
+}
+
+template<typename T>
+boost::json::value to_json(const T& val){
+    if constexpr (std::is_enum_v<T>){
+        return to_json(static_cast<T>(val));
+    }
+    else if constexpr(std::is_floating_point_v<T> || std::is_integral_v<T> || std::is_same_v<std::string,T> || std::is_same_v<std::string_view,T>){
+        return val;
+    }
+    else if constexpr (pair_concept<T>){
+        boost::json::array result;
+        result.emplace_back(to_json(val.first));
+        result.emplace_back(to_json(val.second));
+        return result;
+    }
+    else static_assert(false,"Not implemented to_json function");
+}

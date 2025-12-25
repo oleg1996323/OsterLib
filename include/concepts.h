@@ -74,3 +74,15 @@ concept IsStdVariant = requires(const T& val){
 // удобный alias
 template<typename T>
 inline constexpr bool is_std_variant_v = IsStdVariant<T>;
+
+template<typename T>
+concept IsDuration = requires(T d) {
+    typename T::rep;
+    typename T::period;
+    { d.count() } -> std::same_as<typename T::rep>;
+    { d + d } -> std::same_as<T>;
+    { d - d } -> std::same_as<T>;
+    requires !std::is_same_v<T, std::chrono::system_clock::time_point> &&
+             !std::is_same_v<T, std::chrono::steady_clock::time_point> &&
+             !std::is_same_v<T, std::chrono::high_resolution_clock::time_point>;
+};

@@ -8,7 +8,9 @@
 using MinTimeRange = std::chrono::duration<int64_t, std::ratio<3600L>>;
 
 using namespace std::chrono;
-using utc_tp = system_clock::time_point;
+template<typename DURATION = std::chrono::nanoseconds>
+using utc_tp_t = time_point<std::chrono::system_clock,DURATION>;
+using utc_tp = utc_tp_t<>;
 using utc_diff = std::chrono::system_clock::duration;
 
 class TimeInterval{
@@ -314,3 +316,44 @@ template<>
 utc_tp boost::lexical_cast(const std::string& input);
 template<>
 std::string boost::lexical_cast(const utc_tp& input);
+
+template<>
+boost::json::value to_json(const utc_tp& time);
+
+template<>
+std::expected<utc_tp,std::exception> from_json<utc_tp>(const boost::json::value& json_time);
+
+template<>
+boost::json::value to_json(const utc_tp_t<std::chrono::seconds>& time);
+
+template<>
+std::expected<utc_tp_t<std::chrono::seconds>,std::exception> from_json<utc_tp_t<std::chrono::seconds>>(const boost::json::value& json_time);
+
+#include "concepts.h"
+template<typename DURATION>
+requires IsDuration<DURATION>
+std::expected<DURATION,std::exception> from_json(const boost::json::value& json_duration){
+    if constexpr(std::is_same_v<DURATION,nanoseconds>){
+        if(json_duration.is_string()){
+            std::istringstream stream_tmp(json_duration.as_string().subview());
+            nanoseconds result;
+            stream_tmp>>std::chrono::parse("{}",result);
+            if(stream_tmp.fail())
+                return std::unexpected(std::exception());
+            else return result;
+        }
+        else return std::unexpected(std::exception());
+    }
+    else if constexpr(std::is_same_v<DURATION,std::chrono::seconds>){
+        if(json_duration.is_string()){
+            std::istringstream stream_tmp(json_duration.as_string().subview());
+            std::chrono::seconds result;
+            stream_tmp>>std::chrono::parse("{:%Y/%m/%D %H:%M:%S}",result);
+            if(stream_tmp.fail())
+                return std::unexpected(std::exception());
+            else return result;
+        }
+        else return std::unexpected(std::exception());
+    }
+    else static_assert(false,"not implemented duration from_json function");
+}
