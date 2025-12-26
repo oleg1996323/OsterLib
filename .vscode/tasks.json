@@ -3,7 +3,7 @@
         {
             "type": "cppbuild",
             "label": "C/C++: g++ build active file",
-            "command": "/home/oster/gcc/gcc-install/bin/g++",
+            "command": "/home/oster/gcc-install/bin/g++",
             "args": [
                 "-fdiagnostics-color=always",
                 "-g",

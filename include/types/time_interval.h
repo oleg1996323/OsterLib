@@ -337,7 +337,7 @@ std::expected<DURATION,std::exception> from_json(const boost::json::value& json_
         if(json_duration.is_string()){
             std::istringstream stream_tmp(json_duration.as_string().subview());
             nanoseconds result;
-            stream_tmp>>std::chrono::parse("{}",result);
+            stream_tmp>>std::chrono::parse("{:%Y/%m/%d %T}",result);
             if(stream_tmp.fail())
                 return std::unexpected(std::exception());
             else return result;
@@ -348,7 +348,7 @@ std::expected<DURATION,std::exception> from_json(const boost::json::value& json_
         if(json_duration.is_string()){
             std::istringstream stream_tmp(json_duration.as_string().subview());
             std::chrono::seconds result;
-            stream_tmp>>std::chrono::parse("{:%Y/%m/%D %H:%M:%S}",result);
+            stream_tmp>>std::chrono::parse("{:%Y/%m/%d %H:%M:%S}",result);
             if(stream_tmp.fail())
                 return std::unexpected(std::exception());
             else return result;
@@ -356,4 +356,44 @@ std::expected<DURATION,std::exception> from_json(const boost::json::value& json_
         else return std::unexpected(std::exception());
     }
     else static_assert(false,"not implemented duration from_json function");
+}
+
+template<typename DURATION>
+inline boost::json::value to_json(const utc_tp_t<& time){
+    boost::json::string result;
+    result.subview() = std::format("{:%Y/%m/%d %T}",time);
+    return result;
+}
+
+template<>
+inline std::expected<utc_tp,std::exception> from_json<utc_tp>(const boost::json::value& json_time){
+    if(json_time.is_string()){
+        std::istringstream stream_tmp(json_time.as_string().subview());
+        utc_tp result;
+        stream_tmp>>std::chrono::parse("{:%Y/%m/%d %T}",result);
+        if(stream_tmp.fail())
+            return std::unexpected(std::exception());
+        else return result;
+    }
+    else return std::unexpected(std::exception());
+}
+
+template<>
+inline boost::json::value to_json(const utc_tp_t<std::chrono::seconds>& time){
+    boost::json::string result;
+    result.subview() = std::format("{:%Y/%m/%d %H:%M:%S}",time);
+    return result;
+}
+
+template<>
+inline std::expected<utc_tp_t<std::chrono::seconds>,std::exception> from_json<utc_tp_t<std::chrono::seconds>>(const boost::json::value& json_time){
+    if(json_time.is_string()){
+        std::istringstream stream_tmp(json_time.as_string().subview());
+        utc_tp_t<std::chrono::seconds> result;
+        stream_tmp>>std::chrono::parse("{:%Y/%m/%d %H:%M:%S}",result);
+        if(stream_tmp.fail())
+            return std::unexpected(std::exception());
+        else return result;
+    }
+    else return std::unexpected(std::exception());
 }
