@@ -17,9 +17,11 @@ std::expected<boost::json::value,std::error_code> parse_json_from_buffer(std::st
 template<typename T>
 std::expected<T,std::exception> from_json(const boost::json::value& val);
 template<typename RANGE>
+requires (!String<RANGE>)
 std::expected<RANGE,std::exception> from_json(const boost::json::value& val) requires(std::ranges::range<RANGE>);
 
 template<typename RANGE>
+requires (!String<RANGE>)
 std::expected<RANGE,std::exception> from_json(const boost::json::value& val) requires(std::ranges::range<RANGE>){
     if constexpr(is_associative_container_v<RANGE>){
         RANGE result;
@@ -53,7 +55,7 @@ std::expected<RANGE,std::exception> from_json(const boost::json::value& val) req
     else{
         RANGE result;
         if(val.is_array()){
-            if constexpr(requires{std::declval<RANGE>().reserve();})
+            if constexpr(requires{std::declval<RANGE>().reserve(0);})
                 result.reserve(val.as_array().size());
             for(const auto& arr_val:val.as_array()){
                 if(auto tmp = from_json<typename RANGE::value_type>(arr_val);tmp.has_value())
@@ -93,7 +95,7 @@ std::expected<T,std::exception> from_json(const boost::json::value& val){
     }
     else if constexpr (std::is_same_v<std::string,T> || std::is_same_v<std::string_view,T>){
         if(val.is_string())
-            return val.as_string();
+            return val.as_string().subview();
         else return std::unexpected(std::invalid_argument("Not string data type"));
     }
     else if constexpr (pair_concept<T>){
@@ -108,35 +110,26 @@ std::expected<T,std::exception> from_json(const boost::json::value& val){
         }
         else return std::unexpected(std::exception());
     }
+    else if constexpr (IsOptional<T>){
+        if(val.is_null())
+            return std::unexpected(std::exception());
+        else{
+            if(auto opt_res = from_json<T>(val);!opt_res.has_value())
+                return std::unexpected(std::exception());
+            else{
+                std::optional<T> result = std::move(opt_res.value());
+                return result;
+            }
+        }
+    }
     else static_assert(false,"Not implemented from_json function");
 }
 
-template<typename T>
+template<typename... ARGS,typename T>
 boost::json::value to_json(const T& val);
 
-template<typename T>
-boost::json::value to_json(const std::optional<T>& val){
-    boost::json::value result;
-    if(val.has_value())
-        result = to_json(val.value());
-    return result;
-}
-
-template<typename T>
-std::expected<std::optional<T>,std::exception> to_json(const boost::json::value& val){
-    if(val.is_null())
-        return std::unexpected(std::exception());
-    else{
-        if(auto opt_res = from_json<T>(val);!opt_res.has_value())
-            return std::unexpected(std::exception());
-        else{
-            std::optional<T> result = std::move(opt_res.value());
-            return result;
-        }
-    }
-}
-
-template<typename T>
+template<typename... ARGS,typename T>
+requires (sizeof...(ARGS)==0)
 boost::json::value to_json(const T& val){
     if constexpr (std::is_enum_v<T>){
         return to_json(static_cast<std::underlying_type_t<T>>(val));
@@ -153,6 +146,12 @@ boost::json::value to_json(const T& val){
         boost::json::array result;
         result.emplace_back(to_json(val.first));
         result.emplace_back(to_json(val.second));
+        return result;
+    }
+    else if constexpr (IsOptional<T>){
+        boost::json::value result;
+        if(val.has_value())
+            result = to_json(val.value());
         return result;
     }
     else static_assert(false,"Not implemented to_json function");

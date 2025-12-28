@@ -11,7 +11,9 @@ using namespace std::chrono;
 template<typename DURATION = std::chrono::nanoseconds>
 using utc_tp_t = time_point<std::chrono::system_clock,DURATION>;
 using utc_tp = utc_tp_t<>;
-using utc_diff = std::chrono::system_clock::duration;
+template<typename DURATION = std::chrono::nanoseconds>
+using utc_diff_t = std::chrono::duration<typename DURATION::rep,typename DURATION::period>;
+using utc_diff = utc_diff_t<>;
 
 class TimeInterval{
     utc_tp from_;
@@ -317,83 +319,74 @@ utc_tp boost::lexical_cast(const std::string& input);
 template<>
 std::string boost::lexical_cast(const utc_tp& input);
 
-template<>
-boost::json::value to_json(const utc_tp& time);
-
-template<>
-std::expected<utc_tp,std::exception> from_json<utc_tp>(const boost::json::value& json_time);
-
-template<>
-boost::json::value to_json(const utc_tp_t<std::chrono::seconds>& time);
-
-template<>
-std::expected<utc_tp_t<std::chrono::seconds>,std::exception> from_json<utc_tp_t<std::chrono::seconds>>(const boost::json::value& json_time);
-
 #include "concepts.h"
-template<typename DURATION>
-requires IsDuration<DURATION>
-std::expected<DURATION,std::exception> from_json(const boost::json::value& json_duration){
-    if constexpr(std::is_same_v<DURATION,nanoseconds>){
-        if(json_duration.is_string()){
-            std::istringstream stream_tmp(json_duration.as_string().subview());
-            nanoseconds result;
-            stream_tmp>>std::chrono::parse("{:%Y/%m/%d %T}",result);
-            if(stream_tmp.fail())
-                return std::unexpected(std::exception());
-            else return result;
-        }
-        else return std::unexpected(std::exception());
-    }
-    else if constexpr(std::is_same_v<DURATION,std::chrono::seconds>){
-        if(json_duration.is_string()){
-            std::istringstream stream_tmp(json_duration.as_string().subview());
-            std::chrono::seconds result;
-            stream_tmp>>std::chrono::parse("{:%Y/%m/%d %H:%M:%S}",result);
-            if(stream_tmp.fail())
-                return std::unexpected(std::exception());
-            else return result;
-        }
-        else return std::unexpected(std::exception());
-    }
-    else static_assert(false,"not implemented duration from_json function");
-}
 
-template<typename DURATION>
-inline boost::json::value to_json(const utc_tp_t<& time){
-    boost::json::string result;
-    result.subview() = std::format("{:%Y/%m/%d %T}",time);
+using default_template_arg_time = std::chrono::seconds;
+
+template<typename... ARGS,IsDuration ARG_DURATION>
+requires (sizeof...(ARGS)==1)
+inline boost::json::value to_json(const ARG_DURATION& tp) {
+    boost::json::value result;
+    if constexpr(std::is_same_v<ARGS...,days>)
+        result = std::format("{}d", std::chrono::duration_cast<ARGS...>(tp).count());
+    else if constexpr(std::is_same_v<ARGS...,hours>)
+        result = std::format("{}h", std::chrono::duration_cast<ARGS...>(tp).count());
+    else if constexpr(std::is_same_v<ARGS...,minutes>)
+        result = std::format("{}m", std::chrono::duration_cast<ARGS...>(tp).count());
+    else result = std::format("{}s", std::chrono::duration_cast<ARGS...>(tp).count());
     return result;
 }
 
-template<>
-inline std::expected<utc_tp,std::exception> from_json<utc_tp>(const boost::json::value& json_time){
-    if(json_time.is_string()){
-        std::istringstream stream_tmp(json_time.as_string().subview());
-        utc_tp result;
-        stream_tmp>>std::chrono::parse("{:%Y/%m/%d %T}",result);
-        if(stream_tmp.fail())
-            return std::unexpected(std::exception());
-        else return result;
-    }
-    else return std::unexpected(std::exception());
-}
-
-template<>
-inline boost::json::value to_json(const utc_tp_t<std::chrono::seconds>& time){
-    boost::json::string result;
-    result.subview() = std::format("{:%Y/%m/%d %H:%M:%S}",time);
+template<typename... ARGS,IsTimePoint ARG_TP>
+requires (sizeof...(ARGS)==1)
+inline boost::json::value to_json(const ARG_TP& tp) {
+    boost::json::value result;
+    result = std::format("{:%Y/%m/%d %H:%M:%S %Z}", time_point_cast<ARGS...>(tp));
     return result;
 }
 
-template<>
-inline std::expected<utc_tp_t<std::chrono::seconds>,std::exception> from_json<utc_tp_t<std::chrono::seconds>>(const boost::json::value& json_time){
-    if(json_time.is_string()){
-        std::istringstream stream_tmp(json_time.as_string().subview());
-        utc_tp_t<std::chrono::seconds> result;
-        stream_tmp>>std::chrono::parse("{:%Y/%m/%d %H:%M:%S}",result);
+template<typename TIME_T>
+requires (IsTimePoint<TIME_T> || IsDuration<TIME_T>)
+inline std::expected<TIME_T,std::exception> from_json(const boost::json::value& json_time){
+    using namespace std::string_literals;
+    if(!json_time.is_string())
+        return std::unexpected(std::exception());
+    std::istringstream stream_tmp(json_time.as_string().subview());
+    TIME_T result;
+    if constexpr (IsTimePoint<TIME_T>){
+        stream_tmp>>std::chrono::parse("%Y/%m/%d %H:%M:%S %Z",result);
         if(stream_tmp.fail())
             return std::unexpected(std::exception());
-        else return result;
     }
-    else return std::unexpected(std::exception());
+    else if constexpr (IsDuration<TIME_T>){
+        uint32_t dur = 0;
+        std::string back_sign;
+        stream_tmp>>dur>>back_sign;
+        if(back_sign.size()==1){
+            switch (*back_sign.c_str())
+            {
+            case 's':
+                result = std::chrono::seconds(dur);
+                break;
+            case 'm':
+                result = std::chrono::minutes(dur);
+                break;
+            case 'h':
+                result = std::chrono::hours(dur);
+                break;
+            case 'd':
+                result = std::chrono::days(dur);
+                break;
+            default:
+                return std::unexpected(std::exception());
+                break;
+            }
+        }
+        else return std::unexpected(std::exception());        
+    }
+    else static_assert(false,"Invalid from_json function implementation");
+    return result;
 }
+
+static_assert(IsTimePoint<utc_tp>);
+static_assert(IsDuration<utc_diff>);

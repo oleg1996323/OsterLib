@@ -39,13 +39,14 @@ template<typename T>
 concept duration_concept = requires (const T& duration){
     duration.count();
 };
+
 static_assert(duration_concept<std::chrono::system_clock::duration>);
+
 template<typename T>
-concept RangeOfStrings  = requires{
-    requires std::ranges::range<std::ranges::range_value_t<std::decay_t<T>>>;
-    requires std::is_same_v<std::decay_t<std::ranges::range_value_t<
-    std::ranges::range_value_t<std::decay_t<T>>>>,
-    char>;
+concept AssociativeContainer = requires(const T& cont){
+    typename std::decay_t<T>::key_type;
+    typename std::decay_t<T>::mapped_type;
+    requires std::ranges::range<std::decay_t<T>>;
 };
 
 template<typename T>
@@ -53,13 +54,14 @@ concept String  = requires{
     requires std::ranges::range<std::decay_t<T>>;
     requires std::is_same_v<std::ranges::range_value_t<
     std::decay_t<T>>,char>;
+    requires std::ranges::bidirectional_range<T>;
 };
 
+
 template<typename T>
-concept AssociativeContainer = requires(const T& cont){
-    typename std::decay_t<T>::key_type;
-    typename std::decay_t<T>::mapped_type;
-    requires std::ranges::range<std::decay_t<T>>;
+concept RangeOfStrings  = requires{
+    requires std::ranges::range<std::ranges::range_value_t<std::decay_t<T>>>;
+    requires String<std::ranges::range_value_t<std::decay_t<T>>>;
 };
 
 template<typename T>
@@ -76,13 +78,33 @@ template<typename T>
 inline constexpr bool is_std_variant_v = IsStdVariant<T>;
 
 template<typename T>
+concept IsTimePoint = requires(T d) {
+    typename T::rep;
+    typename T::period;
+    { d.time_since_epoch() } -> std::same_as<typename T::duration>;
+    requires std::is_same_v<T, std::chrono::time_point<typename T::clock,typename T::duration>>;
+};
+
+template<typename T>
 concept IsDuration = requires(T d) {
     typename T::rep;
     typename T::period;
     { d.count() } -> std::same_as<typename T::rep>;
     { d + d } -> std::same_as<T>;
     { d - d } -> std::same_as<T>;
-    requires !std::is_same_v<T, std::chrono::system_clock::time_point> &&
-             !std::is_same_v<T, std::chrono::steady_clock::time_point> &&
-             !std::is_same_v<T, std::chrono::high_resolution_clock::time_point>;
+    requires !IsTimePoint<T>;
 };
+
+template<typename T>
+concept IsOptional = requires(T opt) {
+    typename T::value_type;
+    {std::declval<T>().has_value()}->std::same_as<bool>;
+    std::is_same_v<std::optional<typename T::value_type>,T>;
+};
+
+static_assert(IsDuration<std::chrono::nanoseconds>);
+static_assert(IsDuration<std::chrono::nanoseconds>);
+static_assert(IsTimePoint<std::chrono::system_clock::time_point>);
+static_assert(IsTimePoint<std::chrono::steady_clock::time_point>);
+static_assert(IsTimePoint<std::chrono::file_clock::time_point>);
+static_assert(IsTimePoint<std::chrono::tai_clock::time_point>);

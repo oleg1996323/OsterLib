@@ -1,35 +1,25 @@
 {
-  "tests": 5,
+  "tests": 3,
   "name": "AllTests",
   "testsuites": [
     {
-      "name": "TimeSequence",
-      "tests": 5,
+      "name": "JsonParse",
+      "tests": 3,
       "testsuite": [
         {
-          "name": "ConstructionTest",
-          "file": "\/home\/oster\/OsterLib\/tests\/time_sequence.cpp",
-          "line": 4
+          "name": "JsonArrayParseTest",
+          "file": "\/home\/oster\/OsterLib\/tests\/parse_json.cpp",
+          "line": 5
         },
         {
-          "name": "MakeFromRangeTest",
-          "file": "\/home\/oster\/OsterLib\/tests\/time_sequence.cpp",
-          "line": 26
+          "name": "JsonTimePointParseTest",
+          "file": "\/home\/oster\/OsterLib\/tests\/parse_json.cpp",
+          "line": 21
         },
         {
-          "name": "PushTimeTest",
-          "file": "\/home\/oster\/OsterLib\/tests\/time_sequence.cpp",
-          "line": 71
-        },
-        {
-          "name": "ExtendableTest",
-          "file": "\/home\/oster\/OsterLib\/tests\/time_sequence.cpp",
-          "line": 87
-        },
-        {
-          "name": "ExtendByIntervalTest",
-          "file": "\/home\/oster\/OsterLib\/tests\/time_sequence.cpp",
-          "line": 102
+          "name": "JsonDurationParseTest",
+          "file": "\/home\/oster\/OsterLib\/tests\/parse_json.cpp",
+          "line": 28
         }
       ]
     }
