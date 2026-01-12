@@ -45,9 +45,9 @@ namespace serialization{
     template<typename T>
     struct Min_serial_size;
 
-    template<typename T>
+    template<typename T,bool NETWORK = false>
     SerializationEC serialize_to_file(const T& val,std::ofstream& fstream) noexcept;
-    template<typename T>
+    template<typename T,bool NETWORK = false>
     SerializationEC deserialize_from_file(T& val,std::ifstream& fstream) noexcept;
 
     template<typename T>
@@ -186,8 +186,7 @@ namespace serialization{
                     return err;
             }
             else{
-                static_assert(false,"serialize unspecified");
-                return SerializationEC::NONE;
+                static_assert(false, "serialize unspecified");
             }
         }
     };
@@ -558,6 +557,37 @@ namespace serialization{
         }();
     };
 
+template<bool NETWORK_ORDER,typename T>
+    requires (serialize_concept<NETWORK_ORDER,T>)
+    struct Serialize<NETWORK_ORDER,std::reference_wrapper<T>>{
+        SerializationEC operator()(const std::reference_wrapper<T>& val,std::vector<char>& buf) const noexcept{
+            return serialize<NETWORK_ORDER>(val.get(),buf);
+        }
+    };
+
+    template<typename T>
+    struct Serial_size<std::reference_wrapper<T>>{
+        size_t operator()(const std::reference_wrapper<T>& val) const noexcept{
+            return serial_size(val.get());
+        }
+    };
+
+    template<typename T>
+    struct Min_serial_size<std::reference_wrapper<T>>{
+        static constexpr size_t value = []()
+        {
+            return Min_serial_size<T>::value;
+        }();
+    };
+
+    template<typename T>
+    struct Max_serial_size<std::reference_wrapper<T>>{
+        static constexpr size_t value = []()
+        {
+            return Max_serial_size<T>::value;
+        }();
+    };
+
     template<bool NETWORK_ORDER,typename T>
     requires IsStdVariant<T>
     struct Serialize<NETWORK_ORDER,T>{
@@ -727,7 +757,7 @@ namespace serialization{
         else return Deserialize<true,std::decay_t<T>>{}(to_deserialize,buf);
     }
 
-    template<typename T>
+    template<typename T, bool NETWORK>
     SerializationEC serialize_to_file(const T& val,std::ofstream& fstream) noexcept{
         if constexpr(std::is_integral_v<std::decay_t<T>>)
             fstream.write(reinterpret_cast<const char*>(&val),sizeof(val));
@@ -741,15 +771,21 @@ namespace serialization{
             if(err!=SerializationEC::NONE)
                 return err;
             buf.reserve(serial_size(val));
-            if(err = serialize_native(val,buf); err!=SerializationEC::NONE)
-                return err;
+            if constexpr (!NETWORK){
+                if(err = serialize_native(val,buf); err!=SerializationEC::NONE)
+                    return err;
+            }
+            else{
+                if(err = serialize_network(val,buf); err!=SerializationEC::NONE)
+                    return err;
+            }
             fstream.write(buf.data(),buf.size());
         }
         if(fstream.fail())
             return SerializationEC::FILE_WRITING_ERROR;
         return SerializationEC::NONE;
     }
-    template<typename T>
+    template<typename T, bool NETWORK>
     SerializationEC deserialize_from_file(T& val,std::ifstream& fstream) noexcept{
         if constexpr(std::is_integral_v<std::decay_t<T>>)
             fstream.read(reinterpret_cast<char*>(&val),sizeof(val));
@@ -772,15 +808,87 @@ namespace serialization{
                 return SerializationEC::UNEXPECTED_EOF;
             else if(fstream.fail())
                 return SerializationEC::FILE_READING_ERROR;
-            err = deserialize_native(val,std::span<const char>(buf));
-            if(err!=SerializationEC::NONE)
-                return err;
+            if constexpr(!NETWORK){
+                err = deserialize_native(val,std::span<const char>(buf));
+                if(err!=SerializationEC::NONE)
+                    return err;
+            }
+            else{
+                err = deserialize_network(val,std::span<const char>(buf));
+                if(err!=SerializationEC::NONE)
+                    return err;
+            }
         }
+        return SerializationEC::NONE;
+    }
+
+    template<bool NETWORK = false,typename... ARGS>
+    requires (sizeof...(ARGS)>1)
+    SerializationEC serialize_to_file(std::ofstream& fstream,const ARGS&... val) noexcept{
+        SerializationEC err;
+        err = serialize_to_file(serial_size(val...),fstream);
+        std::vector<char> buf;
+        if(err!=SerializationEC::NONE)
+            return err;
+        buf.reserve(serial_size(val...));
+
+        auto serialize_variadic = [&buf,&err](auto&& value) ->SerializationEC
+        {
+            if constexpr(!NETWORK){
+                err = serialize_native(std::forward<decltype(value)>(value),buf);
+                return err;
+            }
+            else {
+                err = serialize_network(std::forward<decltype(value)>(value),buf);
+                return err;
+            }
+        };
+
+        ((serialize_variadic(val)==SerializationEC::NONE) && ...);
+        if(err!=SerializationEC::NONE)
+            return err;
+        fstream.write(buf.data(),buf.size());
+        if(fstream.fail())
+            return SerializationEC::FILE_WRITING_ERROR;
+        return err;
+    }
+    template<bool NETWORK = false,typename... ARGS>
+    requires (sizeof...(ARGS)>1)
+    SerializationEC deserialize_from_file(std::ifstream& fstream,ARGS&... val) noexcept{
+        SerializationEC err;
+        size_t sz = 0;
+        err = deserialize_from_file(sz,fstream);   
         if(fstream.eof())
             return SerializationEC::UNEXPECTED_EOF;
         else if(fstream.fail())
             return SerializationEC::FILE_READING_ERROR;
-        return SerializationEC::NONE;
+        else if(sz<min_serial_size(val...))
+            return SerializationEC::BUFFER_SIZE_LESSER;
+        std::vector<char> buf;
+        buf.resize(sz);
+        fstream.read(buf.data(),sz);
+        if(fstream.eof())
+            return SerializationEC::UNEXPECTED_EOF;
+        else if(fstream.fail())
+            return SerializationEC::FILE_READING_ERROR;
+
+        size_t offset = 0;
+        auto deserialize_variadic = [&buf,&err,&offset](auto& value) ->SerializationEC
+        {
+            if constexpr(!NETWORK){
+                err = deserialize_native(value,std::span<const char>(buf).subspan(offset));
+                offset+=serial_size(value);
+                return err;
+            }
+            else {
+                err = deserialize_network(value,std::span<const char>(buf).subspan(offset));
+                offset+=serial_size(value);
+                return err;
+            }
+        };
+
+        ((deserialize_variadic(val)==SerializationEC::NONE) && ...);
+        return err;
     }
 }
 

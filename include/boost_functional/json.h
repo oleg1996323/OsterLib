@@ -16,13 +16,114 @@ std::expected<boost::json::value,std::error_code> parse_json_from_buffer(std::st
 
 template<typename T>
 std::expected<T,std::exception> from_json(const boost::json::value& val);
-template<typename RANGE>
-requires (!String<RANGE>)
-std::expected<RANGE,std::exception> from_json(const boost::json::value& val) requires(std::ranges::range<RANGE>);
 
-template<typename RANGE>
+template<typename T>
+boost::json::value to_json(const T& val);
+
+template<numeric_types_concept T>
+std::expected<T,std::exception> from_json(const boost::json::value& val){
+    if constexpr (std::is_enum_v<T>){
+        if(auto tmp = from_json<std::underlying_type_t<T>>(val);!tmp.has_value())
+            return std::unexpected(tmp.error());
+        else return static_cast<T>(tmp.value());
+    }
+    else if constexpr(std::is_floating_point_v<T>){
+            if(val.is_double())
+                return val.to_number<T>();
+            else return std::unexpected(std::invalid_argument("Not floating point data type"));
+	}
+    else{
+        static_assert(std::is_integral_v<T>);
+        if constexpr(!std::is_signed_v<T>){
+            if(val.is_uint64() || (val.is_int64() && val.as_int64()>=0))
+                return val.to_number<T>();
+            else return std::unexpected(std::invalid_argument("Not unsigned integer data type"));
+        }
+        else {
+            if(val.is_int64() || (val.is_uint64() && val.as_uint64()<std::numeric_limits<int64_t>::max()))
+                return val.to_number<T>();
+            else return std::unexpected(std::invalid_argument("Not signed integer data type"));
+        }
+    }
+}
+
+template<String T>
+std::expected<T,std::exception> from_json(const boost::json::value& val){
+    if(val.is_string())
+        return val.as_string().subview();
+    else return std::unexpected(std::invalid_argument("Not string data type"));
+}
+
+template<IsOptional T>
+std::expected<T,std::exception> from_json(const boost::json::value& val){
+    if(val.is_null())
+        return std::unexpected(std::exception());
+    else{
+        if(auto opt_res = from_json<T>(val);!opt_res.has_value())
+            return std::unexpected(std::exception());
+        else{
+            std::optional<T> result = std::move(opt_res.value());
+            return result;
+        }
+    }
+}
+
+template<pair_concept T>
+std::expected<T,std::exception> from_json(const boost::json::value& val){
+    std::pair<typename T::first_type,typename T::second_type> result;
+    if(val.is_array() && val.as_array().size()<3){
+        if(auto first_result = from_json<typename T::first_type>(val.as_array()[0]);first_result.has_value()){
+            if(auto second_result = from_json<typename T::second_type>(val.as_array()[1]);second_result.has_value())
+                return std::make_pair<typename T::first_type,typename T::second_type>(std::move(first_result.value()),std::move(second_result.value()));
+            else return std::unexpected(second_result.error());
+        }
+        else return std::unexpected(first_result.error());
+    }
+    else return std::unexpected(std::exception());
+}
+
+template<String T>
+boost::json::value to_json(const T& val){
+    return boost::json::value(std::string(val));
+}
+
+template<numeric_types_concept T>
+boost::json::value to_json(const T& val){
+    if constexpr (std::is_enum_v<T>){
+        return to_json(static_cast<std::underlying_type_t<T>>(val));
+    }
+    else{
+        static_assert(std::is_floating_point_v<T> || std::is_integral_v<T>);
+        boost::json::value result;
+        if constexpr (std::is_floating_point_v<T>)
+            result.emplace_double();
+        else if constexpr(std::is_signed_v<T>)
+            result.emplace_int64();
+        else result.emplace_uint64();
+        result = val;
+        return result;
+    }
+}
+
+template<pair_concept T>
+boost::json::value to_json(const T& val){
+    boost::json::array result;
+    result.emplace_back(to_json(val.first));
+    result.emplace_back(to_json(val.second));
+    return result;
+}
+
+template<IsOptional T>
+boost::json::value to_json(const T& val){
+    boost::json::value result;
+    if(val.has_value())
+        result = to_json(val.value());
+    return result;
+}
+
+template<std::ranges::range RANGE>
 requires (!String<RANGE>)
-std::expected<RANGE,std::exception> from_json(const boost::json::value& val) requires(std::ranges::range<RANGE>){
+std::expected<RANGE,std::exception> from_json(const boost::json::value& val){
     if constexpr(is_associative_container_v<RANGE>){
         RANGE result;
         if(val.is_array()){
@@ -68,91 +169,33 @@ std::expected<RANGE,std::exception> from_json(const boost::json::value& val) req
     }
 }
 
-template<typename T>
-std::expected<T,std::exception> from_json(const boost::json::value& val){
-    if constexpr (std::is_enum_v<T>){
-	if(auto tmp = from_json<std::underlying_type_t<T>>(val);!tmp.has_value())
-		return std::unexpected(tmp.error());
-	else return static_cast<T>(tmp.value());
-    }
-    else if constexpr(std::is_floating_point_v<T>){
-            if(val.is_double())
-                return val.to_number<T>();
-            else return std::unexpected(std::invalid_argument("Not floating point data type"));
-	}
-    else if constexpr (std::is_integral_v<T>){
-
-        if constexpr(!std::is_signed_v<T>){
-            if(val.is_uint64())
-                return val.to_number<T>();
-            else return std::unexpected(std::invalid_argument("Not unsigned integer data type"));
+template<std::ranges::range RANGE>
+requires (!String<RANGE>)
+boost::json::value to_json(const RANGE& range){
+    if constexpr(is_associative_container_v<RANGE>){
+        if constexpr(String<typename RANGE::key_value>){
+            boost::json::object result;
+            for(const auto& [key,value]:range)
+                result[key] = to_json(value);
+            return result;
         }
-        else {
-            if(val.is_int64())
-                return val.to_number<T>();
-            else return std::unexpected(std::invalid_argument("Not signed integer data type"));
-        }
-    }
-    else if constexpr (std::is_same_v<std::string,T> || std::is_same_v<std::string_view,T>){
-        if(val.is_string())
-            return val.as_string().subview();
-        else return std::unexpected(std::invalid_argument("Not string data type"));
-    }
-    else if constexpr (pair_concept<T>){
-        std::pair<typename T::first_type,typename T::second_type> result;
-        if(val.is_array() && val.as_array().size()<3){
-            if(auto first_result = from_json<typename T::first_type>(val.as_array()[0]);first_result.has_value()){
-                if(auto second_result = from_json<typename T::second_type>(val.as_array()[1]);second_result.has_value())
-                    return std::make_pair<typename T::first_type,typename T::second_type>(std::move(first_result.value()),std::move(second_result.value()));
-                else return std::unexpected(second_result.error());
-            }
-            else return std::unexpected(first_result.error());
-        }
-        else return std::unexpected(std::exception());
-    }
-    else if constexpr (IsOptional<T>){
-        if(val.is_null())
-            return std::unexpected(std::exception());
         else{
-            if(auto opt_res = from_json<T>(val);!opt_res.has_value())
-                return std::unexpected(std::exception());
-            else{
-                std::optional<T> result = std::move(opt_res.value());
-                return result;
+            boost::json::array result;
+            result.reserve(range.size());
+            for(auto& [key,val]:range){
+                auto& key_val = result.emplace_back(boost::json::array()).as_array();
+                key_val.resize(2);
+                key_val.at(0) = to_json(key);
+                key_val.at(1) = to_json(val);
             }
+            return result;
         }
     }
-    else static_assert(false,"Not implemented from_json function");
-}
-
-template<typename... ARGS,typename T>
-boost::json::value to_json(const T& val);
-
-template<typename... ARGS,typename T>
-requires (sizeof...(ARGS)==0)
-boost::json::value to_json(const T& val){
-    if constexpr (std::is_enum_v<T>){
-        return to_json(static_cast<std::underlying_type_t<T>>(val));
-    }
-    else if constexpr(std::is_floating_point_v<T> || std::is_integral_v<T>){
-        return val;
-    }
-    else if constexpr (std::is_same_v<std::decay_t<T>, std::string> ||
-                       std::is_same_v<std::decay_t<T>, std::string_view> ||
-                       std::is_same_v<std::decay_t<T>, const char*>){
-        return boost::json::value(std::string(val));
-    }
-    else if constexpr (pair_concept<T>){
+    else{
         boost::json::array result;
-        result.emplace_back(to_json(val.first));
-        result.emplace_back(to_json(val.second));
+        result.reserve(range.size());
+        for(const auto& val:range)
+            result.push_back(to_json(val));
         return result;
     }
-    else if constexpr (IsOptional<T>){
-        boost::json::value result;
-        if(val.has_value())
-            result = to_json(val.value());
-        return result;
-    }
-    else static_assert(false,"Not implemented to_json function");
 }

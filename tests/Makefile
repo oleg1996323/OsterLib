@@ -231,6 +231,20 @@ parse_json_test/fast:
 	cd /home/oster/OsterLib && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/parse_json_test.dir/build.make tests/CMakeFiles/parse_json_test.dir/build
 .PHONY : parse_json_test/fast
 
+# Convenience name for target.
+tests/CMakeFiles/lexical_cast_test.dir/rule:
+	cd /home/oster/OsterLib && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 tests/CMakeFiles/lexical_cast_test.dir/rule
+.PHONY : tests/CMakeFiles/lexical_cast_test.dir/rule
+
+# Convenience name for target.
+lexical_cast_test: tests/CMakeFiles/lexical_cast_test.dir/rule
+.PHONY : lexical_cast_test
+
+# fast build rule for target.
+lexical_cast_test/fast:
+	cd /home/oster/OsterLib && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/lexical_cast_test.dir/build.make tests/CMakeFiles/lexical_cast_test.dir/build
+.PHONY : lexical_cast_test/fast
+
 bytes.o: bytes.cpp.o
 .PHONY : bytes.o
 
@@ -254,6 +268,30 @@ bytes.s: bytes.cpp.s
 bytes.cpp.s:
 	cd /home/oster/OsterLib && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/bytes_test.dir/build.make tests/CMakeFiles/bytes_test.dir/bytes.cpp.s
 .PHONY : bytes.cpp.s
+
+lexical_cast.o: lexical_cast.cpp.o
+.PHONY : lexical_cast.o
+
+# target to build an object file
+lexical_cast.cpp.o:
+	cd /home/oster/OsterLib && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/lexical_cast_test.dir/build.make tests/CMakeFiles/lexical_cast_test.dir/lexical_cast.cpp.o
+.PHONY : lexical_cast.cpp.o
+
+lexical_cast.i: lexical_cast.cpp.i
+.PHONY : lexical_cast.i
+
+# target to preprocess a source file
+lexical_cast.cpp.i:
+	cd /home/oster/OsterLib && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/lexical_cast_test.dir/build.make tests/CMakeFiles/lexical_cast_test.dir/lexical_cast.cpp.i
+.PHONY : lexical_cast.cpp.i
+
+lexical_cast.s: lexical_cast.cpp.s
+.PHONY : lexical_cast.s
+
+# target to generate assembly for a file
+lexical_cast.cpp.s:
+	cd /home/oster/OsterLib && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/lexical_cast_test.dir/build.make tests/CMakeFiles/lexical_cast_test.dir/lexical_cast.cpp.s
+.PHONY : lexical_cast.cpp.s
 
 parse_json.o: parse_json.cpp.o
 .PHONY : parse_json.o
@@ -364,6 +402,7 @@ help:
 	@echo "... list_install_components"
 	@echo "... rebuild_cache"
 	@echo "... bytes_test"
+	@echo "... lexical_cast_test"
 	@echo "... parse_json_test"
 	@echo "... serialization_test"
 	@echo "... time_interval_test"
@@ -371,6 +410,9 @@ help:
 	@echo "... bytes.o"
 	@echo "... bytes.i"
 	@echo "... bytes.s"
+	@echo "... lexical_cast.o"
+	@echo "... lexical_cast.i"
+	@echo "... lexical_cast.s"
 	@echo "... parse_json.o"
 	@echo "... parse_json.i"
 	@echo "... parse_json.s"

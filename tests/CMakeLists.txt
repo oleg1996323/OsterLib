@@ -17,8 +17,12 @@ target_link_libraries(time_sequence_test GTest::gtest types)
 add_executable(parse_json_test parse_json.cpp)
 target_link_libraries(parse_json_test GTest::gtest types)
 
+add_executable(lexical_cast_test lexical_cast.cpp)
+target_link_libraries(lexical_cast_test GTest::gtest types)
+
 gtest_discover_tests(bytes_test WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 gtest_discover_tests(serialization_test WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 gtest_discover_tests(time_interval_test WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 gtest_discover_tests(time_sequence_test WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 gtest_discover_tests(parse_json_test WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+gtest_discover_tests(lexical_cast_test WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})

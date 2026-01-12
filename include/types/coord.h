@@ -15,6 +15,14 @@ struct Coord
             return true;
         else return false;
     }
+
+    bool operator==(const Coord& other) const{
+        return lat_ == other.lat_ && lon_ == other.lon_;
+    }
+
+    bool operator!=(const Coord& other) const{
+        return !operator==(other);
+    }
 };
 
 struct RawCoord
@@ -64,3 +72,11 @@ struct Max_serial_size<Coord>{
     }();
 };
 }
+
+#include "boost_functional/json.h"
+
+template<>
+boost::json::value to_json<Coord>(const Coord& coord);
+
+template<>
+std::expected<Coord,std::exception> from_json<Coord>(const boost::json::value& json);

@@ -4,7 +4,7 @@
         "name": "(gdb) Launch",
         "type": "cppdbg",
         "request": "launch",
-        "program": "${workspaceFolder}/tests/parse_json_test",
+        "program": "${workspaceFolder}/tests/time_sequence_test",
         "args": [],
         "stopAtEntry": false,
         "cwd": "${fileDirname}",

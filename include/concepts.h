@@ -51,12 +51,14 @@ concept AssociativeContainer = requires(const T& cont){
 
 template<typename T>
 concept String  = requires{
-    requires std::ranges::range<std::decay_t<T>>;
-    requires std::is_same_v<std::ranges::range_value_t<
-    std::decay_t<T>>,char>;
-    requires std::ranges::bidirectional_range<T>;
+    requires(
+        std::ranges::range<std::decay_t<T>>&&
+        std::is_same_v<std::ranges::range_value_t<
+        std::decay_t<T>>,char>&&
+        std::ranges::bidirectional_range<T>
+    )||
+    std::is_convertible_v<T,std::string_view>;
 };
-
 
 template<typename T>
 concept RangeOfStrings  = requires{
@@ -79,28 +81,37 @@ inline constexpr bool is_std_variant_v = IsStdVariant<T>;
 
 template<typename T>
 concept IsTimePoint = requires(T d) {
-    typename T::rep;
-    typename T::period;
-    { d.time_since_epoch() } -> std::same_as<typename T::duration>;
-    requires std::is_same_v<T, std::chrono::time_point<typename T::clock,typename T::duration>>;
+    typename std::decay_t<T>::rep;
+    typename std::decay_t<T>::period;
+    typename std::decay_t<T>::clock;
+    { d.time_since_epoch() } -> std::same_as<typename std::decay_t<T>::duration>;
+    requires std::is_same_v<std::decay_t<T>, std::chrono::time_point<typename std::decay_t<T>::clock,typename std::decay_t<T>::duration>>;
 };
 
 template<typename T>
 concept IsDuration = requires(T d) {
-    typename T::rep;
-    typename T::period;
-    { d.count() } -> std::same_as<typename T::rep>;
-    { d + d } -> std::same_as<T>;
-    { d - d } -> std::same_as<T>;
-    requires !IsTimePoint<T>;
+    typename std::decay_t<T>::rep;
+    typename std::decay_t<T>::period;
+    { d.count() } -> std::same_as<typename std::decay_t<T>::rep>;
+    { d + d } -> std::same_as<std::decay_t<T>>;
+    { d - d } -> std::same_as<std::decay_t<T>>;
+    requires !IsTimePoint<std::decay_t<T>>;
 };
 
 template<typename T>
 concept IsOptional = requires(T opt) {
-    typename T::value_type;
-    {std::declval<T>().has_value()}->std::same_as<bool>;
-    std::is_same_v<std::optional<typename T::value_type>,T>;
+    typename std::decay_t<T>::value_type;
+    {std::declval<std::decay_t<T>>().has_value()}->std::same_as<bool>;
+    std::is_same_v<std::optional<typename std::decay_t<T>::value_type>,std::decay_t<T>>;
 };
+
+template<typename T>
+concept IsReferenceWrapper = 
+    requires(T t) {
+        typename T::type;
+        requires std::same_as<std::remove_cvref_t<T>, 
+                             std::reference_wrapper<typename T::type>>;
+    };
 
 static_assert(IsDuration<std::chrono::nanoseconds>);
 static_assert(IsDuration<std::chrono::nanoseconds>);
@@ -108,3 +119,4 @@ static_assert(IsTimePoint<std::chrono::system_clock::time_point>);
 static_assert(IsTimePoint<std::chrono::steady_clock::time_point>);
 static_assert(IsTimePoint<std::chrono::file_clock::time_point>);
 static_assert(IsTimePoint<std::chrono::tai_clock::time_point>);
+static_assert(IsReferenceWrapper<std::reference_wrapper<int>>);
