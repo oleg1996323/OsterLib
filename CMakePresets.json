@@ -1,0 +1,114 @@
+{
+  "version": 10,
+  "cmakeMinimumRequired": {
+    "major": 4,
+    "minor": 0,
+    "patch": 0
+  },
+  "$comment": "OsterLib building/installation",
+    "configurePresets": [
+        {  
+            "$comment": ["Configuration for basic building and intalling by Unix Makefiles in Unix systems"],
+            "name": "default",
+            "displayName": "Configuration",
+            "description": "Default build using Ninja generator",
+            "generator": "Unix Makefiles",
+            "binaryDir": "${sourceDir}/build",
+            "cmakeExecutable": "cmake",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE":"Debug",
+                "CMAKE_CXX_COMPILER":"$env{HOME}/gcc/gcc-install/bin/g++",
+                "CMAKE_C_COMPILER":"$env{HOME}/gcc/gcc-install/bin/gcc",
+                "CMAKE_INSTALL_PREFIX":"$env{HOME}/OsterLib-install",
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+                "DEBUG":null
+            },
+            "vendor": {}
+        },
+        {
+            "name":"default-Debug",
+            "inherits":"default",
+            "displayName": "Configuration-Debug",
+            "$comment": "Configuration for basic building and intalling by Unix Makefiles in Unix systems"
+        },
+        {
+            "name":"default-Release",
+            "inherits":"default",
+            "displayName": "Configuration-Release",
+            "$comment": "Configuration for basic building and intalling by Unix Makefiles in Unix systems",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE":"Release",
+                "CMAKE_CXX_COMPILER":"$env{HOME}/gcc/gcc-install/bin/g++",
+                "CMAKE_C_COMPILER":"$env{HOME}/gcc/gcc-install/bin/gcc",
+                "CMAKE_INSTALL_PREFIX":"$env{HOME}/OsterLib-install",
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+            }
+        },
+        {
+            "name": "ninja-multi",
+            "inherits": "default",
+            "displayName": "Ninja Multi-Config",
+            "description": "Default build using Ninja Multi-Config generator",
+            "generator": "Ninja"
+        },
+        {
+        "name": "windows-only",
+        "inherits": "default",
+        "displayName": "Windows-only configuration",
+        "description": "This build is only available on Windows",
+        "condition": {
+            "type": "equals",
+            "lhs": "${hostSystemName}",
+            "rhs": "Windows"
+        }
+        }
+    ],
+    "buildPresets": [
+        {
+        "name": "default",
+        "configurePreset": "default",
+        "cleanFirst": true
+        }
+    ],
+    "testPresets": [
+        {
+        "name": "default",
+        "configurePreset": "default",
+        "output": {"outputOnFailure": true},
+        "execution": {"noTestsAction": "error", "stopOnFailure": true}
+        }
+    ],
+    "packagePresets": [
+        {
+        "name": "default",
+        "configurePreset": "default",
+        "generators": [
+            "Unix Makefiles","Ninja"
+        ]
+        }
+    ],
+    "workflowPresets": [
+        {
+        "name": "default",
+        "steps": [
+            {
+            "type": "configure",
+            "name": "default"
+            },
+            {
+            "type": "build",
+            "name": "default"
+            },
+            {
+            "type": "test",
+            "name": "default"
+            },
+            {
+            "type": "package",
+            "name": "default"
+            }
+        ]
+        }
+    ],
+  "vendor": {}
+}

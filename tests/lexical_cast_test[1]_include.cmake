@@ -1,5 +1,0 @@
-if(EXISTS "/home/oster/OsterLib/tests/lexical_cast_test[1]_tests.cmake")
-  include("/home/oster/OsterLib/tests/lexical_cast_test[1]_tests.cmake")
-else()
-  add_test(lexical_cast_test_NOT_BUILT lexical_cast_test_NOT_BUILT)
-endif()

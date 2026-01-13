@@ -1,5 +1,0 @@
-if(EXISTS "/home/oster/OsterLib/tests/bytes_test[1]_tests.cmake")
-  include("/home/oster/OsterLib/tests/bytes_test[1]_tests.cmake")
-else()
-  add_test(bytes_test_NOT_BUILT bytes_test_NOT_BUILT)
-endif()
