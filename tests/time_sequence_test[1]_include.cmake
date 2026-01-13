@@ -1,5 +1,0 @@
-if(EXISTS "/home/oster/OsterLib/tests/time_sequence_test[1]_tests.cmake")
-  include("/home/oster/OsterLib/tests/time_sequence_test[1]_tests.cmake")
-else()
-  add_test(time_sequence_test_NOT_BUILT time_sequence_test_NOT_BUILT)
-endif()

@@ -1,0 +1,16 @@
+{
+    "version": 4,
+    "configurePresets": [{
+        "name":"OsterLib-Client/Server",
+        "displayName": "Windows x64 Debug",
+        "binaryDir": "${sourceDir}/build",
+        "generator": "nmake",
+        "cacheVariables":{
+            "CMAKE_BUILD_TYPE":"Debug",
+            "CMAKE_C_COMPILER":"gcc",
+            "CMAKE_CXX_COMPILER":"g++",
+            "CMAKE_INSTALL_PREFIX":"${sourceDir}/install"
+            
+        }
+    }]
+}

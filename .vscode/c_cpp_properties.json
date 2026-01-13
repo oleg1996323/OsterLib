@@ -7,8 +7,21 @@
             ],
             "defines": [],
             "cStandard": "c23",
-            "cppStandard": "c++23",
-            "compilerPath": "/home/oster/gcc/gcc-install/bin/g++"
+            "cppStandard": "c++23"
+        },
+        {
+            "name": "Windows",
+            "includePath": [
+                "${workspaceFolder}/**"
+            ],
+            "defines": [
+                "_DEBUG",
+                "UNICODE",
+                "_UNICODE"
+            ]
+            ,
+            "cStandard": "gnu23",
+            "cppStandard": "gnu++23"
         }
     ],
     "version": 4

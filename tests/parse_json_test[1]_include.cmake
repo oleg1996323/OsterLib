@@ -1,5 +1,0 @@
-if(EXISTS "/home/oster/OsterLib/tests/parse_json_test[1]_tests.cmake")
-  include("/home/oster/OsterLib/tests/parse_json_test[1]_tests.cmake")
-else()
-  add_test(parse_json_test_NOT_BUILT parse_json_test_NOT_BUILT)
-endif()

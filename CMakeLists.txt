@@ -6,10 +6,10 @@ project(OsterLib
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_C_STANDARD 23)
-set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_CXX_EXTENSIONS ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-rpath,$ENV{LD_LIBRARY_PATH}")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lzip -static-libstdc++")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static-libstdc++")
 add_compile_options("-fPIC" "-O0" "-fconcepts-diagnostics-depth=10")
 find_package(GTest CONFIG REQUIRED)
 include(GoogleTest)
@@ -17,7 +17,19 @@ include(CMakePackageConfigHelpers)
 include(GNUInstallDirs)
 find_package(PNG REQUIRED)
 find_package(ZLIB REQUIRED)
-find_package(Boost CONFIG 1.82 REQUIRED json)
+
+find_package(Boost 1.82 CONFIG REQUIRED json)
+
+if(Boost_FOUND)
+        message(STATUS ${Boost_INCLUDE_DIR})
+        if(EXISTS "${Boost_INCLUDE_DIRS}/boost/json.hpp")
+                message(STATUS "SUCCESS: boost/json.hpp found at ${Boost_INCLUDE_DIRS}/boost/json.hpp")
+        else()
+                message(WARNING "boost/json.hpp NOT found at ${Boost_INCLUDE_DIRS}/boost/json.hpp")
+        endif()
+
+message(STATUS ${Boost_LIBRARIES})
+endif()
 
 add_library(bytes INTERFACE)
 target_include_directories(bytes INTERFACE 
@@ -46,21 +58,26 @@ add_library(compressor INTERFACE)
 target_link_libraries(compressor INTERFACE ${ZLIB_LIBRARIES})
 target_include_directories(compressor INTERFACE 
                 "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
-                "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>")
+                "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
+                ${Boost_INCLUDE_DIR})
 
 add_library(images INTERFACE)
 target_link_libraries(images INTERFACE PNG::PNG)
 target_include_directories(images INTERFACE 
                 "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/images>"
-                "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/images>")
+                "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/images>"
+                ${Boost_INCLUDE_DIR})
 
 add_library(boost_functional STATIC ${CMAKE_CURRENT_SOURCE_DIR}/src/boost_functional/json.cpp)
 target_link_libraries(boost_functional PRIVATE Boost::json)
 target_include_directories(boost_functional PUBLIC
+                "$<BUILD_INTERFACE:${Boost_INCLUDE_DIR}>"
+                "$<INSTALL_INTERFACE:${Boost_INCLUDE_DIR}>"
                 "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/boost_functional>"
                 "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/>"
                 "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/boost_functional>"
-                "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>")
+                "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
+                )
 
 add_library(types STATIC src/types/coord.cpp
                 src/types/rect.cpp
@@ -71,7 +88,7 @@ target_include_directories(types PUBLIC
                                 "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/types>"
                                 "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/>"
                                 "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>")
-target_link_libraries(types PUBLIC boost_functional)
+target_link_libraries(types PUBLIC boost_functional Boost::json)
 add_library(utilities STATIC    src/directories.cpp
                                 src/floattoieee.cpp
                                 src/ibmtofloat.cpp
