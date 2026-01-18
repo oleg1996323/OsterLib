@@ -557,6 +557,19 @@ class TimeSequence{
     }
     template<IsDuration INTERVAL_DUR>
     TimeSequence(__time_interval__<INTERVAL_DUR> interval):interval_(interval),time_duration_(interval_.from(),interval_.to()),intervals_(1){}
+    template<IsTimePoint ARG_TP>
+    TimeSequence(ARG_TP&& from, const DateTimeDiff& dtd, uint16_t number_of_intervals){
+        std::chrono::year_month_day ymd_to((std::chrono::floor<std::chrono::days>(from)));
+        ymd_to=ymd_to+(std::chrono::years(dtd.years_)*number_of_intervals);
+        ymd_to=ymd_to+(std::chrono::months(dtd.months_)*number_of_intervals);
+        interval_ = decltype(interval_)(from,std::chrono::sys_days(ymd_to)+(std::chrono::days(dtd.days_)+
+                                                                            std::chrono::hours(dtd.hours_)+
+                                                                            std::chrono::minutes(dtd.minutes_)+
+                                                                            std::chrono::seconds(dtd.seconds_))*
+                                                                            number_of_intervals);
+        intervals_ = number_of_intervals;
+        time_duration_ = dtd;
+    }
     TimeSequence(const TimeSequence& other){
         operator=(other);
     }
