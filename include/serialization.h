@@ -177,6 +177,12 @@ namespace serialization{
                 }
                 else return serialize<NETWORK_ORDER>(false,buf);
             }
+            else if constexpr (weak_pointer_concept<std::decay_t<T>>){
+                SerializationEC err;
+                if(!val.expired())
+                    return serialize<NETWORK_ORDER>(val.lock(),buf);
+                else return serialize<NETWORK_ORDER>(false,buf);
+            }
             else if constexpr(std::is_same_v<std::decay_t<T>,std::monostate>)
                 return SerializationEC::NONE;
             else if constexpr(pair_concept<T>){
@@ -294,6 +300,8 @@ namespace serialization{
                 return sizeof(val.count());
             else if constexpr (smart_pointer_concept<T>)
                 return sizeof(bool)+(val?serial_size(*val):0);
+            else if constexpr(weak_pointer_concept<T>)
+                return sizeof(bool)+(!val.expired()?serial_size(val.lock()):0);
             else if constexpr(std::is_same_v<std::decay_t<T>,std::monostate>)
                 return 0;
             else if constexpr(pair_concept<T>)
@@ -315,7 +323,7 @@ namespace serialization{
                 return sizeof(T);
             else if constexpr (duration_concept<T>)
                 return sizeof(T);
-            else if constexpr (smart_pointer_concept<T>)
+            else if constexpr (smart_pointer_concept<T> || weak_pointer_concept<T>)
                 return sizeof(bool);
             else if constexpr(std::is_same_v<std::decay_t<T>,std::monostate>)
                 return 0;
@@ -340,7 +348,7 @@ namespace serialization{
                 return sizeof(T);
             else if constexpr (duration_concept<T>)
                 return sizeof(T);
-            else if constexpr (smart_pointer_concept<T>)
+            else if constexpr (smart_pointer_concept<T>||weak_pointer_concept<T>)
                 return Max_serial_size<typename T::element_type>::value == std::numeric_limits<size_t>::max()?
                         Max_serial_size<typename T::element_type>::value:Max_serial_size<typename T::element_type>::value+sizeof(bool);
             else if constexpr(std::is_same_v<T,std::monostate>)

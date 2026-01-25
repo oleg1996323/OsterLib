@@ -125,6 +125,10 @@ class __time_interval__{
     utc_tp_t<DUR_PRECISION> to() const noexcept{
         return to_;
     }
+    template<IsDuration INTERVAL_DUR>
+    bool contains(const __time_interval__<INTERVAL_DUR>& other) const{
+        return from_<=other.from() && to_>=other.to();
+    }
 };
 
 #include <ranges>
@@ -390,6 +394,43 @@ struct DateTimeDiff{
 
     bool operator!=(const DateTimeDiff& other) const noexcept{
         return !(*this==other);
+    }
+
+    bool operator<(const DateTimeDiff& other) const noexcept{
+        return !(*this>=other);
+    }
+    bool operator>(const DateTimeDiff& other) const noexcept{
+        return !(*this<=other);
+    }
+    bool operator<=(const DateTimeDiff& other) const noexcept{
+        if(years_>other.years_)
+            return false;
+        if(months_>other.months_)
+            return false;
+        if(days_>other.days_)
+            return false;
+        if(hours_>other.hours_)
+            return false;
+        if(minutes_>other.minutes_)
+            return false;
+        if(seconds_>other.seconds_)
+            return false;
+        return *this==other;
+    }
+    bool operator>=(const DateTimeDiff& other) const noexcept{
+        if(years_>other.years_)
+            return false;
+        if(months_>other.months_)
+            return false;
+        if(days_>other.days_)
+            return false;
+        if(hours_>other.hours_)
+            return false;
+        if(minutes_>other.minutes_)
+            return false;
+        if(seconds_>other.seconds_)
+            return false;
+        return *this==other;
     }
 
     DateTimeDiff& operator=(const DateTimeDiff& other) noexcept{
@@ -1114,6 +1155,11 @@ std::string lexical_cast(const TP& tp )requires(IsTimePoint<TP>)
 {
     return std::format("{:%y/%m/%d %H:%M:%S}", tp);
 }
+
+template<>
+DateTimeDiff lexical_cast(const std::string& input);
+template<>
+std::string lexical_cast(const DateTimeDiff& input);
 }
 
 static_assert(IsTimePoint<utc_tp>);

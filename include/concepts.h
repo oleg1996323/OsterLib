@@ -31,6 +31,14 @@ static_assert(smart_pointer_concept<std::shared_ptr<int>>);
 static_assert(smart_pointer_concept<std::unique_ptr<int>>);
 
 template<typename T>
+concept weak_pointer_concept =
+requires(T ptr) {
+    {ptr.lock()}->std::same_as<std::shared_ptr<typename std::decay_t<T>::element_type>>;
+    std::is_same_v<T, std::weak_ptr<typename T::element_type>>;
+};
+static_assert(weak_pointer_concept<std::weak_ptr<int>>);
+
+template<typename T>
 concept time_point_concept = requires (const T& time){
     time.time_since_epoch().count();
 };

@@ -9,6 +9,9 @@ struct std::hash<std::shared_ptr<TYPE>>\
     size_t operator()(const std::shared_ptr<TYPE>& node_ptr) const{\
         return std::hash<TYPE>{}(*node_ptr);\
     }\
+    size_t operator()(const std::weak_ptr<TYPE>& node_ptr) const{\
+        return std::hash<TYPE>{}(*(node_ptr.lock()));\
+    }\
     size_t operator()(const TYPE& node_ptr) const{\
         return std::hash<TYPE>{}(node_ptr);\
     }\
@@ -17,9 +20,12 @@ struct std::hash<std::shared_ptr<TYPE>>\
 template<>\
 struct std::hash<std::weak_ptr<TYPE>>\
 {\
+    size_t operator()(const std::shared_ptr<TYPE>& node_ptr) const{\
+        return std::hash<TYPE>{}(*node_ptr);\
+    }\
     using is_transparent = std::true_type;\
     size_t operator()(const std::weak_ptr<TYPE>& node_ptr) const{\
-        return std::hash<TYPE>{}(*node_ptr.lock());\
+        return std::hash<std::shared_ptr<TYPE>>{}(*(node_ptr.lock()));\
     }\
     size_t operator()(const TYPE& node_ptr) const{\
         return std::hash<TYPE>{}(node_ptr);\
@@ -269,11 +275,3 @@ struct std::equal_to<TYPE<TEMPLATE_ARG __VA_OPT__(,)__VA_ARGS__>>\
         return lhs==rhs;\
     }\
 };
-
-struct macros
-{
-    int i;
-    /* data */
-};
-
-
