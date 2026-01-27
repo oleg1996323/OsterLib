@@ -113,6 +113,14 @@ TEST(TimeIntervalTest,interval_instersection_test){
     }
 }
 
+TEST(DateTimeDiffTest,operators_test){
+    utc_tp_t<std::chrono::seconds> time;
+    DateTimeDiff diff;
+    utc_tp_t<std::chrono::seconds> result = diff+time;
+    result = time+diff;
+    utc_tp_t<std::chrono::days> result_d = std::chrono::floor<std::chrono::days>(diff+time);
+}
+
 int main(int argc,char* argv[]){
     testing::InitGoogleTest(&argc,argv);
     return RUN_ALL_TESTS();

@@ -1,5 +1,4 @@
 #pragma once
-#include "byte_order.h"
 #include "serialization.h"
 #include "float_conv.h"
 typedef float Lat;
@@ -72,6 +71,13 @@ struct Max_serial_size<Coord>{
     }();
 };
 }
+
+template<>
+struct std::hash<Coord>{
+    size_t operator()(const Coord& val) const{
+        return static_cast<size_t>(::to_integer(val.lat_))<<sizeof(Lat)|static_cast<size_t>(::to_integer(val.lon_));
+    }
+};
 
 #include "boost_functional/json.h"
 

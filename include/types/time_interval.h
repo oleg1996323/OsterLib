@@ -382,9 +382,9 @@ struct DateTimeDiff{
     template<IsTimePoint ARG1_TP>
     std::decay_t<ARG1_TP> operator+(ARG1_TP&& tp) const {
         std::chrono::year_month_day ymd_tp(std::chrono::floor<std::chrono::days>(tp));
-        return std::chrono::time_point_cast<typename ARG1_TP::duration>(std::chrono::seconds(seconds_)+std::chrono::sys_days(std::chrono::year_month_day(   ymd_tp.year()+std::chrono::years(years_),
+        return std::chrono::seconds(seconds_)+std::chrono::sys_days(std::chrono::year_month_day(   ymd_tp.year()+std::chrono::years(years_),
                                                                     ymd_tp.month()+std::chrono::months(months_),
-                                                                    ymd_tp.day()+std::chrono::days(days_))));
+                                                                    ymd_tp.day()+std::chrono::days(days_)));
     }
 
     bool operator==(const DateTimeDiff& other) const noexcept{
