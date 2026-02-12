@@ -774,10 +774,10 @@ template<bool NETWORK_ORDER,typename T>
         else{
             SerializationEC err;
             std::vector<char> buf;
-            size_t sz = serial_size(val);
-            err = serialize_to_file(sz,fstream);
-            if(err!=SerializationEC::NONE)
-                return err;
+            // size_t sz = serial_size(val);
+            // err = serialize_to_file(sz,fstream);
+            // if(err!=SerializationEC::NONE)
+            //     return err;
             buf.reserve(serial_size(val));
             if constexpr (!NETWORK){
                 if(err = serialize_native(val,buf); err!=SerializationEC::NONE)
@@ -802,10 +802,12 @@ template<bool NETWORK_ORDER,typename T>
         else{
             SerializationEC err;
             size_t sz = 0;
-            err = deserialize_from_file(sz,fstream);
-            if(fstream.eof())
-                return SerializationEC::UNEXPECTED_EOF;
-            else if(fstream.fail())
+            {
+                size_t cur = fstream.tellg();
+                sz = fstream.seekg(0,std::ios::end).tellg()-cur;
+                fstream.seekg(cur,std::ios::beg);
+            }
+            if(fstream.fail())
                 return SerializationEC::FILE_READING_ERROR;
             else if(sz<min_serial_size(val))
                 return SerializationEC::BUFFER_SIZE_LESSER;

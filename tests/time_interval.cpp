@@ -42,38 +42,61 @@ TEST(TimeIntervalTest,intervals_intersect_test){
 }
 
 TEST(TimeIntervalTest,interval_intersection_pos_test){
-    std::error_code err;
+    std::error_code err = std::error_code();
+    auto ts = TimeSequence(sys_days(year(1990)/month(1)/day(3)),sys_days(year(1990)/month(1)/day(31)),err,days(1));
+    ASSERT_EQ(err,std::error_code());
     auto beg_end = interval_intersection_pos(__time_interval__(sys_days(1990y/month(1)/day(1)),sys_days(year(1990)/month(1)/day(2))),
-                            TimeSequence(sys_days(year(1990)/month(1)/day(3)),sys_days(year(1990)/month(1)/day(31)),err,days(1)),err);
+                            ts,err);
     ASSERT_FALSE(beg_end.has_value());
+    ts = TimeSequence(sys_days(year(1990)/month(1)/day(1)),sys_days(year(1990)/month(1)/day(2)),err,days(1));
+    ASSERT_EQ(err,std::error_code());
     beg_end = interval_intersection_pos(__time_interval__(sys_days(1990y/month(1)/day(1)),sys_days(year(1990)/month(1)/day(1))+days(1)),
-                            TimeSequence(sys_days(year(1990)/month(1)/day(1)),sys_days(year(1990)/month(1)/day(2)),err,days(1)),err);
+                            ts,err);
     EXPECT_EQ(beg_end->first,0);
     EXPECT_EQ(beg_end->second,1);
+    ts = TimeSequence(sys_days(year(1990)/month(1)/day(1)),sys_days(year(1990)/month(1)/day(31)),err,days(1));
+    ASSERT_EQ(err,std::error_code());
     beg_end = interval_intersection_pos(__time_interval__(sys_days(1990y/month(1)/day(1)),sys_days(year(1990)/month(1)/day(1))+days(31)),
-                            TimeSequence(sys_days(year(1990)/month(1)/day(1)),sys_days(year(1990)/month(1)/day(31)),err,days(1)),err);
+                            ts,err);
     EXPECT_EQ(beg_end->first,0);
     EXPECT_EQ(beg_end->second,30);
+    ts = TimeSequence(sys_days(year(1990)/month(1)/day(1)),sys_days(year(1990)/month(1)/day(31)),err,days(1));
+    ASSERT_EQ(err,std::error_code());
     beg_end = interval_intersection_pos(__time_interval__(sys_days(1990y/month(1)/day(1)),sys_days(year(1990)/month(1)/day(1))+days(30)),
-                            TimeSequence(sys_days(year(1990)/month(1)/day(1)),sys_days(year(1990)/month(1)/day(31)),err,days(1)),err);
+                            ts,err);
     EXPECT_EQ(beg_end->first,0);
     EXPECT_EQ(beg_end->second,30);
+    ts = TimeSequence(sys_days(year(1990)/month(1)/day(1)),sys_days(year(1990)/month(1)/day(32)),err,days(1));
+    ASSERT_EQ(err,std::error_code());
     beg_end = interval_intersection_pos(__time_interval__(sys_days(1990y/month(1)/day(1)),sys_days(year(1990)/month(1)/day(1))+days(31)),
-                            TimeSequence(sys_days(year(1990)/month(1)/day(1)),sys_days(year(1990)/month(1)/day(32)),err,days(1)),err);
+                            ts,err);
     EXPECT_EQ(beg_end->first,0);
     EXPECT_EQ(beg_end->second,31);
+    ts  = TimeSequence(sys_days(year(1990)/month(1)/day(1)),sys_days(year(1991)/month(1)/day(1)),err,days(1));
+    ASSERT_EQ(err,std::error_code());
+    ts = TimeSequence(sys_days(year(1990)/month(1)/day(1)),sys_days(year(1991)/month(1)/day(1)),err,days(1));
+    ASSERT_EQ(err,std::error_code());
     beg_end = interval_intersection_pos(__time_interval__(sys_days(1990y/month(1)/day(1)),sys_days(year(1990)/month(12)/day(25))),
-                            TimeSequence(sys_days(year(1990)/month(1)/day(1)),sys_days(year(1991)/month(1)/day(1)),err,days(1)),err);
+                            ts,err);
     EXPECT_EQ(beg_end->first,0);
     EXPECT_EQ(beg_end->second,358);
+    ts = TimeSequence(sys_days(year(1990)/month(1)/day(1)),sys_days(year(1991)/month(1)/day(1)),err,days(1));
+    ASSERT_EQ(err,std::error_code());
     beg_end = interval_intersection_pos(__time_interval__(sys_days(1990y/month(1)/day(1))+days(30),sys_days(year(1990)/month(12)/day(25))-days(30)),
-                            TimeSequence(sys_days(year(1990)/month(1)/day(1)),sys_days(year(1991)/month(1)/day(1)),err,days(1)),err);
+                            ts,err);
     EXPECT_EQ(beg_end->first,30);
     EXPECT_EQ(beg_end->second,328);
+    ts = TimeSequence(sys_days(year(1990)/month(1)/day(1)),sys_days(year(1991)/month(1)/day(1)),err,days(1));
+    ASSERT_EQ(err,std::error_code());
     beg_end = interval_intersection_pos(__time_interval__(sys_days(1990y/month(1)/day(1))-days(30),sys_days(year(1990)/month(12)/day(25))+days(30)),
-                            TimeSequence(sys_days(year(1990)/month(1)/day(1)),sys_days(year(1991)/month(1)/day(1)),err,days(1)),err);
+                            ts,err);
     EXPECT_EQ(beg_end->first,0);
     EXPECT_EQ(beg_end->second,(sys_days(year(1991)/month(1)/day(1))-sys_days(year(1990)/month(1)/day(1)))/days(1));
+    ts = TimeSequence(sys_days(year(1990)/month(1)/day(1)),sys_days(year(1990)/month(1)/day(31)),err,days(1));
+    beg_end = interval_intersection_pos(__time_interval__(sys_days(1990y/month(1)/day(1)),sys_days(year(1990)/month(1)/day(2))),
+                            ts,err);
+    EXPECT_EQ(beg_end->first,0);
+    EXPECT_EQ(beg_end->second,1);
 }
 
 TEST(TimeIntervalTest,interval_instersection_test){
@@ -112,6 +135,23 @@ TEST(TimeIntervalTest,interval_instersection_test){
         EXPECT_EQ(res.value(),expected);
     }
 }
+
+// TEST(TimeIntervalTest,bounds_search){
+//     using TimeInterval = __time_interval__<std::chrono::seconds>;
+//     std::set<TimeInterval> set;
+//     auto beg_check = set.insert(TimeInterval(sys_days(1991y/1/1),sys_days(2000y/12/1))).first;
+//     set.insert(TimeInterval(sys_days(1995y/1/1),sys_days(1998y/5/1)));
+//     set.insert(TimeInterval(sys_days(1980y/1/1),sys_days(2010y/11/1)));
+//     set.insert(TimeInterval(sys_days(1996y/1/1),sys_days(1998y/3/1)));
+//     set.insert(TimeInterval(sys_days(2005y/1/1),sys_days(2010y/12/1)));
+//     set.insert(TimeInterval(sys_days(1999y/1/1),sys_days(2008y/7/1)));
+//     ASSERT_EQ(set.size(),6);
+//     TimeInterval to_search(sys_days(1992y/1/1),sys_days(2001y/1/1));
+//     auto beg = set.lower_bound(to_search);
+//     auto end = set.upper_bound(to_search);
+//     ASSERT_NE(beg,end);
+//     EXPECT_EQ(beg_check,beg);
+// }
 
 TEST(DateTimeDiffTest,operators_test){
     utc_tp_t<std::chrono::seconds> time;

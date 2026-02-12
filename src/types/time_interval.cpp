@@ -10,7 +10,7 @@ bool TimeSequence::operator<(const TimeSequence& other) const{
 template<>
 boost::json::value to_json(const DateTimeDiff& diff) {
     boost::json::value result;
-    result = std::format("%dY %dM %dD %dh %dm %ds",
+    result = std::format("{}Y {}M {}D {}h {}m {}s",
                         diff.years_,diff.months_,
                         diff.days_,diff.hours_,
                         diff.minutes_,diff.seconds_);
@@ -22,12 +22,22 @@ std::expected<DateTimeDiff,std::exception> from_json<DateTimeDiff>(const boost::
     using namespace std::string_literals;
     if(!json_time.is_string())
         return std::unexpected(std::exception());
-    std::istringstream stream_tmp(json_time.as_string().subview());
-    DateTimeDiff result;
+    int years,months,days,hours,minutes,seconds;    
     if(std::sscanf(json_time.as_string().c_str(),"%dY %dM %dD %dh %dm %ds",
-    result.years_,result.months_,result.days_,result.hours_,result.minutes_,result.seconds_)!=0)
+    &years,&months,&days,&hours,&minutes,&seconds)!=6)
         return std::unexpected(std::exception());
-    else return result;
+    else{
+        std::error_code err;
+        using namespace std;
+        DateTimeDiff result(err,
+            chrono::years(years),
+            chrono::months(months),
+            chrono::days(days),
+            chrono::hours(hours),
+            chrono::minutes(minutes),
+            chrono::seconds(seconds));
+        return result;
+    }
 }
 
 #include "parsing.h"

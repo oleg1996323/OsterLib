@@ -159,8 +159,12 @@ struct DateTimeDiff{
         return days_in_month[static_cast<unsigned>(month) - 1];
     }
 
-    static uint8_t getDaysInMonth(uint8_t year, uint8_t month){
+    static uint8_t getDaysInMonth(uint16_t year, uint8_t month){
         return getDaysInMonth(std::chrono::year(year),std::chrono::month(month));
+    }
+
+    static uint16_t getDaysInYear(uint16_t year){
+        return isLeapYear(year)?366:365;
     }
 
     static uint64_t days_between_dates(std::chrono::year_month_day ymd_from, std::chrono::year_month_day ymd_to){
@@ -168,6 +172,32 @@ struct DateTimeDiff{
             return static_cast<uint64_t>((std::chrono::sys_days(ymd_from)-std::chrono::sys_days(ymd_to)).count());
         }
         else return static_cast<uint64_t>((std::chrono::sys_days(ymd_to)-std::chrono::sys_days(ymd_from)).count());
+    }
+
+    static uint32_t number_leap_days(std::chrono::year_month_day ymd_from,
+                                          std::chrono::year_month_day ymd_to) {
+        auto y1 = static_cast<int>(ymd_from.year());
+        auto y2 = static_cast<int>(ymd_to.year());
+        auto leap_count = [](int year) -> int {
+            return year / 4 - year / 100 + year / 400;
+        };
+        int total_leaps = leap_count(y2 - 1) - leap_count(y1 - 1);
+        auto is_leap = [](int y) -> bool {
+            return (y & 3) == 0 && (y % 100 != 0 || (y & 15) == 0);
+        };
+        if (is_leap(y1)) {
+            auto m1 = static_cast<unsigned>(ymd_from.month());
+            if (m1 < 3) {
+                ++total_leaps;
+            }
+        }
+        if (is_leap(y2)) {
+            auto m2 = static_cast<unsigned>(ymd_to.month());
+            if (m2 > 2 || (m2 == 2 && static_cast<unsigned>(ymd_to.day()) == 29)) {
+                ++total_leaps;
+            }
+        }
+        return static_cast<uint32_t>(total_leaps);
     }
 
     DateTimeDiff() noexcept = default;
@@ -234,10 +264,15 @@ struct DateTimeDiff{
         std::chrono::year_month_day ymd_from(std::chrono::floor<std::chrono::days>(from)),
                                     ymd_to(std::chrono::floor<std::chrono::days>(to));
         int diff = 0;
-        if(diff = static_cast<unsigned>(ymd_to.day())-static_cast<unsigned>(ymd_from.day());diff>std::numeric_limits<decltype(days_)>::max() || diff<std::numeric_limits<decltype(days_)>::min()){
-            throw std::invalid_argument("Months-diff value overflow. Must be "s+
-                            std::to_string(std::numeric_limits<decltype(days_)>::min())+
-                            "<=[VAL]]<="+std::to_string(std::numeric_limits<decltype(days_)>::max()));
+        if(diff = static_cast<unsigned>(ymd_to.day())-
+                static_cast<unsigned>(ymd_from.day());
+                diff>std::numeric_limits<decltype(days_)>::max() ||
+                diff<std::numeric_limits<decltype(days_)>::min()){
+            throw std::invalid_argument(
+            "Months-diff value overflow. Must be "s+
+            std::to_string(std::numeric_limits<decltype(days_)>::min())+
+            "<=[VAL]]<="+
+            std::to_string(std::numeric_limits<decltype(days_)>::max()));
         }
         else{
             if(diff<0){
@@ -246,10 +281,15 @@ struct DateTimeDiff{
             }
             else days_ =static_cast<decltype(days_)>(diff);
         }
-        if(diff = static_cast<unsigned>(ymd_to.month())-static_cast<unsigned>(ymd_from.month());diff>std::numeric_limits<decltype(months_)>::max() || diff<std::numeric_limits<decltype(months_)>::min()){
-            throw std::invalid_argument("Months-diff value overflow. Must be "s+
-                            std::to_string(std::numeric_limits<decltype(months_)>::min())+
-                            "<=[VAL]]<="+std::to_string(std::numeric_limits<decltype(months_)>::max()));
+        if(diff = static_cast<unsigned>(ymd_to.month())-
+        static_cast<unsigned>(ymd_from.month());
+        diff>std::numeric_limits<decltype(months_)>::max() ||
+        diff<std::numeric_limits<decltype(months_)>::min()){
+            throw std::invalid_argument(
+            "Months-diff value overflow. Must be "s+
+            std::to_string(std::numeric_limits<decltype(months_)>::min())+
+            "<=[VAL]]<="+
+            std::to_string(std::numeric_limits<decltype(months_)>::max()));
         }
         else {
             if(diff<0){
@@ -259,136 +299,200 @@ struct DateTimeDiff{
             else
                 months_ =static_cast<decltype(months_)>(diff);
         }
-        if(diff = static_cast<int>(ymd_to.year())-static_cast<int>(ymd_from.year());diff>std::numeric_limits<decltype(years_)>::max() || diff<std::numeric_limits<decltype(years_)>::min())
+        if(diff = static_cast<int>(ymd_to.year())-static_cast<int>(ymd_from.year());
+            diff>std::numeric_limits<decltype(years_)>::max() ||
+            diff<std::numeric_limits<decltype(years_)>::min())
             throw std::invalid_argument("Years-diff value overflow. Must be "s+
-                            std::to_string(std::numeric_limits<decltype(years_)>::min())+
-                            "<=[VAL]]<="+std::to_string(std::numeric_limits<decltype(years_)>::max()));
+                std::to_string(std::numeric_limits<decltype(years_)>::min())+
+                "<=[VAL]]<="+std::to_string(std::numeric_limits<decltype(years_)>::max()));
         else years_ += static_cast<decltype(years_)>(diff);
-        hours_ = std::chrono::duration_cast<std::chrono::hours>((to-std::chrono::floor<std::chrono::days>(to))-
-                    (from-std::chrono::floor<std::chrono::days>(from))).count();
-        minutes_ = std::chrono::duration_cast<std::chrono::minutes>((to-std::chrono::floor<std::chrono::hours>(to))-
-                    (from-std::chrono::floor<std::chrono::hours>(from))).count();
-        seconds_ = std::chrono::duration_cast<std::chrono::seconds>((to-std::chrono::floor<std::chrono::minutes>(to))-
-                    (from-std::chrono::floor<std::chrono::minutes>(from))).count();
-        // std::cout<<"Resulted duration from constructor:\nyears:"<<static_cast<int>(years_)<<
-        //             "\nmonths:"<<static_cast<int>(months_)<<"\ndays:"<<static_cast<int>(days_)<<
-        //             "\nhours:"<<static_cast<int>(hours_)<<"\nminutes"<<static_cast<int>(minutes_)<<
-        //             "\nseconds"<<static_cast<int>(seconds_)<<std::endl;
+        hours_ = std::chrono::duration_cast<std::chrono::hours>(
+            (to-std::chrono::floor<std::chrono::days>(to))-
+            (from-std::chrono::floor<std::chrono::days>(from))).count();
+        minutes_ = std::chrono::duration_cast<std::chrono::minutes>(
+            (to-std::chrono::floor<std::chrono::hours>(to))-
+            (from-std::chrono::floor<std::chrono::hours>(from))).count();
+        seconds_ = std::chrono::duration_cast<std::chrono::seconds>(
+            (to-std::chrono::floor<std::chrono::minutes>(to))-
+            (from-std::chrono::floor<std::chrono::minutes>(from))).count();
     }
 
     template<IsTimePoint ARG1_TP,IsTimePoint ARG2_TP>
-    DateTimeDiff(ARG1_TP&& from,ARG2_TP&& to, uint32_t number_of_intervals, std::error_code& err){
+    DateTimeDiff(ARG1_TP&& from,
+                ARG2_TP&& to,
+                uint32_t number_of_intervals,
+                std::error_code& err){
         using namespace std::string_literals;
-        if(from==to){
+        utc_tp_t<std::chrono::seconds> from_conv=std::chrono::floor<std::chrono::seconds>(from);
+        utc_tp_t<std::chrono::seconds> to_conv=std::chrono::floor<std::chrono::seconds>(to);
+        if(from_conv==to_conv){
             if(number_of_intervals>0)
                 err = std::make_error_code(std::errc::invalid_argument);
             return;
         }
-        if(from!=to && number_of_intervals==0){
+        if(from_conv!=to_conv && number_of_intervals==0){
             err = std::make_error_code(std::errc::invalid_argument);
             return;
         }
 
         auto is_integer = [](const auto& number){
-            bool is = std::fmod(std::fabs(number),1)<std::numeric_limits<std::decay_t<decltype(number)>>::epsilon();
+            bool is = std::fmod(std::fabs(number),1)<
+            std::numeric_limits<std::decay_t<decltype(number)>>::epsilon();
             return is;
         };
 
-        std::chrono::year_month_day ymd_from(std::chrono::floor<std::chrono::days>(from)),
-                                    ymd_to(std::chrono::floor<std::chrono::days>(to));
-        double diff = 0;
-        {
-            auto from_time = from-std::chrono::floor<std::chrono::days>(from);
-            auto to_time = to-std::chrono::floor<std::chrono::days>(to);
-            if(from_time>to_time){
-                diff = static_cast<double>((to_time-from_time+std::chrono::hours(24)).count())/number_of_intervals;
-                --days_;
-            }
-            else 
-                diff = static_cast<double>((to_time-from_time).count())/number_of_intervals;
-        }
+        std::chrono::year_month_day 
+                ymd_from(
+                std::chrono::floor<std::chrono::days>(from_conv)),
+                ymd_to(
+                std::chrono::floor<std::chrono::days>(to_conv));
+        double diff = static_cast<double>((
+            std::chrono::floor<std::chrono::seconds>(to_conv)-
+            std::chrono::floor<std::chrono::seconds>(from_conv)-
+            std::chrono::days(number_leap_days(ymd_from,ymd_to)))
+            .count())/number_of_intervals;
         if(!is_integer(diff)){
             err = std::make_error_code(std::errc::invalid_argument);
             return;
         }
-        else{
-            hours_ = static_cast<decltype(hours_)>(diff/3600);
-            minutes_ = static_cast<decltype(minutes_)>((diff-hours_*3600)/60);
-            seconds_ = static_cast<decltype(minutes_)>(diff-hours_*3600-minutes_*60);
-        }       
+        {
+        auto total_days_diff = days_between_dates(ymd_from,ymd_to);
+            if(total_days_diff<
+                getDaysInMonth(ymd_from.year(),ymd_from.month())){
+                diff = (to_conv-from_conv).count()/number_of_intervals;
+                days_ = total_days_diff/number_of_intervals;
+                (diff-=days_*86400)/=3600;
+                hours_ = static_cast<decltype(hours_)>(diff);
+                (diff-=hours_*3600)/=60;
+                minutes_ = static_cast<decltype(minutes_)>(diff);
+                diff-=minutes_*60;
+                seconds_ = static_cast<decltype(minutes_)>(diff);
+                return;
+            }
+            else{
+                auto from_time = from_conv-std::chrono::floor<std::chrono::days>(from_conv);
+                auto to_time = to_conv-std::chrono::floor<std::chrono::days>(to_conv);
+                if(from_time>to_time){
+                    diff = static_cast<double>((to_time-from_time+
+                        std::chrono::hours(24)).count())/number_of_intervals;
+                    --days_;
+                }
+                else 
+                    diff = static_cast<double>((to_time-from_time).count())/
+                    number_of_intervals;
+                hours_ = static_cast<decltype(hours_)>(diff/3600);
+                minutes_ = static_cast<decltype(minutes_)>((diff-hours_*3600)/60);
+                seconds_ = static_cast<decltype(minutes_)>(diff-hours_*3600-minutes_*60);
+            }
+        }
+        
         if(ymd_to.day()<ymd_from.day()){
-            diff = static_cast<double>((ymd_to.day()-ymd_from.day()+std::chrono::days(getDaysInMonth(ymd_from.year(),ymd_from.month())+days_)).count())/number_of_intervals;
+            diff = static_cast<double>((ymd_to.day()-ymd_from.day()+
+            std::chrono::days(getDaysInMonth(ymd_from.year(),
+                    ymd_from.month())+days_)).count())/number_of_intervals;
             --months_;
         }
-        else diff = static_cast<double>((ymd_to.day()-ymd_from.day()).count()+days_)/number_of_intervals;
-
-        if(diff>std::numeric_limits<decltype(days_)>::max() || diff<std::numeric_limits<decltype(days_)>::min()){
-            err = std::make_error_code(std::errc::invalid_argument);
-            return;
-                        // throw std::invalid_argument("Months-diff value overflow. Must be "s+
-            //                 std::to_string(std::numeric_limits<decltype(days_)>::min())+
-            //                 "<=[VAL]]<="+std::to_string(std::numeric_limits<decltype(days_)>::max()));
+        else diff = static_cast<double>((ymd_to.day()-
+                    ymd_from.day()).count()+days_)/number_of_intervals;
+        days_=static_cast<decltype(days_)>(diff);
+        diff-=static_cast<uint64_t>(diff);
+        if(diff>std::numeric_limits<double>::epsilon()){
+            diff*=std::chrono::days::period::num;
+            int16_t tmp =0;
+            tmp = static_cast<decltype(hours_)>(diff/std::chrono::hours::period::num);
+            hours_+=tmp;
+            diff-=tmp*std::chrono::hours::period::num;
+            tmp=static_cast<decltype(minutes_)>(diff/std::chrono::minutes::period::num);
+            minutes_+=tmp;
+            diff-=tmp*std::chrono::minutes::period::num;
+            seconds_+=static_cast<decltype(seconds_)>(diff);
         }
-        else days_ =static_cast<decltype(days_)>(diff);
-        if(diff = static_cast<double>((ymd_to.month()-ymd_from.month()).count()+months_)/number_of_intervals;
-                        diff>std::numeric_limits<decltype(months_)>::max() || diff<std::numeric_limits<decltype(months_)>::min()){
-            err = std::make_error_code(std::errc::invalid_argument);
-            return;
-            // throw std::invalid_argument("Months-diff value overflow. Must be "s+
-            //                 std::to_string(std::numeric_limits<decltype(months_)>::min())+
-            //                 "<=[VAL]]<="+std::to_string(std::numeric_limits<decltype(months_)>::max()));
-        }
-        else {
-            if(ymd_to.month()<ymd_from.month()){
+        diff = static_cast<double>((ymd_to.month()-ymd_from.month()).count()+
+                                months_)/number_of_intervals;
+        if(ymd_to.month()<ymd_from.month()){
                 months_ = static_cast<decltype(months_)>(diff);
                 --years_;
             }
-            else months_ =static_cast<decltype(months_)>(diff);
+        else months_ =static_cast<decltype(months_)>(diff);
+        diff-=static_cast<uint64_t>(diff);
+        if(diff>std::numeric_limits<double>::epsilon()){
+            int16_t tmp =0;
+            auto days_in_month = getDaysInMonth(ymd_from.year(),
+                                ymd_from.month());
+            diff*=std::chrono::days::period::num*days_in_month;
+            tmp=static_cast<decltype(days_)>(diff/
+                        (days_in_month*std::chrono::days::period::num));
+            days_+=tmp;
+            diff-=days_in_month*std::chrono::days::period::num;
+            tmp = static_cast<decltype(hours_)>(diff/std::chrono::hours::period::num);
+            hours_+=tmp;
+            diff-=tmp*std::chrono::hours::period::num;
+            tmp=static_cast<decltype(minutes_)>(diff/std::chrono::minutes::period::num);
+            minutes_+=tmp;
+            diff-=tmp*std::chrono::minutes::period::num;
+            seconds_+=static_cast<decltype(seconds_)>(diff);
+        }
 
-            if(double days_tmp = std::fmod(diff,1)*getDaysInMonth(ymd_from.year(),ymd_from.month());!is_integer(days_tmp)){
-                err = std::make_error_code(std::errc::invalid_argument);
-                return;
+        diff = static_cast<double>((ymd_to.year()-
+                ymd_from.year()).count()+years_)/number_of_intervals;
+        years_ = static_cast<decltype(years_)>(diff);
+        diff-=static_cast<uint64_t>(diff);
+        if(diff>std::numeric_limits<double>::epsilon()){
+            int16_t tmp =std::fmod(diff,1)*12;
+            uint64_t days = isLeapYear(static_cast<int>(ymd_from.year()))&&
+                    static_cast<uint32_t>(ymd_from.month())<
+                    3?366:365;
+            if(tmp!=0){
+                months_ += tmp;
+                diff-=static_cast<double>(tmp)/(12);
             }
-            else days_+=static_cast<decltype(days_)>(days_tmp);
-        }
-        if(diff = static_cast<double>((ymd_to.year()-ymd_from.year()).count()+years_)/number_of_intervals;
-                        diff>std::numeric_limits<decltype(years_)>::max() || diff<std::numeric_limits<decltype(years_)>::min()){
-            err = std::make_error_code(std::errc::invalid_argument);
-            return;
-        }
-            // throw std::invalid_argument("Years-diff value overflow. Must be "s+
-            //                 std::to_string(std::numeric_limits<decltype(years_)>::min())+
-            //                 "<=[VAL]]<="+std::to_string(std::numeric_limits<decltype(years_)>::max()));
-        else {
-            years_ = static_cast<decltype(years_)>(diff);
-            if(double months_tmp = std::fmod(diff,1)*12;!is_integer(months_tmp)){
-                err = std::make_error_code(std::errc::invalid_argument);
-                return;
+            diff*=days;
+            tmp=static_cast<decltype(days_)>(diff);
+            if(tmp!=0){
+                days_+=tmp;
+                diff-=static_cast<double>(tmp);
             }
-            else months_+=static_cast<decltype(months_)>(months_tmp);
+            tmp = static_cast<decltype(hours_)>(diff*24);
+            if(tmp!=0){
+                hours_+=tmp;
+                diff-=static_cast<double>(tmp)/24;
+            }
+            tmp=static_cast<decltype(minutes_)>(diff*1440);
+            if(tmp!=0){
+                minutes_+=tmp;
+                diff-=static_cast<double>(tmp)/(1440*days);
+            }
+            tmp=static_cast<decltype(seconds_)>(diff*
+                std::chrono::days::period::num);
+            seconds_+=tmp;
         }
-
-
-
-        // std::cout<<"Resulted duration from constructor:\nyears:"<<static_cast<int>(years_)<<
-        //             "\nmonths:"<<static_cast<int>(months_)<<"\ndays:"<<static_cast<int>(days_)<<
-        //             "\nhours:"<<static_cast<int>(hours_)<<"\nminutes"<<static_cast<int>(minutes_)<<
-        //             "\nseconds"<<static_cast<int>(seconds_)<<std::endl;
     }
 
-    DateTimeDiff(const DateTimeDiff& other) noexcept:years_(other.years_),months_(other.months_),days_(other.days_),hours_(other.hours_),minutes_(other.minutes_),seconds_(other.seconds_){}
-    DateTimeDiff(DateTimeDiff&& other) noexcept:years_(other.years_),months_(other.months_),days_(other.days_),hours_(other.hours_),minutes_(other.minutes_),seconds_(other.seconds_){}
+    DateTimeDiff(const DateTimeDiff& other) noexcept:years_(other.years_),
+                months_(other.months_),
+                days_(other.days_),
+                hours_(other.hours_),
+                minutes_(other.minutes_),
+                seconds_(other.seconds_){}
+    DateTimeDiff(DateTimeDiff&& other) noexcept:years_(other.years_),
+                months_(other.months_),
+                days_(other.days_),
+                hours_(other.hours_),
+                minutes_(other.minutes_),
+                seconds_(other.seconds_){}
 
     template<IsTimePoint ARG1_TP>
     std::decay_t<ARG1_TP> operator+(ARG1_TP&& tp) const {
         std::chrono::year_month_day ymd_tp(std::chrono::floor<std::chrono::days>(tp));
-        return std::chrono::seconds(seconds_)+std::chrono::sys_days(std::chrono::year_month_day(   ymd_tp.year()+std::chrono::years(years_),
-                                                                    ymd_tp.month()+std::chrono::months(months_),
-                                                                    ymd_tp.day()+std::chrono::days(days_)));
+        return std::chrono::seconds(seconds_)+std::chrono::minutes(minutes_)+std::chrono::hours(hours_)
+                +std::chrono::sys_days(
+                            std::chrono::year_month_day(    ymd_tp.year()+std::chrono::years(years_),
+                                                            ymd_tp.month()+std::chrono::months(months_),
+                                                            ymd_tp.day()+std::chrono::days(days_)));
     }
 
     bool operator==(const DateTimeDiff& other) const noexcept{
-        return years_==other.years_ && months_==other.months_ && days_ == other.days_ &&
+        return  years_==other.years_ && months_==other.months_ && days_ == other.days_ &&
                 hours_==other.hours_ && minutes_ == other.minutes_ && seconds_ == other.seconds_;
     }
 
@@ -397,40 +501,21 @@ struct DateTimeDiff{
     }
 
     bool operator<(const DateTimeDiff& other) const noexcept{
-        return !(*this>=other);
+        if (years_ != other.years_) return years_ < other.years_;
+        if (months_ != other.months_) return months_ < other.months_;
+        if (days_ != other.days_) return days_ < other.days_;
+        if (hours_ != other.hours_) return hours_ < other.hours_;
+        if (minutes_ != other.minutes_) return minutes_ < other.minutes_;
+        return seconds_ < other.seconds_;
     }
     bool operator>(const DateTimeDiff& other) const noexcept{
-        return !(*this<=other);
+        return other < *this;
     }
     bool operator<=(const DateTimeDiff& other) const noexcept{
-        if(years_>other.years_)
-            return false;
-        if(months_>other.months_)
-            return false;
-        if(days_>other.days_)
-            return false;
-        if(hours_>other.hours_)
-            return false;
-        if(minutes_>other.minutes_)
-            return false;
-        if(seconds_>other.seconds_)
-            return false;
-        return *this==other;
+        return !(other < *this);
     }
     bool operator>=(const DateTimeDiff& other) const noexcept{
-        if(years_>other.years_)
-            return false;
-        if(months_>other.months_)
-            return false;
-        if(days_>other.days_)
-            return false;
-        if(hours_>other.hours_)
-            return false;
-        if(minutes_>other.minutes_)
-            return false;
-        if(seconds_>other.seconds_)
-            return false;
-        return *this==other;
+        return !(*this < other);
     }
 
     DateTimeDiff& operator=(const DateTimeDiff& other) noexcept{
@@ -454,24 +539,37 @@ std::decay_t<ARG1_TP> operator+(ARG1_TP&& tp, const DateTimeDiff& diff){
 template<IsTimePoint ARG1_TP>
 std::decay_t<ARG1_TP> operator-(ARG1_TP&& tp, const DateTimeDiff& diff){
     std::chrono::year_month_day ymd_tp(std::chrono::floor<std::chrono::days>(tp));
-    return std::chrono::time_point_cast<typename ARG1_TP::duration>(std::chrono::sys_days(std::chrono::year_month_day(   ymd_tp.year()-std::chrono::years(diff.years_),
-                                                                ymd_tp.month()-std::chrono::months(diff.months_),
-                                                                ymd_tp.day()-std::chrono::days(diff.days_)))-std::chrono::seconds(diff.seconds_));
+    return std::chrono::time_point_cast<typename ARG1_TP::duration>(
+        std::chrono::sys_days(std::chrono::year_month_day(
+            ymd_tp.year()-std::chrono::years(diff.years_),
+            ymd_tp.month()-std::chrono::months(diff.months_),
+            ymd_tp.day()-std::chrono::days(diff.days_)))-
+            std::chrono::hours(diff.hours_)-
+            std::chrono::minutes(diff.minutes_)-
+            std::chrono::seconds(diff.seconds_));
 }
 
 template<>
 struct std::hash<DateTimeDiff>{
     size_t operator()(const DateTimeDiff& val){
-        return (std::hash<decltype(val.years_)>()(val.years_)<<(sizeof(size_t)-sizeof(val.years_))*8)|
-            (std::hash<decltype(val.months_)>()(val.months_)<<(sizeof(size_t)-sizeof(val.years_)-sizeof(val.months_))*8)|
-            (std::hash<decltype(val.days_)>()(val.days_)<<(sizeof(size_t)-sizeof(val.years_)-
+        return (std::hash<decltype(val.years_)>()(val.years_)<<
+            (sizeof(size_t)-sizeof(val.years_))*8)|
+            (std::hash<decltype(val.months_)>()(val.months_)<<
+            (sizeof(size_t)-sizeof(val.years_)-sizeof(val.months_))*8)|
+            (std::hash<decltype(val.days_)>()(val.days_)<<
+            (sizeof(size_t)-sizeof(val.years_)-
             sizeof(val.months_)-sizeof(val.days_))*8)|
-            (std::hash<decltype(val.hours_)>()(val.hours_)<<(sizeof(size_t)-sizeof(val.years_)-
+            (std::hash<decltype(val.hours_)>()(val.hours_)<<
+            (sizeof(size_t)-sizeof(val.years_)-
             sizeof(val.months_)-sizeof(val.days_)-sizeof(val.hours_))*8)|
-            (std::hash<decltype(val.minutes_)>()(val.minutes_)<<(sizeof(size_t)-sizeof(val.years_)-
-            sizeof(val.months_)-sizeof(val.days_)-sizeof(val.hours_)-sizeof(val.minutes_))*8)|
-            (std::hash<decltype(val.minutes_)>()(val.minutes_)<<(sizeof(size_t)-sizeof(val.years_)-
-            sizeof(val.months_)-sizeof(val.days_)-sizeof(val.hours_)-sizeof(val.minutes_)-sizeof(val.seconds_))*8);
+            (std::hash<decltype(val.minutes_)>()(val.minutes_)<<
+            (sizeof(size_t)-sizeof(val.years_)-
+            sizeof(val.months_)-sizeof(val.days_)-
+            sizeof(val.hours_)-sizeof(val.minutes_))*8)|
+            (std::hash<decltype(val.minutes_)>()(val.minutes_)<<
+            (sizeof(size_t)-sizeof(val.years_)-
+            sizeof(val.months_)-sizeof(val.days_)-sizeof(val.hours_)-
+            sizeof(val.minutes_)-sizeof(val.seconds_))*8);
     }
 };
 
@@ -591,10 +689,6 @@ class TimeSequence{
             err = std::make_error_code(std::errc::invalid_argument);
             return;
         }
-        // std::cout<<"Resulted duration from constructor:\nyears:"<<static_cast<int>(time_duration_.years_)<<
-        //             "\nmonths:"<<static_cast<int>(time_duration_.months_)<<"\ndays:"<<static_cast<int>(time_duration_.days_)<<
-        //             "\nhours:"<<static_cast<int>(time_duration_.hours_)<<"\nminutes"<<static_cast<int>(time_duration_.minutes_)<<
-        //             "\nseconds"<<static_cast<int>(time_duration_.seconds_)<<std::endl;
     }
     template<IsDuration INTERVAL_DUR>
     TimeSequence(__time_interval__<INTERVAL_DUR> interval):interval_(interval),time_duration_(interval_.from(),interval_.to()),intervals_(1){}
@@ -603,11 +697,12 @@ class TimeSequence{
         std::chrono::year_month_day ymd_to((std::chrono::floor<std::chrono::days>(from)));
         ymd_to=ymd_to+(std::chrono::years(dtd.years_)*number_of_intervals);
         ymd_to=ymd_to+(std::chrono::months(dtd.months_)*number_of_intervals);
-        interval_ = decltype(interval_)(from,std::chrono::sys_days(ymd_to)+(std::chrono::days(dtd.days_)+
-                                                                            std::chrono::hours(dtd.hours_)+
-                                                                            std::chrono::minutes(dtd.minutes_)+
-                                                                            std::chrono::seconds(dtd.seconds_))*
-                                                                            number_of_intervals);
+        interval_ = decltype(interval_)(from,std::chrono::sys_days(ymd_to)+
+                                        (std::chrono::days(dtd.days_)+
+                                        std::chrono::hours(dtd.hours_)+
+                                        std::chrono::minutes(dtd.minutes_)+
+                                        std::chrono::seconds(dtd.seconds_))*
+                                        number_of_intervals);
         intervals_ = number_of_intervals;
         time_duration_ = dtd;
     }
@@ -634,6 +729,109 @@ class TimeSequence{
         return *this;
     }
 
+    template<IsDuration DUR>
+    TimeSequence bound_by_interval(const __time_interval__<DUR>& interval, std::error_code& err) const{
+        utc_tp_t<std::chrono::seconds> from;
+        utc_tp_t<std::chrono::seconds> to;
+        if constexpr(std::is_same_v<DUR,std::chrono::seconds>){
+            from = interval.from();
+            to = interval.to();
+        }
+        else {
+            from = std::chrono::time_point_cast<std::chrono::seconds>(interval.from());
+            to = std::chrono::time_point_cast<std::chrono::seconds>(interval.to());
+        }
+        if(to<interval_.from()||
+            from>interval_.to()){
+            err = std::make_error_code(std::errc::invalid_argument);
+            return TimeSequence();
+        }
+        else{
+            if(from<=interval_.from()){
+                if(to>=interval_.to())
+                    return *this;
+                else{
+                    int32_t number_intervals = 
+                        full_number_of_intervals(interval_.from(),
+                        to,time_duration_,err);
+                    if(err!=std::error_code())
+                        return TimeSequence();
+                    if(number_intervals == 0)
+                        return TimeSequence(__time_interval__<
+                            std::chrono::seconds>(interval_.from(),
+                            interval_.from()));
+                    else{
+                        TimeSequence result(__time_interval__<
+                            std::chrono::seconds>(interval_.from(),
+                            (*this)[number_intervals]));
+                        result.intervals_=number_intervals;
+                        result.time_duration_=time_duration_;
+                        return result;
+                    } 
+                }
+            }
+            else{
+                if(to>=interval_.to()){
+                    int32_t number_intervals = 
+                        full_number_of_intervals(interval_.from(),
+                        from,time_duration_,err);
+                    if(err!=std::error_code())
+                        return TimeSequence();
+                    if(number_intervals == 0){
+                        TimeSequence result(__time_interval__<
+                            std::chrono::seconds>(interval_.from()+time_duration_,
+                            interval_.to()));
+                        result.intervals_=intervals_-1;
+                        result.time_duration_=time_duration_;
+                        return result;
+                    }
+                    else{
+                        TimeSequence result(__time_interval__<
+                            std::chrono::seconds>(interval_.from(),
+                            (*this)[number_intervals]));
+                        result.intervals_=number_intervals;
+                        result.time_duration_=time_duration_;
+                        return result;
+                    }
+                }
+                else{
+                    int32_t full_number_intervals = 
+                        full_number_of_intervals(interval_.from(),
+                        from,time_duration_,err)+1;
+                    if(err!=std::error_code())
+                        return TimeSequence();
+                    auto beg = (*this)[full_number_intervals];
+                    uint32_t new_number_intervals = full_number_intervals;
+                    full_number_intervals = 
+                        full_number_of_intervals(interval_.from(),
+                        to,time_duration_,err);
+                    if(err!=std::error_code())
+                        return TimeSequence();
+                    new_number_intervals = full_number_intervals-new_number_intervals;
+                    auto end = (*this)[full_number_intervals];
+                    TimeSequence result(__time_interval__<
+                            std::chrono::seconds>(beg,end));
+                    result.intervals_=new_number_intervals;
+                    result.time_duration_=time_duration_;
+                    return result;
+                }
+            }
+        }
+    }
+
+    utc_tp_t<std::chrono::seconds> operator[](int number) const noexcept{
+        auto date = sys_days(year_month_day(floor<std::chrono::days>(interval_.from()))+
+                std::chrono::years(time_duration_.years_*number)+
+                std::chrono::months(time_duration_.months_*number))+
+                std::chrono::days(time_duration_.days_*number);
+        auto time = interval_.from()-
+            std::chrono::floor<std::chrono::days>(interval_.from())+
+                std::chrono::hours(time_duration_.hours_*number)+
+                std::chrono::minutes(time_duration_.minutes_*number)+
+                std::chrono::seconds(time_duration_.seconds_*number);
+        return date+time;
+    }
+
     template<std::ranges::range CONTAINER_TP>
     static std::pair<TimeSequence,typename std::decay_t<CONTAINER_TP>::const_iterator> make_from_range(CONTAINER_TP&& time_series,std::error_code& err) 
         requires (IsTimePoint<typename std::decay_t<CONTAINER_TP>::value_type>)
@@ -645,7 +843,6 @@ class TimeSequence{
             TimeSequence result(first);
             if(time_series.size()>1){
                 typename std::decay_t<decltype(time_series)>::const_iterator iter = std::next(time_series.begin());
-                //std::cout<<"trying to push "<< std::chrono::time_point_cast<std::chrono::seconds>(*iter)<<std::endl;
                 while(iter!=time_series.end() && result.push_time_after(*iter,err)){
                     ++iter;
                 }
@@ -685,7 +882,6 @@ class TimeSequence{
                 if(err!=std::error_code())
                     return false;
                 operator=(std::move(tmp));
-                ++intervals_;
                 return true;
             }
             else{
@@ -703,24 +899,17 @@ class TimeSequence{
     }
     template<IsDuration DUR_PRECISION>
     bool push_time_after(utc_tp_t<DUR_PRECISION> time, std::error_code& err) noexcept{
-        // std::cout<<"comparing times \"interval_.to()\" "<< std::chrono::time_point_cast<std::chrono::seconds>(interval_.to())<<"\n\"time\" "<<
-        //         std::chrono::time_point_cast<std::chrono::seconds>(time)<<std::endl;
         if(time>interval_.to()){
             if(time_duration_==DateTimeDiff()){
                 TimeSequence tmp(interval_.from(),time,1,err);
                 if(err!=std::error_code())
                     return false;
                 operator=(std::move(tmp));
-                ++intervals_;
                 return true;
             }
             else{
-                // std::cout<<"comparing interval from "<< std::chrono::time_point_cast<std::chrono::seconds>(interval_.to())<<"\nto "<<
-                // std::chrono::time_point_cast<std::chrono::seconds>(time)<<std::endl;
                 if(DateTimeDiff(interval_.to(),time)==time_duration_){
                     interval_=__time_interval__(interval_.from(),time);
-                    // std::cout<<"updated interval from "<< std::chrono::time_point_cast<std::chrono::seconds>(interval_.from())<<"\nto "<<
-                    // std::chrono::time_point_cast<std::chrono::seconds>(interval_.to())<<std::endl;
                     ++intervals_;
                     return true;
                 }
@@ -731,14 +920,109 @@ class TimeSequence{
         }
         else return false;
     }
-    uint32_t number_of_intervals(std::error_code& err) const noexcept{
+    uint32_t number_of_intervals() const noexcept{
         return intervals_;
     }
-    template<IsDuration FROM_DUR,IsDuration TO_DUR>
-    static int32_t compute_number_of_intervals(utc_tp_t<FROM_DUR> from,utc_tp_t<TO_DUR> to, const DateTimeDiff& diff,std::error_code& err) noexcept{
+    /**
+     * @result number of intervals that could be emplaced between two time points.
+     * If number of intervals cannot be calculated then returns -1 and err holds a std::errc::invalid_argument
+     * @details the number of intervals is non-strictly computed. Remainders is discarded.
+    */
+    static int32_t full_number_of_intervals(utc_tp_t<std::chrono::seconds> from_arg,utc_tp_t<std::chrono::seconds> to_arg, const DateTimeDiff& diff,std::error_code& err) noexcept{
         err = std::error_code();
-        if(from==to)
-            return 0;
+        utc_tp_t<std::chrono::seconds> from = from_arg<to_arg?
+                    std::chrono::floor<std::chrono::seconds>(from_arg):
+                    std::chrono::floor<std::chrono::seconds>(to_arg);
+        utc_tp_t<std::chrono::seconds> to = from_arg<to_arg?
+                    std::chrono::floor<std::chrono::seconds>(to_arg):
+                    std::chrono::floor<std::chrono::seconds>(from_arg);
+        if(from==to){
+            if(diff==DateTimeDiff())
+                return 0;
+            else{
+                err=std::make_error_code(std::errc::invalid_argument);
+                return -1;
+            }
+        }
+        else if(diff==DateTimeDiff()){
+            err=std::make_error_code(std::errc::invalid_argument);
+            return -1;
+        }
+        else{
+            auto is_integer = [](const auto& number){
+                bool is = std::fmod(std::fabs(number),1)<std::numeric_limits<std::decay_t<decltype(number)>>::epsilon();
+                return is;
+            };
+            int32_t N = 0;
+            double diff_loc = 0;
+            std::chrono::year_month_day ymd_from(to>from?
+                                        std::chrono::floor<std::chrono::days>(from):
+                                        std::chrono::floor<std::chrono::days>(to)),
+                                        ymd_to(to>from?
+                                        std::chrono::floor<std::chrono::days>(to):
+                                        std::chrono::floor<std::chrono::days>(from));
+            if(diff.years_!=0 || diff.months_!=0){
+                auto dy = ((ymd_to.year()-ymd_from.year()).count())*12;
+                auto dm = (static_cast<int16_t>(static_cast<uint32_t>(ymd_to.month()))-
+                            static_cast<int16_t>(static_cast<uint32_t>(ymd_from.month())));
+                {
+                    auto time_to = to-std::chrono::floor<std::chrono::days>(to);
+                    auto time_from = from-std::chrono::floor<std::chrono::days>(from);
+                    dm-=(ymd_to.day()<ymd_from.day())?1:
+                        (ymd_to.day()==ymd_from.day() && time_to<time_from?1:0);
+                }
+                diff_loc = static_cast<double>(dy+dm)/
+                                (diff.years_*12+diff.months_);
+                N=static_cast<int32_t>(diff_loc);
+            }
+            if(diff.days_!=0 || diff.hours_!=0 || diff.minutes_!=0 || diff.seconds_!=0){
+                auto time_to = to-std::chrono::floor<std::chrono::days>(to);
+                auto time_from = from-std::chrono::floor<std::chrono::days>(from);
+                year_month_day ymd_tmp(std::chrono::floor<std::chrono::days>(to-
+                                std::chrono::months(N*diff.months_+N*diff.years_*12)));
+                int64_t total_seconds = (sys_days(ymd_to-
+                                std::chrono::months(N*diff.months_+N*diff.years_*12))+
+                                time_to-(std::chrono::floor<std::chrono::days>(from)+
+                                time_from)).count();
+                diff_loc=static_cast<double>(total_seconds)/
+                    (diff.days_*std::chrono::days::period::num+
+                    diff.hours_*std::chrono::hours::period::num+
+                    diff.minutes_*std::chrono::minutes::period::num+
+                    diff.seconds_);
+                if(diff.years_!=0 || diff.months_!=0)
+                    return std::min(N,static_cast<int32_t>(diff_loc));
+                else return static_cast<int32_t>(diff_loc);
+            } 
+            return N;
+        }
+    }
+
+    /**
+     * @result number of intervals. If number of intervals cannot be calculated
+     * then returns -1 and err holds a std::errc::invalid_argument
+     * @details the number of intervals is strictly computed. Remainders are not allowed.
+    */
+    template<IsDuration FROM_DUR,IsDuration TO_DUR>
+    static int32_t compute_number_of_intervals(utc_tp_t<FROM_DUR> from_arg,utc_tp_t<TO_DUR> to_arg, const DateTimeDiff& diff,std::error_code& err) noexcept{
+        err = std::error_code();
+        utc_tp_t<std::chrono::seconds> from = from_arg<to_arg?
+                    std::chrono::floor<std::chrono::seconds>(from_arg):
+                    std::chrono::floor<std::chrono::seconds>(to_arg);
+        utc_tp_t<std::chrono::seconds> to = from_arg<to_arg?
+                    std::chrono::floor<std::chrono::seconds>(to_arg):
+                    std::chrono::floor<std::chrono::seconds>(from_arg);
+        if(from==to){
+            if(diff==DateTimeDiff())
+                return 0;
+            else{
+                err=std::make_error_code(std::errc::invalid_argument);
+                return -1;
+            }
+        }
+        else if(diff==DateTimeDiff()){
+            err=std::make_error_code(std::errc::invalid_argument);
+            return -1;
+        }
         else{
             auto is_integer = [](const auto& number){
                 bool is = std::fmod(std::fabs(number),1)<std::numeric_limits<std::decay_t<decltype(number)>>::epsilon();
@@ -746,53 +1030,53 @@ class TimeSequence{
             };
             
             int32_t N = 0;
-            std::chrono::year_month_day ymd_from(to>from?std::chrono::floor<std::chrono::days>(from):std::chrono::floor<std::chrono::days>(to)),
-                                        ymd_to(to>from?std::chrono::floor<std::chrono::days>(to):std::chrono::floor<std::chrono::days>(from));
-            if(diff.years_!=0){
-                double years = static_cast<double>((ymd_to.year()-ymd_from.year()).count())/diff.years_;
-                if(diff.months_==0 && diff.days_==0 && diff.hours_==0 && diff.minutes_==0 && diff.seconds_==0 && !is_integer(years)){
+            double diff_loc = 0;
+            std::chrono::year_month_day ymd_from(to>from?
+                                        std::chrono::floor<std::chrono::days>(from):
+                                        std::chrono::floor<std::chrono::days>(to)),
+                                        ymd_to(to>from?
+                                        std::chrono::floor<std::chrono::days>(to):
+                                        std::chrono::floor<std::chrono::days>(from));
+            if(diff.years_!=0 || diff.months_!=0){
+                auto dy = ((ymd_to.year()-ymd_from.year()).count())*12;
+                auto dm = (static_cast<int16_t>(static_cast<uint32_t>(ymd_to.month()))-
+                            static_cast<int16_t>(static_cast<uint32_t>(ymd_from.month())));
+                {
+                    auto time_to = to-std::chrono::floor<std::chrono::days>(to);
+                    auto time_from = from-std::chrono::floor<std::chrono::days>(from);
+                    dm-=(ymd_to.day()<ymd_from.day())?1:
+                        (ymd_to.day()==ymd_from.day() && time_to<time_from?1:0);
+                }
+                diff_loc = static_cast<double>(dy+dm)/
+                                (diff.years_*12+diff.months_);
+                if(diff.days_==0 && diff.hours_==0 && diff.minutes_==0 && diff.seconds_==0 && !is_integer(diff_loc)){
                     err = std::make_error_code(std::errc::invalid_argument);
                     return -1;
                 }
-                N=years;
-            }
-
-            if(diff.months_!=0){
-                double months = static_cast<double>((ymd_to.month()-ymd_from.month() -(ymd_to.month()<ymd_from.month()?std::chrono::months(1):std::chrono::months(0))+ 
-                        std::chrono::months(((ymd_to.year()-ymd_from.year()).count()-diff.years_-(ymd_to.month()<ymd_from.month()?1:0))*12)).count())/diff.months_;
-                if(diff.days_==0 && diff.hours_==0 && diff.minutes_==0 && diff.seconds_==0 && !is_integer(months)){
-                    err = std::make_error_code(std::errc::invalid_argument);
-                    return -1;
-                }
-                if(months==0){
-                    if(N!=0){
-                        err = std::make_error_code(std::errc::invalid_argument);
-                        return -1;
-                    }
-                }
-                else{
-                    if(N!=0){
-                        if(N!=static_cast<int32_t>(months)){
-                            err = std::make_error_code(std::errc::invalid_argument);
-                            return -1;
-                        }
-                    }
-                    else N=months;
-                }
+                N=static_cast<int32_t>(diff_loc);
             }
             if(diff.days_!=0 || diff.hours_!=0 || diff.minutes_!=0 || diff.seconds_!=0){
-                auto diff_days_time = (to>from?((to-std::chrono::floor<std::chrono::days>(to))-(from-std::chrono::floor<std::chrono::days>(from))):
-                                ((from-std::chrono::floor<std::chrono::days>(from))-(to-std::chrono::floor<std::chrono::days>(to))))+
-                                std::chrono::sys_days(ymd_to-std::chrono::months(N*diff.months_)-std::chrono::years(N*diff.years_))-
-                                std::chrono::sys_days(ymd_from);
-                if(double days_time = static_cast<double>(std::chrono::duration_cast<std::chrono::seconds>(diff_days_time).count())/
-                    (std::chrono::days(diff.days_)+std::chrono::hours(diff.hours_)+std::chrono::minutes(diff.minutes_)+std::chrono::seconds(diff.seconds_)).count();!is_integer(days_time))
+                auto time_to = to-std::chrono::floor<std::chrono::days>(to);
+                auto time_from = from-std::chrono::floor<std::chrono::days>(from);
+                year_month_day ymd_tmp(std::chrono::floor<std::chrono::days>(to-
+                                std::chrono::months(N*diff.months_+N*diff.years_*12)));
+                //days
+                int64_t total_seconds = (sys_days(ymd_to-
+                                std::chrono::months(N*diff.months_+N*diff.years_*12))+
+                                time_to-(std::chrono::floor<std::chrono::days>(from)+
+                                time_from)).count();
+                diff_loc=static_cast<double>(total_seconds)/
+                    (diff.days_*std::chrono::days::period::num+
+                    diff.hours_*std::chrono::hours::period::num+
+                    diff.minutes_*std::chrono::minutes::period::num+
+                    diff.seconds_);
+                if(!is_integer(diff_loc))
                 {
                     err = std::make_error_code(std::errc::invalid_argument);
                     return -1;
                 }
                 else{
-                    if(days_time==0){
+                    if(diff_loc==0){
                         if(N!=0){
                             err = std::make_error_code(std::errc::invalid_argument);
                             return -1;
@@ -800,12 +1084,12 @@ class TimeSequence{
                     }
                     else{
                         if(N!=0){
-                            if(static_cast<uint32_t>(N)!=static_cast<uint32_t>(days_time)){
+                            if(static_cast<uint32_t>(N)!=static_cast<uint32_t>(diff_loc)){
                                 err = std::make_error_code(std::errc::invalid_argument);
                                 return -1;
                             }
                         }
-                        else N=days_time;
+                        else N=diff_loc;
                     } 
                 }
             } 
@@ -945,10 +1229,15 @@ std::optional<std::pair<uint64_t,uint64_t>> interval_intersection_pos(const __ti
         return std::nullopt;
     if(initial.time_duration()==DateTimeDiff())
         return std::nullopt;
-    result.first = initial.compute_number_of_intervals(initial.get_interval().from(),to_seek.from(),initial.time_duration(),err);
+    if(to_seek.from()<=initial.get_interval().from())
+        result.first = 0;
+    else 
+        result.first = initial.compute_number_of_intervals(initial.get_interval().from(),to_seek.from(),initial.time_duration(),err);
     if(err!=std::error_code())
         return std::nullopt;
-    result.second = initial.compute_number_of_intervals(to_seek.to(),initial.get_interval().to(),initial.time_duration(),err);
+    if(to_seek.to()>=initial.get_interval().to())
+        result.second = initial.number_of_intervals();
+    else result.second = initial.number_of_intervals()-initial.compute_number_of_intervals(to_seek.to(),initial.get_interval().to(),initial.time_duration(),err);
     if(err!=std::error_code())
         return std::nullopt;
     return result;
@@ -1038,21 +1327,21 @@ namespace serialization{
     template<bool NETWORK_ORDER>
     struct Serialize<NETWORK_ORDER,TimeSequence>{
         auto operator()(const TimeSequence& val,std::vector<char>& buf) const noexcept{
-            return serialize<NETWORK_ORDER>(val,buf,val.interval_,val.time_duration_);
+            return serialize<NETWORK_ORDER>(val,buf,val.interval_,val.time_duration_,val.intervals_);
         }
     };
 
     template<bool NETWORK_ORDER>
     struct Deserialize<NETWORK_ORDER,TimeSequence>{
         auto operator()(TimeSequence& val,std::span<const char> buf) const noexcept{
-            return deserialize<NETWORK_ORDER>(val,buf,val.interval_,val.time_duration_);
+            return deserialize<NETWORK_ORDER>(val,buf,val.interval_,val.time_duration_,val.intervals_);
         }
     };
 
     template<>
     struct Serial_size<TimeSequence>{
         size_t operator()(const TimeSequence& val) const noexcept{
-            return serial_size(val.interval_,val.time_duration_);
+            return serial_size(val.interval_,val.time_duration_,val.intervals_);
         }
     };
 
@@ -1061,7 +1350,9 @@ namespace serialization{
         using type = TimeSequence;
         static constexpr size_t value = []()
         {
-            return min_serial_size<decltype(type::interval_),decltype(type::time_duration_)>();
+            return min_serial_size<decltype(type::interval_),
+                        decltype(type::time_duration_),
+                        decltype(type::intervals_)>();
         }();
     };
      
@@ -1070,7 +1361,9 @@ namespace serialization{
         using type = TimeSequence;
         static constexpr size_t value = []()
         {
-            return max_serial_size<decltype(type::interval_),decltype(type::time_duration_)>();
+            return max_serial_size<decltype(type::interval_),
+                        decltype(type::time_duration_),
+                        decltype(type::intervals_)>();
         }();
     };
 }

@@ -13,6 +13,15 @@ TEST(TimeSequence,DateTimeTest){
     ASSERT_EQ(dt.seconds_,52);
 }
 
+TEST(TimeSequence,NumberLeapDaysTest){
+    auto from=sys_days(year(1990)/month(1)/day(1));
+    auto to=sys_days(year(2100)/month(1)/day(1));
+    ASSERT_EQ(DateTimeDiff::number_leap_days(std::chrono::year_month_day(from),std::chrono::year_month_day(to)),27);
+    from=sys_days(year(1990)/month(1)/day(1));
+    to=sys_days(year(2200)/month(1)/day(1));
+    ASSERT_EQ(DateTimeDiff::number_leap_days(std::chrono::year_month_day(from),std::chrono::year_month_day(to)),51);
+}
+
 TEST(TimeSequence,ComputeNumberOfIntervalsTest){
     std::error_code err;
     DateTimeDiff dtd = DateTimeDiff(err,std::chrono::months(6));
@@ -24,6 +33,112 @@ TEST(TimeSequence,ComputeNumberOfIntervalsTest){
     dtd = DateTimeDiff(err,std::chrono::days(5));
     ASSERT_EQ(TimeSequence::compute_number_of_intervals(sys_days(year(1992)/month(1)/day(1)),
                                                 sys_days(year(1991)/month(1)/day(1)),dtd,err),73);
+
+    dtd = DateTimeDiff(err,std::chrono::years(1),std::chrono::months(6));
+    ASSERT_EQ(TimeSequence::compute_number_of_intervals(sys_days(year(1990)/month(1)/day(1)),
+                                                sys_days(year(1994)/month(7)/day(1)),dtd,err),3);
+    dtd = DateTimeDiff(err,std::chrono::months(1),std::chrono::days(0),
+                        std::chrono::hours(0),std::chrono::minutes(19),std::chrono::seconds(45));
+    ASSERT_EQ(TimeSequence::compute_number_of_intervals(sys_days(year(1990)/month(10)/day(31))+hours(23)+minutes(20)+seconds(30),
+                                                sys_days(year(1991)/month(1)/day(1)),dtd,err),2);
+    dtd = DateTimeDiff(err,std::chrono::years(5),std::chrono::months(5),std::chrono::days(15),
+                        std::chrono::hours(23),std::chrono::minutes(19),std::chrono::seconds(45));
+
+    // year_month_day tmp(sys_days((year(1990)/month(10)/day(31))+
+    //                                             years(dtd.years_)*10+months(dtd.months_)*10)+days(dtd.days_)*10);
+    auto from = sys_days(year(1990)/month(10)/day(31))+hours(23)+minutes(20)+seconds(30);
+    year_month_day ymd_to(sys_days(floor<days>(from)));
+    auto to = time_point_cast<seconds>(sys_days(ymd_to+
+                years(dtd.years_)*10+months(dtd.months_)*10)+days(dtd.days_)*10);
+    std::cout<<to<<std::endl;
+    to+=from-floor<days>(from);
+    std::cout<<to<<std::endl;
+    to+=hours(dtd.hours_)*10+minutes(dtd.minutes_)*10+seconds(dtd.seconds_)*10;
+    std::cout<<to<<std::endl;
+    ASSERT_EQ(TimeSequence::compute_number_of_intervals(from,
+                                                to
+                                                ,dtd,err),10);
+}
+
+TEST(TimeSequence,ComputeRawNumberOfIntervalsTest){
+    std::error_code err;
+    DateTimeDiff dtd = DateTimeDiff(err,std::chrono::months(6));
+    ASSERT_EQ(TimeSequence::full_number_of_intervals(sys_days(year(1990)/month(1)/day(1))+std::chrono::hours(6)+std::chrono::minutes(30)+std::chrono::seconds(50),
+                                                sys_days(year(1991)/month(1)/day(1))+std::chrono::hours(6)+std::chrono::minutes(30)+std::chrono::seconds(50),dtd,err),2);
+    dtd = DateTimeDiff(err,std::chrono::years(109));
+    ASSERT_EQ(TimeSequence::full_number_of_intervals(sys_days(year(2100)/month(1)/day(1)),
+                                                sys_days(year(1991)/month(1)/day(1)),dtd,err),1);
+    dtd = DateTimeDiff(err,std::chrono::days(5));
+    ASSERT_EQ(TimeSequence::full_number_of_intervals(sys_days(year(1992)/month(1)/day(1)),
+                                                sys_days(year(1991)/month(1)/day(1)),dtd,err),73);
+
+    dtd = DateTimeDiff(err,std::chrono::years(1),std::chrono::months(6));
+    ASSERT_EQ(TimeSequence::full_number_of_intervals(sys_days(year(1990)/month(1)/day(1)),
+                                                sys_days(year(1994)/month(7)/day(1)),dtd,err),3);
+    dtd = DateTimeDiff(err,std::chrono::months(1),std::chrono::days(0),
+                        std::chrono::hours(0),std::chrono::minutes(19),std::chrono::seconds(45));
+    ASSERT_EQ(TimeSequence::full_number_of_intervals(sys_days(year(1990)/month(10)/day(31))+hours(23)+minutes(20)+seconds(30),
+                                                sys_days(year(1991)/month(1)/day(1)),dtd,err),2);
+    dtd = DateTimeDiff(err,std::chrono::months(1),std::chrono::days(0));
+    ASSERT_EQ(TimeSequence::full_number_of_intervals(sys_days(year(1990)/month(1)/day(1)),
+                                                sys_days(year(1990)/month(1)/day(16))+hours(12),dtd,err),0);
+    dtd = DateTimeDiff(err,std::chrono::years(10),std::chrono::months(10),std::chrono::days(10),
+                        std::chrono::hours(10),std::chrono::minutes(10),std::chrono::seconds(10));
+    auto from = sys_days(year(1990)/month(10)/day(31))+hours(23)+minutes(20)+seconds(30);
+    year_month_day ymd_to(sys_days(floor<days>(from)));
+    auto to = time_point_cast<seconds>(sys_days(ymd_to+
+                years(dtd.years_)*10-years(5)+
+                months(dtd.months_)*10-months(5))+
+                hours(23)+minutes(20)+seconds(30)+
+                days(dtd.days_)*10-days(5)+
+                hours(dtd.hours_)*10-hours(5)+
+                minutes(dtd.minutes_)*10-minutes(5)+
+                seconds(dtd.seconds_)*10-seconds(5));
+    std::cout<<"to:"<<to<<std::endl;
+    std::cout<<DateTimeDiff::days_between_dates(year_month_day(floor<days>(from)),
+                    year_month_day(floor<days>(to)))<<std::endl;
+    std::cout<<DateTimeDiff::number_leap_days(year_month_day(floor<days>(from)),year_month_day(floor<days>(to)))<<std::endl;
+    ASSERT_EQ(TimeSequence::full_number_of_intervals(from,
+                                                to
+                                                ,dtd,err),9);
+}
+
+TEST(TimeSequence,BoundByInterval_test){
+    std::error_code err;
+    using TimeInterval = __time_interval__<seconds>;
+    DateTimeDiff dtd = DateTimeDiff(err,std::chrono::months(6));
+    TimeSequence ts(sys_days(year(1990)/month(1)/day(1))+std::chrono::hours(6)+std::chrono::minutes(30)+std::chrono::seconds(50),
+                        sys_days(year(1991)/month(1)/day(1))+std::chrono::hours(6)+std::chrono::minutes(30)+std::chrono::seconds(50),dtd,err);
+    ASSERT_EQ(err,std::error_code());
+    TimeInterval interval(sys_days(year(1990)/month(1)/day(1))+std::chrono::hours(6)+std::chrono::minutes(30)+std::chrono::seconds(50),
+                        sys_days(year(1990)/month(12)/day(1)));
+    TimeSequence bounded = ts.bound_by_interval(interval,err);
+    ASSERT_EQ(err,std::error_code());
+    ASSERT_EQ(bounded,TimeSequence(sys_days(year(1990)/month(1)/day(1))+std::chrono::hours(6)+std::chrono::minutes(30)+std::chrono::seconds(50),
+                        sys_days(year(1990)/month(1)/day(1)+months(dtd.months_))+std::chrono::hours(6)+std::chrono::minutes(30)+std::chrono::seconds(50),1,err));
+    ASSERT_EQ(err,std::error_code());
+    dtd = DateTimeDiff(err,std::chrono::years(1));
+    ts = TimeSequence(sys_days(year(1991)/month(1)/day(1)),
+                        sys_days(year(2100)/month(1)/day(1)),dtd,err);
+    ASSERT_EQ(err,std::error_code());
+    interval = TimeInterval(sys_days(year(2000)/month(2)/day(30)),
+                        sys_days(year(2020)/month(12)/day(1)));
+    bounded = ts.bound_by_interval(interval,err);
+    ASSERT_EQ(err,std::error_code());
+    ASSERT_EQ(bounded,TimeSequence(sys_days(year(2001)/month(1)/day(1)),
+                        sys_days(year(2020)/month(1)/day(1)),1,err));
+    ASSERT_EQ(err,std::error_code());
+    // dtd = DateTimeDiff(err,std::chrono::years(5),std::chrono::months(5),);
+    // ts = TimeSequence(sys_days(year(1991)/month(1)/day(1)),
+    //                     sys_days(year(2100)/month(1)/day(1)),dtd,err);
+    // ASSERT_EQ(err,std::error_code());
+    // interval = TimeInterval(sys_days(year(2000)/month(2)/day(30)),
+    //                     sys_days(year(2020)/month(12)/day(1)));
+    // bounded = ts.bound_by_interval(interval,err);
+    // ASSERT_EQ(err,std::error_code());
+    // ASSERT_EQ(bounded,TimeSequence(sys_days(year(2001)/month(1)/day(1)),
+    //                     sys_days(year(2020)/month(1)/day(1)),1,err));
+    // ASSERT_EQ(err,std::error_code());
 }
 
 TEST(TimeSequence,ConstructionTest){
@@ -60,6 +175,28 @@ TEST(TimeSequence,ConstructionTest){
         to = sys_days(year(1991)/month(1)/day(1));
         test = TimeSequence(from,to,2,err);
         ASSERT_EQ(test.time_duration(),DateTimeDiff(err,std::chrono::months(6)));
+    }
+}
+TEST(TimeSequence,DateTimeDiffExtremalTest){
+    {
+        auto from=sys_days(year(1990)/month(1)/day(1));
+        utc_tp_t<std::chrono::seconds> to=sys_days(year(2100)/month(1)/day(1));
+        std::error_code err;
+        TimeSequence test(from,to,err,std::chrono::years(1));
+        ASSERT_EQ(err,std::error_code());
+        err = std::error_code();
+        EXPECT_EQ(test.time_duration(),DateTimeDiff(from,to,110,err));
+        ASSERT_EQ(err,std::error_code());
+        from=sys_days(year(1990)/month(1)/day(1));
+        to=sys_days(year(2100)/month(1)/day(1))+std::chrono::seconds(110+60*110+3600*110);
+        
+        test = TimeSequence(from,to,err,std::chrono::years(1),std::chrono::months(0),
+                                    std::chrono::days(0),std::chrono::hours(1),
+                                std::chrono::minutes(1),std::chrono::seconds(1));
+        ASSERT_EQ(err,std::error_code());
+        err = std::error_code();
+        EXPECT_EQ(test.time_duration(),DateTimeDiff(from,to,110,err));
+        ASSERT_EQ(err,std::error_code());
     }
 }
 TEST(TimeSequence,MakeFromRangeTest){
