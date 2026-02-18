@@ -34,7 +34,12 @@ std::expected<T,std::exception> from_json(const boost::json::value& val){
 	}
     else{
         static_assert(std::is_integral_v<T>);
-        if constexpr(!std::is_signed_v<T>){
+        if constexpr(std::is_same_v<T,bool>){
+            if(val.is_bool())
+                return val.as_bool();
+            else return std::unexpected(std::invalid_argument("Not boolean data type"));
+        }
+        else if constexpr(!std::is_signed_v<T>){
             if(val.is_uint64() || (val.is_int64() && val.as_int64()>=0))
                 return val.to_number<T>();
             else return std::unexpected(std::invalid_argument("Not unsigned integer data type"));

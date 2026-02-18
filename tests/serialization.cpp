@@ -524,9 +524,35 @@ TEST(Serialization,SerializeVariadicFile){
         std::vector<int> test_range;
         std::string test_text;
         ASSERT_TRUE(serialization::deserialize_from_file<true>(file,test_int,test_range,test_text)==serialization::SerializationEC::NONE);
-        ASSERT_EQ(test_int,_32);
-        ASSERT_EQ(test_range,range);
-        ASSERT_EQ(test_text,text);
+        EXPECT_EQ(test_int,_32);
+        EXPECT_EQ(test_range,range);
+        EXPECT_EQ(test_text,text);
+    }
+    fs::remove("serial_test.bin");
+}
+
+TEST(Serialization,SequentialSerializeFile){
+    int _32 = 32;
+    std::vector<int> range{15,30,50,40};
+    std::string text{"any text"};
+    {
+        std::ofstream file("serial_test.bin");
+        
+        ASSERT_TRUE(serialization::serialize_to_file<true>(file,_32,range,text)==serialization::SerializationEC::NONE);
+        ASSERT_TRUE(std::filesystem::exists("serial_test.bin"));
+    }
+    {
+        std::ifstream file("serial_test.bin");
+        int test_int = 0;
+        std::vector<int> test_range;
+        std::string test_text;
+        ASSERT_TRUE(serialization::deserialize_from_file<true>(test_int,file)==serialization::SerializationEC::NONE);
+        EXPECT_EQ(test_int,_32);
+        ASSERT_TRUE(serialization::deserialize_from_file<true>(test_range,file)==serialization::SerializationEC::NONE);
+        EXPECT_EQ(test_range,range);
+        ASSERT_TRUE(serialization::deserialize_from_file<true>(test_text,file)==serialization::SerializationEC::NONE);
+        EXPECT_EQ(test_text,text);
+        fs::remove("serial_test.bin");
     }
 }
 
@@ -537,7 +563,7 @@ TEST(Serialization,SerializationReferenceWrapper){
     ASSERT_TRUE(serialization::serialize_native(reference,buf)==serialization::SerializationEC::NONE);
     int test_int = 0;
     ASSERT_TRUE(serialization::deserialize_native(test_int,buf)==serialization::SerializationEC::NONE);
-    ASSERT_EQ(test_int,integer);
+    EXPECT_EQ(test_int,integer);
 }
 
 TEST(Serialization, SerialLimits){
