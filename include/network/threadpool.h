@@ -1,0 +1,124 @@
+#pragma once
+#include <vector>
+#include <list>
+#include "abstractworker.h"
+
+namespace network{
+
+class Worker:public AbstractWorker{
+protected:
+    std::string name_;
+public:
+    Worker(std::string worker_name,
+            uint32_t order_length,
+            std::error_code& err);
+    virtual ~Worker();
+    virtual bool connectInternal(
+            const ConnectionHandle& hconn,
+            std::unique_ptr<Connection> conn,
+            Socket&& socket,
+            std::error_code& err) noexcept override;
+    virtual bool attachConnectionInternal(
+			ConnectionHandle hconn,
+			std::unique_ptr<Connection> addr,
+            std::unique_ptr<AbstractConnectionProcess> proc,
+			Socket&& socket,
+			std::error_code& err
+			) noexcept override;
+    virtual bool removeConnectionInternal(
+			const ConnectionHandle& hconn,
+            bool wait_for_end_connections,
+            uint16_t timeout_sec,
+			std::error_code& err) noexcept override;
+    virtual bool modifyConnectionInternal(
+			const ConnectionHandle& hconn,
+            std::span<std::shared_ptr<Socket::BaseOption>> options,
+			std::error_code& err) noexcept override;
+    virtual bool addConnectionProcessInternal(const ConnectionHandle& hconn,
+            std::unique_ptr<AbstractConnectionProcess> proc,
+            std::error_code& err) noexcept override;
+    virtual bool removeConnectionProcessInternal(
+            const ConnectionHandle& hconn,
+            bool wait_for_end_connections,
+            uint16_t timeout_sec,
+            std::error_code& err) noexcept override;
+    virtual void run(std::stop_token st,std::error_code& err) override;
+private:
+    virtual void handle_pending(std::error_code& err) noexcept override;
+};
+
+class ServerWorker:public Worker{
+    public:
+    ServerWorker(std::string worker_name,
+            uint32_t order_length,
+            std::error_code& err):
+            Worker(worker_name,order_length,err){}
+    template<typename CONN_PROC>
+    requires (std::is_base_of_v<AbstractConnectionProcess,CONN_PROC> ||
+                std::is_same_v<CONN_PROC,AbstractConnectionProcess>)
+    void set_processes(
+                std::error_code& err) noexcept
+    {
+        std::cout<<"("<<name_<<")"<<"Number connections: "<<connections().size()<<std::endl;
+        for(auto& [id,conn_stat]:connections()){
+            ConnectionHandle hconn = this->connection_handle(id);
+            auto proc = std::make_unique<CONN_PROC>(hconn,err);
+            if(err!=std::error_code())
+                continue;
+            hconn.execute_command(
+                std::make_shared<Command<
+                    CommandType::AttachProcess>>(hconn,
+                        std::move(proc)),err);
+        }
+    }
+};
+
+class ThreadPool {
+public:
+    ThreadPool(size_t num_threads,std::error_code& err);
+
+    ~ThreadPool();
+
+    ConnectionHandle attach_connection(
+        const Address& addr,
+        Socket&& socket,
+        std::unique_ptr<AbstractConnectionProcess> proc,
+        std::error_code& err) noexcept;
+
+    bool modifyConnection(
+                const ConnectionHandle& hconn,
+                std::vector<std::shared_ptr<Socket::BaseOption>>&& options,
+                std::error_code& err) noexcept;
+
+    template<typename CONN_PROC>
+    requires (std::is_base_of_v<AbstractConnectionProcess,CONN_PROC> ||
+                std::is_same_v<CONN_PROC,AbstractConnectionProcess>)
+    bool setProcesses(std::error_code& err) noexcept
+    {
+        for(std::unique_ptr<ServerWorker>& worker:workers_){
+            if(worker)
+                worker->set_processes<CONN_PROC>(err);
+        }
+        if(err!=std::error_code())
+            return false;
+        return true;
+    }
+
+    bool removeProcess(
+            const ConnectionHandle& hconn,
+            bool wait,
+            uint16_t timeout_sec,
+            std::error_code& err) noexcept;
+    
+    void stopConnections(
+                bool wait_for_end_connections,
+                uint16_t timeout_sec,
+                std::error_code& err) noexcept;
+    void stop(
+                bool wait_for_end_connections,
+                uint16_t timeout_sec) noexcept;
+private:
+    std::vector<std::unique_ptr<ServerWorker>> workers_;
+    std::atomic<size_t> next_worker_{0};
+};
+}

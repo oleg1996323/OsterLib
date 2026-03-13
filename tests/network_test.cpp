@@ -1,0 +1,178 @@
+#include "abstractclient.h"
+#include "abstractserver.h"
+#include <gtest/gtest.h>
+#include "send.h"
+#include "receive.h"
+#include "abstractprocess.h"
+
+using namespace network;
+
+class ClientPingProcess:public AbstractRequestableConnectionProcess{
+    public:
+    int count_sent = 0;
+    int count_recv = 0;
+    virtual void on_read(std::error_code& err) noexcept override{
+        std::cout<<"Client: receive ping"<<std::endl;
+        try_receive(err);
+        if(err!=std::error_code())
+            std::cout<<err.message()<<std::endl;
+        else{
+            ++count_recv;
+            err.clear();
+        }
+    }
+    virtual void on_write(std::error_code& err) noexcept override{
+        std::cout<<"Client: send ping"<<std::endl;
+        try_send(err);
+        if(err!=std::error_code())
+            std::cout<<err.message()<<std::endl;
+        else {
+            ++count_sent;
+            err.clear();
+        }
+    }
+    virtual void on_task_done(std::error_code& err) noexcept override{
+    }
+    virtual void on_stop_requested(std::error_code& err) noexcept override{
+        reset_requests(err);
+        std::cout<<"Client: stop requests"<<std::endl;
+        if(err!=std::error_code())
+            std::cout<<err.message()<<std::endl;
+    }
+
+    ClientPingProcess(ConnectionHandle hconn,std::error_code& err):
+        AbstractRequestableConnectionProcess(hconn,err){}
+    ~ClientPingProcess() = default;
+    virtual void handle_event(
+                Event event,
+                std::error_code& err) noexcept
+    {
+        if(event&Event::In) on_read(err);
+        if(event&Event::Out)on_write(err);
+        
+    }
+};
+
+// должен быть известен фрейм, который десериализуется
+class ServerPingProcess:public AbstractConnectionProcess{
+    public:
+    int count_sent = 0;
+    int count_recv = 0;
+    virtual void on_read(std::error_code& err) noexcept override{
+        SizeFramedData<size_t> ping;
+        if(io_context().receive_buffer_size()==0)
+            io_context().resize_receive_buffer(ping.min_initial_size());
+        io_context().receive(err,ping.min_initial_size());
+        if(err!=std::error_code())
+            return;
+        auto ser_res = io_context().deserialize(ping);
+        if(ser_res==serialization::SerializationEC::NONE)
+            err.clear();
+        else return;
+        if(ping.data_!=1){
+            err = std::make_error_code(std::errc::bad_message);
+            std::cout<<"Server: Not 1 for ping"<<std::endl;
+        }
+        else ++count_recv;
+        ping.data_=1;
+        if(auto ser_res = io_context().serialize(ping);
+            ser_res!=serialization::SerializationEC::NONE){
+            err = std::make_error_code(std::errc::bad_message);
+            std::cout<<"Server: bad serialization"<<std::endl;
+            return;
+        }
+        else {
+            if(err==std::error_code()){
+                std::cout<<"Server: send ping"<<std::endl;
+            }
+            io_context().send(err);
+        }
+        if(err!=std::error_code()){
+            std::cout<<err.message()<<std::endl;
+            std::cout<<"Server: Error at sending"<<std::endl;
+        }
+        return;
+    }
+    virtual void on_write(std::error_code& err) noexcept override{
+        if(!io_context().has_to_write())
+            io_context().enable_writable(false,err);
+    }
+    virtual void on_task_done(std::error_code& err) noexcept override{
+    }
+    virtual void on_stop_requested(std::error_code& err) noexcept override{
+    }
+
+    ServerPingProcess(ConnectionHandle hconn,std::error_code& err):
+        AbstractConnectionProcess(hconn,err){}
+    ~ServerPingProcess() = default;
+    virtual void handle_event(
+                Event event,
+                std::error_code& err) noexcept
+    {
+        if(event&Event::In) on_read(err);
+        if(event&Event::Out)on_write(err);
+    }
+};
+
+class Server:public AbstractServer{
+    int count_recv = 0;
+    FRIEND_TEST(Client_server,ping);
+};
+
+class Client:public AbstractClient{
+    public:
+    Client(std::error_code& err,uint16_t ev_order):
+        AbstractClient(err,ev_order){}
+};
+
+TEST(Client_server,ping){
+    server::Settings settings;
+    settings.host_ = "127.0.0.1";
+    settings.port_ = 32396;
+    settings.protocol_ = Protocol::TCP;
+    settings.num_threads_pool_ = 1;
+    settings.timeout_seconds_processes_ = 3;
+    Server server;
+    std::error_code err;
+    std::vector<std::shared_ptr<network::Socket::BaseOption>> options;
+    options.push_back(std::make_shared<Socket::Option<int>>(
+                            Socket::Option(1,Socket::Options::KeepAlive)));
+    options.push_back(std::make_shared<Socket::Option<int>>(
+                            Socket::Option(1,Socket::Options::ReuseAddress)));
+    options.push_back(std::make_shared<Socket::Option<int>>(
+                            Socket::Option(1,Socket::Options::ReusePort)));
+    server.configure(settings,
+                        std::move(options),
+                        {},
+                        err);
+    server.launch(err);
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+    Client client(err,10);
+    auto hconn = client.connect(
+            settings.host_,
+            settings.port_,
+            Socket::Type::Stream,
+            Protocol::TCP,err);
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+    server.set_process<ServerPingProcess>(err);
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+    ASSERT_EQ(err,std::error_code());
+    {
+        std::unique_ptr<ClientPingProcess> proc = std::make_unique<ClientPingProcess>(hconn,err);
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+        hconn.add_process(std::move(proc),err);
+        std::vector<std::shared_ptr<BaseCommand>> cmds;
+        for(int i=0;i<5;++i){
+            auto result = cmds.emplace_back(client.request<size_t>(hconn,
+                    serialization::serial_size(size_t(1)),
+                    size_t(1),std::monostate()));
+        }
+    }
+    std::this_thread::sleep_for(std::chrono::seconds(2));
+    EXPECT_EQ(server.count_recv,5);
+}
+
+int main(int argc, char* argv[]){
+    testing::InitGoogleTest(&argc,argv);
+    return RUN_ALL_TESTS();
+}

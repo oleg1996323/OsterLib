@@ -56,18 +56,18 @@ namespace serialization{
     template<typename T>
     SerializationEC serialize_network(const T& val,std::vector<char>& buf) noexcept;
     template<typename T>
-    SerializationEC deserialize_native(T& to_deserialize,std::span<const char> buf) noexcept;
+    SerializationEC deserialize_native(T& to_deserialize,MultiBufferView& buf) noexcept;
     template<typename T>
-    SerializationEC deserialize_network(T& to_deserialize,std::span<const char> buf) noexcept;
+    SerializationEC deserialize_network(T& to_deserialize,MultiBufferView& buf) noexcept;
 
     template<typename T,typename... ARGS>
     SerializationEC serialize_native(const T& val,std::vector<char>& buf,const ARGS&... args) noexcept;
     template<typename T,typename... ARGS>
     SerializationEC serialize_network(const T& val,std::vector<char>& buf,const ARGS&... args) noexcept;
     template<typename T,typename... ARGS>
-    SerializationEC deserialize_native(T& to_deserialize,std::span<const char> buf,ARGS&... args) noexcept;
+    SerializationEC deserialize_native(T& to_deserialize,MultiBufferView& buf,ARGS&... args) noexcept;
     template<typename T,typename... ARGS>
-    SerializationEC deserialize_network(T& to_deserialize,std::span<const char> buf,ARGS&... args) noexcept;
+    SerializationEC deserialize_network(T& to_deserialize,MultiBufferView& buf,ARGS&... args) noexcept;
 
     template<typename... ARGS>
     size_t serial_size(const ARGS&... val) noexcept;
@@ -83,14 +83,14 @@ namespace serialization{
     template<bool NETWORK_ORDER,typename T>
     SerializationEC serialize(const T& val,std::vector<char>& buf) noexcept;
     template<bool NETWORK_ORDER,typename T>
-    SerializationEC deserialize(T& val,std::span<const char> buf) noexcept;
+    SerializationEC deserialize(T& val,MultiBufferView& buf) noexcept;
 
     template<bool NETWORK_ORDER,typename T,typename... ARGS>
     requires (sizeof...(ARGS)>0)
     SerializationEC serialize(const T& val,std::vector<char>& buf,const ARGS&... args) noexcept;
     template<bool NETWORK_ORDER,typename T,typename... ARGS>
     requires (sizeof...(ARGS)>0)
-    SerializationEC deserialize(const T& to_deserialize,std::span<const char> buf,ARGS&... args) noexcept;
+    SerializationEC deserialize(const T& to_deserialize,MultiBufferView& buf,ARGS&... args) noexcept;
 
     template<bool NETWORK_ORDER,typename T>
     concept serialize_concept = 
@@ -100,7 +100,7 @@ namespace serialization{
 
     template<bool NETWORK_ORDER,typename T>
     concept deserialize_concept = 
-    requires(T& val,std::span<const char> buf){
+    requires(T& val,MultiBufferView& buf){
         { Deserialize<NETWORK_ORDER,T>{}(val,buf) } -> std::same_as<SerializationEC>;
     };
 
@@ -207,7 +207,7 @@ namespace serialization{
         /// @return std::expected<T, SerializationEC> - value or error code
         /// @note Supports both runtime and constexpr contexts
         /// @warning Buffer must be properly aligned for type T
-        SerializationEC operator()(T& to_deserialize,std::span<const char> buf) const noexcept{
+        SerializationEC operator()(T& to_deserialize,MultiBufferView& buf) const noexcept{
             if constexpr (numeric_types_concept<std::decay_t<T>>){
                 static_assert(std::is_trivially_copyable_v<std::decay_t<T>>, 
                     "Type T must be trivially copyable");
@@ -439,7 +439,7 @@ namespace serialization{
         /// @return std::expected<T, SerializationEC> - value or error code
         /// @note Supports both runtime and constexpr contexts
         /// @warning Buffer must be properly aligned for type T
-        SerializationEC operator()(std::optional<T>& to_deserialize,std::span<const char> buf) const noexcept{
+        SerializationEC operator()(std::optional<T>& to_deserialize,MultiBufferView& buf) const noexcept{
             to_deserialize.reset();
             if(buf.size()<min_serial_size(to_deserialize))
                 return SerializationEC::BUFFER_SIZE_LESSER;
@@ -500,7 +500,7 @@ namespace serialization{
 
     template<bool NETWORK_ORDER,std::ranges::range T>
     struct Deserialize<NETWORK_ORDER,T>{
-        SerializationEC operator()(T& to_deserialize,std::span<const char> buf) const noexcept{
+        SerializationEC operator()(T& to_deserialize,MultiBufferView& buf) const noexcept{
             static_assert(deserialize_concept<NETWORK_ORDER,std::ranges::range_value_t<T>>);
             if(buf.size()<min_serial_size(to_deserialize))
                 return SerializationEC::BUFFER_SIZE_LESSER;
@@ -618,7 +618,7 @@ template<bool NETWORK_ORDER,typename T>
     requires IsStdVariant<T>
     struct Deserialize<NETWORK_ORDER,T>{
         using type = std::decay_t<T>;
-        SerializationEC operator()(type& val, std::span<const char> buf) const noexcept{
+        SerializationEC operator()(type& val, MultiBufferView& buf) const noexcept{
             using factory = ::VariantFactory<type>;
             size_t index = std::numeric_limits<size_t>::max();
             if(SerializationEC err = deserialize<NETWORK_ORDER>(index,buf);err!=SerializationEC::NONE)
@@ -689,7 +689,7 @@ template<bool NETWORK_ORDER,typename T>
         return Serialize<NETWORK_ORDER,T>{}(val,buf);
     }
     template<bool NETWORK_ORDER,typename T>
-    SerializationEC deserialize(T& val,std::span<const char> buf) noexcept{
+    SerializationEC deserialize(T& val,MultiBufferView& buf) noexcept{
         return Deserialize<NETWORK_ORDER,T>{}(val,buf);
     }
 
@@ -706,7 +706,7 @@ template<bool NETWORK_ORDER,typename T>
     }
     template<bool NETWORK_ORDER,typename T,typename... ARGS>
     requires (sizeof...(ARGS)>0)
-    SerializationEC deserialize(const T& val,std::span<const char> buf, ARGS&... args) noexcept{
+    SerializationEC deserialize(const T& val,MultiBufferView& buf, ARGS&... args) noexcept{
         static_assert(min_serial_size<T>()==min_serial_size<ARGS...>(),"Expected equal minimal serial size of object and its fields' summary minimal serial size");
         static_assert(min_serial_size<T>()==min_serial_size<ARGS...>(),"Expected equal maximal serial size of object and its fields' summary maximal serial size");
         SerializationEC result_code = SerializationEC::NONE;
@@ -733,11 +733,11 @@ template<bool NETWORK_ORDER,typename T>
         return Serialize<true,T>{}(val,buf);
     }
     template<typename T>
-    SerializationEC deserialize_native(T& to_deserialize,std::span<const char> buf) noexcept{
+    SerializationEC deserialize_native(T& to_deserialize,MultiBufferView& buf) noexcept{
         return Deserialize<false,T>{}(to_deserialize,buf);
     }
     template<typename T>
-    SerializationEC deserialize_network(T& to_deserialize,std::span<const char> buf) noexcept{
+    SerializationEC deserialize_network(T& to_deserialize,MultiBufferView& buf) noexcept{
         return Deserialize<true,T>{}(to_deserialize,buf);
     }
 
@@ -754,13 +754,13 @@ template<bool NETWORK_ORDER,typename T>
         else return Serialize<true,std::decay_t<T>>{}(val,buf);
     }
     template<typename T,typename... ARGS>
-    SerializationEC deserialize_native(const T& to_deserialize,std::span<const char> buf,ARGS&... args) noexcept{
+    SerializationEC deserialize_native(const T& to_deserialize,MultiBufferView& buf,ARGS&... args) noexcept{
         if constexpr (sizeof...(ARGS)>0)
             return deserialize<false,std::decay_t<T>>(to_deserialize,buf,args...);
         else return Deserialize<false,std::decay_t<T>>{}(to_deserialize,buf);
     }
     template<typename T,typename... ARGS>
-    SerializationEC deserialize_network(const T& to_deserialize,std::span<const char> buf,ARGS&... args) noexcept{
+    SerializationEC deserialize_network(const T& to_deserialize,MultiBufferView& buf,ARGS&... args) noexcept{
         if constexpr (sizeof...(ARGS)>0)
             return deserialize<true,std::decay_t<T>>(to_deserialize,buf,args...);
         else return Deserialize<true,std::decay_t<T>>{}(to_deserialize,buf);
@@ -806,12 +806,12 @@ template<bool NETWORK_ORDER,typename T>
         else if(fstream.fail())
             return SerializationEC::FILE_READING_ERROR;
         if constexpr(!NETWORK){
-            err = deserialize_native(val,std::span<const char>(buf));
+            err = deserialize_native(val,MultiBufferView&(buf));
             if(err!=SerializationEC::NONE)
                 return err;
         }
         else{
-            err = deserialize_network(val,std::span<const char>(buf));
+            err = deserialize_network(val,MultiBufferView&(buf));
             if(err!=SerializationEC::NONE)
                 return err;
         }
@@ -874,12 +874,12 @@ template<bool NETWORK_ORDER,typename T>
         auto deserialize_variadic = [&buf,&err,&offset](auto& value) ->SerializationEC
         {
             if constexpr(!NETWORK){
-                err = deserialize_native(value,std::span<const char>(buf).subspan(offset));
+                err = deserialize_native(value,MultiBufferView&(buf).subspan(offset));
                 offset+=serial_size(value);
                 return err;
             }
             else {
-                err = deserialize_network(value,std::span<const char>(buf).subspan(offset));
+                err = deserialize_network(value,MultiBufferView&(buf).subspan(offset));
                 offset+=serial_size(value);
                 return err;
             }
@@ -895,7 +895,7 @@ template<bool NETWORK_ORDER,typename T>
     }
 
     template<typename T, bool NETWORK_ORDER>
-    SerializationEC deserialize(T& value,std::span<std::span<const char>>& buffer) noexcept{
+    SerializationEC deserialize(T& value,std::span<MultiBufferView&>& buffer) noexcept{
         size_t buffered = 0;
         int sections_buffered = 0;
         for(sections_buffered=0;i<buffer.size();++sections_buffered){

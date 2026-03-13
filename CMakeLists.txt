@@ -62,6 +62,16 @@ target_include_directories(boost_functional PUBLIC
                 "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/boost_functional>"
                 "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>")
 
+file(GLOB_RECURSE Network_lib_SOURCES ${CMAKE_SOURCE_DIR}/src/network/**.cpp)
+
+add_library(network SHARED ${Network_lib_SOURCES})
+target_link_libraries(network PUBLIC serial bytes)
+target_include_directories(network PUBLIC 
+		"$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/network>"
+                "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/>"
+                "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/network>"
+                "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>")
+
 add_library(types STATIC src/types/coord.cpp
                 src/types/rect.cpp
                 src/types/size.cpp
@@ -93,6 +103,7 @@ install(TARGETS
         CLInput 
         compressor
         boost_functional
+        network
         images
         types
         utilities

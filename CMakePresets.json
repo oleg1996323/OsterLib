@@ -17,8 +17,8 @@
             "cmakeExecutable": "cmake",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE":"Debug",
-                "CMAKE_CXX_COMPILER":"$env{HOME}/gcc-install/bin/g++",
-                "CMAKE_C_COMPILER":"$env{HOME}/gcc-install/bin/gcc",
+                "CMAKE_CXX_COMPILER":"$env{HOME}/gcc/gcc-install/bin/g++",
+                "CMAKE_C_COMPILER":"$env{HOME}/gcc/gcc-install/bin/gcc",
                 "CMAKE_INSTALL_PREFIX":"$env{HOME}/OsterLib-install",
                 "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
                 "DEBUG":null
@@ -66,8 +66,7 @@
     "buildPresets": [
         {
         "name": "default",
-        "configurePreset": "default",
-        "cleanFirst": true
+        "configurePreset": "default"
         }
     ],
     "testPresets": [
