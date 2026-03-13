@@ -17,6 +17,7 @@
 #include <cassert>
 #include "concepts.h"
 #include "variant.h"
+#include "serialization/multi_buffer.h"
 
 namespace serialization{
     
@@ -183,7 +184,7 @@ namespace serialization{
                     return serialize<NETWORK_ORDER>(val.lock(),buf);
                 else return serialize<NETWORK_ORDER>(false,buf);
             }
-            else if constexpr(std::is_same_v<std::decay_t<T>,std::monostate>)
+            else if constexpr(std::is_empty_v<T>)
                 return SerializationEC::NONE;
             else if constexpr(pair_concept<T>){
                 if(SerializationEC err = serialize<NETWORK_ORDER>(val.first,buf);err==SerializationEC::NONE)
@@ -277,7 +278,7 @@ namespace serialization{
                     }
                 }
             }
-            else if constexpr(std::is_same_v<std::decay_t<T>,std::monostate>)
+            else if constexpr(std::is_empty_v<T>)
                 return SerializationEC::NONE;
             else if constexpr(pair_concept<T>){
                 return deserialize<NETWORK_ORDER>(to_deserialize,buf,to_deserialize.first,to_deserialize.second);
@@ -302,7 +303,7 @@ namespace serialization{
                 return sizeof(bool)+(val?serial_size(*val):0);
             else if constexpr(weak_pointer_concept<T>)
                 return sizeof(bool)+(!val.expired()?serial_size(val.lock()):0);
-            else if constexpr(std::is_same_v<std::decay_t<T>,std::monostate>)
+            else if constexpr(std::is_empty_v<T>)
                 return 0;
             else if constexpr(pair_concept<T>)
                 return serial_size(val.first)+serial_size(val.second);
@@ -325,7 +326,7 @@ namespace serialization{
                 return sizeof(T);
             else if constexpr (smart_pointer_concept<T> || weak_pointer_concept<T>)
                 return sizeof(bool);
-            else if constexpr(std::is_same_v<std::decay_t<T>,std::monostate>)
+            else if constexpr(std::is_empty_v<T>)
                 return 0;
             else if constexpr(pair_concept<T>){
                 return Min_serial_size<typename T::first_type>::value+
@@ -351,7 +352,7 @@ namespace serialization{
             else if constexpr (smart_pointer_concept<T>||weak_pointer_concept<T>)
                 return Max_serial_size<typename T::element_type>::value == std::numeric_limits<size_t>::max()?
                         Max_serial_size<typename T::element_type>::value:Max_serial_size<typename T::element_type>::value+sizeof(bool);
-            else if constexpr(std::is_same_v<T,std::monostate>)
+            else if constexpr(std::is_empty_v<T>)
                 return 0;
             else if constexpr(pair_concept<T>)
                 return Max_serial_size<typename T::first_type>::value+
@@ -891,6 +892,27 @@ template<bool NETWORK_ORDER,typename T>
         fstream.seekg((serial_size(val)+...)-buf.size(),
             std::ios::cur);
         return err;
+    }
+
+    template<typename T, bool NETWORK_ORDER>
+    SerializationEC deserialize(T& value,std::span<std::span<const char>>& buffer) noexcept{
+        size_t buffered = 0;
+        int sections_buffered = 0;
+        for(sections_buffered=0;i<buffer.size();++sections_buffered){
+            buffered+=buffer[sections_buffered].size();
+            if(buffered>=min_serial_size(value))
+                break;
+        }
+        if(buffered<min_serial_size(value))
+            return serialization::SerializationEC::BUFFER_SIZE_LESSER;
+        if(sections_buffered>1){
+            std::vector<const char> buf_loc;
+            buf_loc.reserve(buffered);
+            for(int i=0;i<sections_buffered;++i)
+                buf_loc.append_range(buffer[i]);
+            
+        }
+        else return deserialize(value,buffer);
     }
 }
 
