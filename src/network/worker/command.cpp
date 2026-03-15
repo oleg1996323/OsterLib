@@ -16,12 +16,10 @@ namespace network{
 
 	Command<CommandType::AttachConnection>::Command(ConnectionHandle hconn,
 			std::unique_ptr<Connection>&& conn,
-			std::unique_ptr<AbstractConnectionProcess> proc,
 			Socket&& sock):
 			hconn_(hconn),
 			conn_(std::move(conn)),
-			socket_(std::move(sock)),
-			proc_(std::move(proc)){}
+			socket_(std::move(sock)){}
 
 	Command<CommandType::RemoveConnection>::Command(ConnectionHandle hconn,
 			uint32_t timeout_sec,
@@ -110,7 +108,6 @@ namespace network{
 		w->attachConnectionInternal(
 			hconn_,
 			std::move(conn_),
-			std::move(proc_),
 			std::move(socket_),
 			err);
 		set_error(err);

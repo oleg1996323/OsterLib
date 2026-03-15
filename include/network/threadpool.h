@@ -21,7 +21,6 @@ public:
     virtual bool attachConnectionInternal(
 			ConnectionHandle hconn,
 			std::unique_ptr<Connection> addr,
-            std::unique_ptr<AbstractConnectionProcess> proc,
 			Socket&& socket,
 			std::error_code& err
 			) noexcept override;
@@ -82,7 +81,6 @@ public:
     ConnectionHandle attach_connection(
         const Address& addr,
         Socket&& socket,
-        std::unique_ptr<AbstractConnectionProcess> proc,
         std::error_code& err) noexcept;
 
     bool modifyConnection(

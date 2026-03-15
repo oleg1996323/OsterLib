@@ -4,17 +4,61 @@
 #include <cstdint>
 #include <cstring>
 #include <optional>
+#include "definitions.h"
+#include "byte_order.h"
+#include "float_conv.h"
+
+namespace serialization{
 
 class MultiBufferView {
+
+    template<typename T,bool NETWORK_ORDER>
+    bool __deserialize_trivial__(T& to_deserialize){
+        if constexpr (std::is_empty_v<T>)
+            return true;
+        else if constexpr (numeric_types_concept<T>){
+            if constexpr (std::is_integral_v<T> || std::is_enum_v<T>){
+                using RawType = serialization::RawType_t<T>;
+                RawType value;
+                if(read(&value,sizeof(RawType))){
+                    if constexpr (sizeof(RawType)>1){
+                        if constexpr(NETWORK_ORDER){
+                            if(is_little_endian())
+                                value = std::byteswap(value);
+                        }
+                        else{
+                            if(!is_little_endian())
+                                value = std::byteswap(value);
+                        }
+                    }
+                    to_deserialize = static_cast<T>(value);
+                    return true;
+                }
+                else return false;
+            }
+            else if constexpr(std::is_floating_point_v<T>){
+                using IntType = oster::detail::to_integer_type<sizeof(std::decay_t<T>)>;
+                IntType int_val;
+                if(__deserialize_trivial__<IntType,NETWORK_ORDER>(int_val)){
+                    to_deserialize = to_float(int_val);
+                    return true;
+                }
+                else return false;
+            }
+            else static_assert(false,"Not implemented");
+        }
+        else static_assert(false,"Not implemented");
+    }
+
 public:
     using Span = std::span<const char>;
     explicit MultiBufferView(std::span<const Span> buffers) noexcept
         : buffers_(buffers.begin(), buffers.end())
     {}
-    MultiBufferView(auto&... args) requires(
-        ((std::ranges::random_access_range<std::decay_t<decltype(args)>> &&
-        std::ranges::contiguous_range<std::decay_t<decltype(args)>>) && ...)
-    ){
+    template<typename... Args>
+    requires ((std::ranges::random_access_range<std::decay_t<Args>> &&
+           std::ranges::contiguous_range<std::decay_t<Args>>) && ...)
+    MultiBufferView(auto&... args){
         buffers_.reserve(sizeof...(args));
         (buffers_.push_back(args),...);
     }
@@ -108,7 +152,8 @@ public:
     requires (std::ranges::random_access_range<std::decay_t<decltype(buffer)>> &&
         std::ranges::contiguous_range<std::decay_t<decltype(buffer)>>)
     {
-        buffers_.push_back(std::span(buffer));
+        if(!std::empty(buffer))
+            buffers_.push_back(std::span(buffer));
     }
 
     /**
@@ -125,22 +170,43 @@ public:
     /**
      * @brief Прочитать тривиально копируемый тип.
      */
-    template<typename T>
+    template<typename T,bool NETWORK_ORDER>
     bool read_trivial(T& value) noexcept {
         static_assert(std::is_trivially_copyable_v<T>);
-        return read(&value, sizeof(T));
+        checkpoint();
+        if(__deserialize_trivial__<T,NETWORK_ORDER>(value)){
+            commit();
+            return true;
+        }
+        else{
+            rollback();
+            return false;
+        }            
     }
 
     /**
      * @brief Прочитать тривиально копируемый тип и вернуть optional.
      */
-    template<typename T>
+    template<typename T,bool NETWORK_ORDER>
     std::optional<T> read_trivial() noexcept {
         static_assert(std::is_trivially_copyable_v<T>);
         T value;
-        if (read(&value, sizeof(T)))
+        if (read_trivial<T,NETWORK_ORDER>(&value))
             return value;
         return std::nullopt;
+    }
+
+    size_t flush_deserialized() noexcept{
+        size_t decrease_offset_{0};
+        for(int id = 0;id<span_idx_;++id){
+            decrease_offset_+=buffers_[id].size();
+        }
+        span_idx_=0;
+        if(!buffers_.empty())
+            buffers_.front()=buffers_.front().subspan(offset_);
+        decrease_offset_+=offset_;
+        offset_=0;
+        return decrease_offset_;
     }
 
 private:
@@ -149,3 +215,4 @@ private:
     size_t offset_ = 0;
     std::vector<std::pair<size_t, size_t>> checkpoints_;
 };
+}

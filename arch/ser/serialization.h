@@ -20,150 +20,6 @@
 #include "serialization/definitions.h"
 #include "serialization/multi_buffer.h"
 
-
-namespace serialization{
-    class StreamSerializer{
-        MultiBufferView mbv_;
-        std::vector<size_t> cont_sizes_; //container sizes
-        size_t through_iterator_{0};
-        ssize_t cont_sz_iter_{-1};
-        size_t flushed_{0};
-        size_t size_{0};
-        size_t iter_begin_state_{0};
-        void next_sized() noexcept{
-            assert(!cont_sizes_.empty() && (static_cast<ssize_t>(
-                    cont_sizes_.size())-1)>cont_sz_iter_);
-            ++cont_sz_iter_;
-        }
-        void prev_sized() noexcept{
-            assert(cont_sz_iter_>-1);
-            --cont_sz_iter_;
-        }
-        void push_container_size() noexcept{
-            cont_sizes_.push_back(0);
-        }
-        void flush_container_sizes() noexcept{
-            cont_sizes_.resize(cont_sz_iter_+1);
-        }
-        public:
-        StreamSerializer() = default;
-        void push_view(auto&& buffer) noexcept
-        requires (std::ranges::random_access_range<std::decay_t<decltype(buffer)>> &&
-        std::ranges::contiguous_range<std::decay_t<decltype(buffer)>>)
-        {
-            if(std::size(buffer)!=0){
-                size_+=std::size(buffer);
-                mbv_.push(std::forward<decltype(buffer)>(buffer));
-                reset_iterators();
-            }
-        }
-        size_t position() const noexcept{
-            return mbv_.position();
-        }
-        template<typename T>
-        bool fully_deserialized(T& value) const noexcept{
-            if constexpr(min_serial_size<T>()==max_serial_size<T>())
-                return position()-through_iterator_>=serial_size(value);
-            else return false;
-        }
-        template<typename T>
-        bool advance(T& value) noexcept{
-            if(fully_deserialized(value)){
-                through_iterator_+=serial_size(value);
-                return true;
-            }
-            else return false;
-        }
-        size_t flushed() const noexcept{
-            return flushed_;
-        }
-        void flush() noexcept{
-            flushed_+=mbv_.flush_deserialized();
-        }
-        void reset_iterators() noexcept{
-            through_iterator_ = iter_begin_state_;
-            cont_sz_iter_ = -1;
-        }
-        void set_container_size(size_t sz) noexcept{
-            cont_sizes_[cont_sz_iter_]=sz;
-        }
-        template<std::ranges::common_range T>
-        size_t remained_container_elements(const T& range) const noexcept{
-            return range.size() - cont_sizes_.at(cont_sz_iter_);
-        }
-        void checkpoint() noexcept{
-            mbv_.checkpoint();
-        }
-        void reset_all() noexcept{
-            mbv_ = MultiBufferView();
-            cont_sizes_.clear(); //container sizes
-            through_iterator_ = 0;
-            cont_sz_iter_=-1;
-            flushed_=0;
-            size_=0;
-            iter_begin_state_=0;
-        }
-        bool rollback() noexcept{
-            return mbv_.rollback();
-        }
-        bool commit_container_elem() noexcept{
-            if(cont_sizes_[cont_sz_iter_]==0)
-                return false; //UNMATCHED_TYPE
-            else {
-                --cont_sizes_[cont_sz_iter_];
-                return true;
-            }
-        }
-        template<bool NETWORK_ORDER,typename T>
-        SerializationEC deserialize(T& value) noexcept{
-            if(advance(value)){
-                return SerializationEC::NONE;
-            }
-            else{
-                SerializationEC result;
-                if constexpr(std::ranges::common_range<T>){
-                    if(cont_sz_iter_<cont_sizes_.size()-1)
-                        next_sized();
-                    else{
-                        cont_sizes_.push_back(0);
-                        next_sized();
-                    }
-                }
-                if constexpr (numeric_types_concept<T>){
-                    if(mbv_.read_trivial<T,NETWORK_ORDER>(value)){
-                            size_t sz = serialization::serial_size(value);
-                            iter_begin_state_ += sz;
-                            result = serialization::SerializationEC::NONE;
-                    }
-                    else result = serialization::SerializationEC::BUFFER_SIZE_LESSER;
-                }
-                else{
-                    result = Deserialize<NETWORK_ORDER,T>{}(value,*this);
-                    flush_container_sizes();
-                    
-                    if(result!=SerializationEC::NONE) reset_iterators();
-                }
-                if constexpr(std::ranges::common_range<T>){
-                    prev_sized();
-                }
-                flush();
-                return result;
-            }
-        }
-        template<bool NETWORK_ORDER,typename... ARGS>
-        requires (sizeof...(ARGS)>1)
-        SerializationEC deserialize(ARGS&... args) noexcept{
-            SerializationEC result_code;
-            auto deserialize_field = [&](auto& field) mutable noexcept->SerializationEC
-            {
-                return this->deserialize<NETWORK_ORDER>(field);
-            };
-            (((result_code = deserialize_field(args))==SerializationEC::NONE) && ...);
-            return result_code;
-        }
-    };
-}
-
 namespace serialization{
     template<bool NETWORK_ORDER,typename T>
     struct Serialize{
@@ -233,28 +89,48 @@ namespace serialization{
         /// @return std::expected<T, SerializationEC> - value or error code
         /// @note Supports both runtime and constexpr contexts
         /// @warning Buffer must be properly aligned for type T
-        SerializationEC operator()(T& to_deserialize,StreamSerializer& buf) const noexcept{
-            if constexpr (numeric_types_concept<T>)
-                return buf.deserialize<NETWORK_ORDER>(to_deserialize);
+        SerializationEC operator()(T& to_deserialize,MultiBufferView& buf) const noexcept{
+            
+            if constexpr (numeric_types_concept<T>){
+                buf.checkpoint();
+                if(buf.read_trivial<T,NETWORK_ORDER>(to_deserialize)){
+                    assert(buf.commit());
+                    return serialization::SerializationEC::NONE;
+                }
+                else{
+                    assert(buf.rollback());
+                    return serialization::SerializationEC::BUFFER_SIZE_LESSER;
+                }
+            }
             else if constexpr (time_point_concept<T>){
+                if(buf.available()<min_serial_size(to_deserialize))
+                    return SerializationEC::BUFFER_SIZE_LESSER;
+                buf.checkpoint();
                 int64_t IntVal = 0;
                 if(auto ser_res = deserialize<NETWORK_ORDER>(IntVal,buf);ser_res == SerializationEC::NONE){
+                    assert(buf.commit());
                     to_deserialize = T(std::chrono::duration_cast<typename T::duration>(std::chrono::nanoseconds(IntVal)));
                     return ser_res;
                 }
                 else{
+                    assert(buf.rollback());
                     return ser_res;
                 }
             }
             else if constexpr (duration_concept<T>){
+                if(buf.available()<min_serial_size(to_deserialize))
+                    return SerializationEC::BUFFER_SIZE_LESSER;
                 int64_t IntVal = 0;
-                if(auto ser_res = buf.deserialize<NETWORK_ORDER>(IntVal);
+                buf.checkpoint();
+                if(auto ser_res = deserialize<NETWORK_ORDER>(IntVal,buf);
                         ser_res == SerializationEC::NONE)
                 {
+                    assert(buf.commit());
                     to_deserialize = std::chrono::duration_cast<T>(std::chrono::nanoseconds(IntVal));
                     return ser_res;
                 }
                 else{
+                    assert(buf.rollback());
                     return ser_res;
                 }
             }
@@ -262,43 +138,54 @@ namespace serialization{
                 static_assert(std::is_default_constructible_v<typename T::element_type>,
                         "smart pointer deserializable elements must be default constructible");
                 bool has_value = false;
-                if(buf.advance(to_deserialize)){
-                    if(to_deserialize.get())
-                        return buf.deserialize<NETWORK_ORDER>(to_deserialize);
-                    else return SerializationEC::NONE;
-                }
-                else{
-                    if(auto ser_res = buf.deserialize<NETWORK_ORDER>(has_value);
-                            ser_res == SerializationEC::NONE)
-                    {
-                        if(has_value){
-                            if constexpr (requires{std::is_same_v<T,std::unique_ptr<typename T::element_type,
-                                                                typename T::deleter_type>>;})
-                                to_deserialize = std::make_unique<typename T::element_type>();
-                            else
-                                to_deserialize = std::make_shared<typename T::element_type>();
-                            if(auto ser_res = deserialize<NETWORK_ORDER>(*to_deserialize,buf);
-                                    ser_res == SerializationEC::NONE)
-                            {
-                                return SerializationEC::NONE;
-                            }
-                            else{
-                                return ser_res;
-                            }
-                        }
-                        else {
-                            to_deserialize.reset();
+                buf.checkpoint();
+                if(auto ser_res = deserialize<NETWORK_ORDER>(has_value,buf);
+                        ser_res == SerializationEC::NONE)
+                {
+                    assert(buf.commit());
+                    if(has_value){
+                        if constexpr (requires{std::is_same_v<T,std::unique_ptr<typename T::element_type,
+                                                            typename T::deleter_type>>;})
+                            to_deserialize = std::make_unique<typename T::element_type>();
+                        else
+                            to_deserialize = std::make_shared<typename T::element_type>();
+                        buf.checkpoint();
+                        if(auto ser_res = deserialize<NETWORK_ORDER>(*to_deserialize,buf);
+                                ser_res == SerializationEC::NONE)
+                        {
+                            assert(buf.commit());
                             return SerializationEC::NONE;
                         }
+                        else{
+                            assert(buf.rollback());
+                            return ser_res;
+                        }
                     }
-                    else return ser_res;
+                    else {
+                        to_deserialize.reset();
+                        return SerializationEC::NONE;
+                    }
+                }
+                else{
+                    assert(buf.rollback());
+                    return ser_res;
                 }
             }
             else if constexpr(std::is_empty_v<T>)
                 return SerializationEC::NONE;
             else if constexpr(pair_concept<T>){
-                return deserialize<NETWORK_ORDER>(to_deserialize,
+                buf.checkpoint();
+                if(auto ser_res = deserialize<NETWORK_ORDER>(to_deserialize,
                         buf,to_deserialize.first,to_deserialize.second);
+                        ser_res == SerializationEC::NONE)
+                {
+                    assert(buf.commit());
+                    return ser_res;
+                }
+                else{
+                    assert(buf.rollback());
+                    return ser_res;
+                }
             }
             else {
                 static_assert(false,"deserialize unspecified operator()");
@@ -456,23 +343,28 @@ namespace serialization{
         /// @return std::expected<T, SerializationEC> - value or error code
         /// @note Supports both runtime and constexpr contexts
         /// @warning Buffer must be properly aligned for type T
-        SerializationEC operator()(std::optional<T>& to_deserialize,StreamSerializer& buf) const noexcept
-        {
+        SerializationEC operator()(std::optional<T>& to_deserialize,MultiBufferView& buf) const noexcept{
+            to_deserialize.reset();
+            buf.checkpoint();
             bool has_value = false;
-            if(buf.advance(to_deserialize)){
-                if(to_deserialize.has_value())
-                    return buf.deserialize<NETWORK_ORDER>(to_deserialize.value());
-                else return SerializationEC::NONE;
+            SerializationEC code = deserialize<NETWORK_ORDER>(has_value,buf);
+            if(code!=SerializationEC::NONE){
+                buf.rollback();
+                return code;
             }
-            else{
-                SerializationEC code = buf.deserialize<NETWORK_ORDER>(has_value);
-                if(code!=SerializationEC::NONE)
-                    return code;
-                if(!has_value)
-                    return SerializationEC::NONE;
-                to_deserialize.emplace();
-                return buf.deserialize<NETWORK_ORDER>(to_deserialize.value());
+            buf.commit();
+            if(!has_value)
+                return SerializationEC::NONE;
+            T value;
+            buf.checkpoint();
+            code = deserialize<NETWORK_ORDER>(value,buf);
+            if(code!=SerializationEC::NONE){
+                buf.rollback();
+                return code;
             }
+            buf.commit();
+            to_deserialize.emplace(std::move(value));
+            return SerializationEC::NONE;
         }
     };
 
@@ -518,35 +410,39 @@ namespace serialization{
 
     template<bool NETWORK_ORDER,std::ranges::range T>
     struct Deserialize<NETWORK_ORDER,T>{
-        SerializationEC operator()(T& to_deserialize,StreamSerializer& buf) const noexcept{
+        SerializationEC operator()(T& to_deserialize,MultiBufferView& buf) const noexcept{
             static_assert(deserialize_concept<NETWORK_ORDER,std::ranges::range_value_t<T>>);
+            buf.checkpoint();
             size_t range_sz = 0;
-            SerializationEC code;
-            if(buf.advance(range_sz))
-                range_sz = buf.remained_container_elements(to_deserialize);
-            else{
-                code = buf.deserialize<NETWORK_ORDER>(range_sz);
-                if(code!=SerializationEC::NONE)
-                    return code;
-                buf.set_container_size(range_sz);
+            SerializationEC code = deserialize<NETWORK_ORDER>(range_sz,buf);
+            if(code!=SerializationEC::NONE){
+                buf.rollback();
+                return code;
             }
-            for (size_t i = 0; i < range_sz; ++i){
+            buf.commit();
+            for (size_t i = 0; i < range_sz; ++i) {
+                
                 if constexpr(is_associative_container_v<T>){
                     std::pair<typename T::key_type,typename T::mapped_type> item{};
-                    code = buf.deserialize<NETWORK_ORDER>(item);
-                    if (code != SerializationEC::NONE)
+                    buf.checkpoint();
+                    code = deserialize<NETWORK_ORDER>(item, buf);
+                    if (code != SerializationEC::NONE){
+                        buf.rollback();
                         return code;
+                    }
+                    buf.commit();
                     to_deserialize.insert(std::move(item));
-                    buf.commit_container_elem();
                 }
                 else {
                     std::ranges::range_value_t<T> item{};
-                    code = buf.deserialize<NETWORK_ORDER>(item);
+                    buf.checkpoint();
+                    code = deserialize<NETWORK_ORDER>(item, buf);
                     if (code != SerializationEC::NONE){
+                        buf.rollback();
                         return code;
                     }
+                    buf.commit();
                     to_deserialize.insert(to_deserialize.end(),std::move(item));
-                    buf.commit_container_elem();
                 }
             }
             return SerializationEC::NONE;
@@ -638,27 +534,33 @@ template<bool NETWORK_ORDER,typename T>
     requires IsStdVariant<T>
     struct Deserialize<NETWORK_ORDER,T>{
         using type = std::decay_t<T>;
-        SerializationEC operator()(type& val, StreamSerializer& buf) const noexcept{
+        SerializationEC operator()(type& val, MultiBufferView& buf) const noexcept{
             using factory = ::VariantFactory<type>;
+            buf.checkpoint();
             size_t index = std::numeric_limits<size_t>::max();
-            if(!buf.advance(index)){
-                if(SerializationEC err = buf.deserialize<NETWORK_ORDER>(index);
-                    err!=SerializationEC::NONE)
-                    return err;
-                if(!factory::emplace(val,index))
-                    return SerializationEC::UNMATCHED_TYPE;
-            }
-            auto deserializer = [&buf](auto& item)
-            {   
-                return buf.deserialize<NETWORK_ORDER>(item);
-            };
-
-            if(auto ser_res = std::visit(deserializer,val);
-                ser_res!=SerializationEC::NONE){
-                return ser_res;
+            if(SerializationEC err = deserialize<NETWORK_ORDER>(index,buf);err!=SerializationEC::NONE){
+                buf.rollback();
+                return err;
             }
             else{
-                return ser_res;
+                if(!factory::emplace(val,index))
+                    return SerializationEC::UNMATCHED_TYPE;
+                buf.commit();
+                auto deserializer = [&buf](auto& item)
+                {   
+                    buf.checkpoint();
+                    return deserialize<NETWORK_ORDER>(item,buf);
+                };
+
+                if(auto ser_res = std::visit(deserializer,val);
+                    ser_res!=SerializationEC::NONE){
+                    buf.rollback();
+                    return ser_res;
+                }
+                else{
+                    buf.commit();
+                    return ser_res;
+                }
             }
         }
     };
@@ -715,8 +617,8 @@ template<bool NETWORK_ORDER,typename T>
         return Serialize<NETWORK_ORDER,T>{}(val,buf);
     }
     template<bool NETWORK_ORDER,typename T>
-    SerializationEC deserialize(T& val,StreamSerializer& buf) noexcept{
-        return buf.deserialize<NETWORK_ORDER>(val);
+    SerializationEC deserialize(T& val,MultiBufferView& buf) noexcept{
+        return Deserialize<NETWORK_ORDER,T>{}(val,buf);
     }
 
     template<bool NETWORK_ORDER,typename T,typename... ARGS>
@@ -732,10 +634,19 @@ template<bool NETWORK_ORDER,typename T>
     }
     template<bool NETWORK_ORDER,typename T,typename... ARGS>
     requires (sizeof...(ARGS)>0)
-    SerializationEC deserialize(const T& val,StreamSerializer& buf, ARGS&... args) noexcept{
+    SerializationEC deserialize(const T& val,MultiBufferView& buf, ARGS&... args) noexcept{
         static_assert(min_serial_size<T>()==min_serial_size<ARGS...>(),"Expected equal minimal serial size of object and its fields' summary minimal serial size");
         static_assert(min_serial_size<T>()==min_serial_size<ARGS...>(),"Expected equal maximal serial size of object and its fields' summary maximal serial size");
-        return buf.deserialize<NETWORK_ORDER>(args...);
+        SerializationEC result_code = SerializationEC::NONE;
+        if (buf.available() < min_serial_size(val))
+            return SerializationEC::BUFFER_SIZE_LESSER;
+
+        auto deserialize_field = [&](auto& field) mutable noexcept->SerializationEC
+        {
+            return deserialize<NETWORK_ORDER>(field,buf);
+        };
+        (((result_code = deserialize_field(args))==SerializationEC::NONE) && ...);
+        return result_code;
     }
 
     template<typename T>
@@ -747,37 +658,37 @@ template<bool NETWORK_ORDER,typename T>
         return Serialize<true,T>{}(val,buf);
     }
     template<typename T>
-    SerializationEC deserialize_native(T& to_deserialize,StreamSerializer& buf) noexcept{
-        return buf.deserialize<false>(to_deserialize);
+    SerializationEC deserialize_native(T& to_deserialize,MultiBufferView& buf) noexcept{
+        return Deserialize<false,T>{}(to_deserialize,buf);
     }
     template<typename T>
-    SerializationEC deserialize_network(T& to_deserialize,StreamSerializer& buf) noexcept{
-        return buf.deserialize<true>(to_deserialize);
+    SerializationEC deserialize_network(T& to_deserialize,MultiBufferView& buf) noexcept{
+        return Deserialize<true,T>{}(to_deserialize,buf);
     }
 
     template<typename T,typename... ARGS>
     SerializationEC serialize_native(const T& val,std::vector<char>& buf,const ARGS&... args) noexcept{
-        if constexpr (sizeof...(ARGS)>1)
+        if constexpr (sizeof...(ARGS)>0)
             return serialize<false,std::decay_t<T>>(val,buf,args...);
         else return Serialize<false,std::decay_t<T>>{}(val,buf);
     }
     template<typename T,typename... ARGS>
     SerializationEC serialize_network(const T& val,std::vector<char>& buf,const ARGS&... args) noexcept{
-        if constexpr (sizeof...(ARGS)>1)
+        if constexpr (sizeof...(ARGS)>0)
             return serialize<true,std::decay_t<T>>(val,buf,args...);
         else return Serialize<true,std::decay_t<T>>{}(val,buf);
     }
     template<typename T,typename... ARGS>
-    SerializationEC deserialize_native(const T& to_deserialize,StreamSerializer& buf,ARGS&... args) noexcept{
-        if constexpr (sizeof...(ARGS)>1)
+    SerializationEC deserialize_native(const T& to_deserialize,MultiBufferView& buf,ARGS&... args) noexcept{
+        if constexpr (sizeof...(ARGS)>0)
             return deserialize<false,std::decay_t<T>>(to_deserialize,buf,args...);
-        else return deserialize<false>(to_deserialize,buf);
+        else return Deserialize<false,std::decay_t<T>>{}(to_deserialize,buf);
     }
     template<typename T,typename... ARGS>
-    SerializationEC deserialize_network(const T& to_deserialize,StreamSerializer& buf,ARGS&... args) noexcept{
-        if constexpr (sizeof...(ARGS)>1)
+    SerializationEC deserialize_network(const T& to_deserialize,MultiBufferView& buf,ARGS&... args) noexcept{
+        if constexpr (sizeof...(ARGS)>0)
             return deserialize<true,std::decay_t<T>>(to_deserialize,buf,args...);
-        else return deserialize<true>(to_deserialize,buf);
+        else return Deserialize<true,std::decay_t<T>>{}(to_deserialize,buf);
     }
 
     template<bool NETWORK_ORDER,typename T>
@@ -819,8 +730,7 @@ template<bool NETWORK_ORDER,typename T>
             return SerializationEC::UNEXPECTED_EOF;
         else if(fstream.fail())
             return SerializationEC::FILE_READING_ERROR;
-        StreamSerializer mbv;
-        mbv.push_view(buf);
+        MultiBufferView mbv(buf);
         if constexpr(!NETWORK_ORDER){
             err = deserialize_native(val,mbv);
             if(err!=SerializationEC::NONE)
@@ -881,8 +791,7 @@ template<bool NETWORK_ORDER,typename T>
         buf.resize(sz>max_serial_size(val...)?max_serial_size(val...):sz);
         fstream.read(buf.data(),
             sz>max_serial_size(val...)?max_serial_size(val...):sz);
-        StreamSerializer multi_buffer;
-        multi_buffer.push_view(buf);
+        MultiBufferView multi_buffer(buf);
         if(fstream.eof())
             return SerializationEC::UNEXPECTED_EOF;
         else if(fstream.fail())
@@ -957,4 +866,3 @@ static_assert(serialization::Max_serial_size<std::unordered_set<int>>::value==st
 static_assert(serialization::Max_serial_size<std::unordered_map<int,int>>::value==std::numeric_limits<size_t>::max());
 static_assert(serialization::Max_serial_size<std::map<int,int>>::value==std::numeric_limits<size_t>::max());
 static_assert(serialization::Max_serial_size<std::optional<std::map<int,int>>>::value==std::numeric_limits<size_t>::max());
-

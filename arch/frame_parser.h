@@ -11,7 +11,7 @@ namespace network{
 class FrameParser {
     std::vector<char> buffer_;
 public:
-    void append_data(std::span<const char> data) {
+    void append_data(MultiBufferView& data) {
         buffer_.insert(buffer_.end(), data.begin(), data.end());
     }
 

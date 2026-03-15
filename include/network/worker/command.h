@@ -88,11 +88,9 @@ namespace network
 	{
 		ConnectionHandle hconn_;
 		std::unique_ptr<Connection> conn_;
-		std::unique_ptr<AbstractConnectionProcess> proc_;
 		Socket socket_;
 		Command(ConnectionHandle hconn,
 				std::unique_ptr<Connection>&& conn,
-				std::unique_ptr<AbstractConnectionProcess> proc,
 				Socket&& sock);
 		virtual void execute_internal(
 				AbstractWorker* w) noexcept override;

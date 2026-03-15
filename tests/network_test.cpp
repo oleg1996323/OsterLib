@@ -9,8 +9,8 @@ using namespace network;
 
 class ClientPingProcess:public AbstractRequestableConnectionProcess{
     public:
-    int count_sent = 0;
-    int count_recv = 0;
+    static int count_sent;
+    static int count_recv;
     virtual void on_read(std::error_code& err) noexcept override{
         std::cout<<"Client: receive ping"<<std::endl;
         try_receive(err);
@@ -23,11 +23,12 @@ class ClientPingProcess:public AbstractRequestableConnectionProcess{
     }
     virtual void on_write(std::error_code& err) noexcept override{
         std::cout<<"Client: send ping"<<std::endl;
-        try_send(err);
+        bool not_all_sent = try_send(err);
         if(err!=std::error_code())
             std::cout<<err.message()<<std::endl;
         else {
-            ++count_sent;
+            if(!not_all_sent)
+                ++count_sent;
             err.clear();
         }
     }
@@ -53,43 +54,62 @@ class ClientPingProcess:public AbstractRequestableConnectionProcess{
     }
 };
 
+int ClientPingProcess::count_sent = 0;
+int ClientPingProcess::count_recv = 0;
+
 // должен быть известен фрейм, который десериализуется
 class ServerPingProcess:public AbstractConnectionProcess{
     public:
-    int count_sent = 0;
-    int count_recv = 0;
+    static int count_sent;
+    static int count_recv;
     virtual void on_read(std::error_code& err) noexcept override{
         SizeFramedData<size_t> ping;
         if(io_context().receive_buffer_size()==0)
-            io_context().resize_receive_buffer(ping.min_initial_size());
+            io_context().resize_receive_buffer(8096);
         io_context().receive(err,ping.min_initial_size());
-        if(err!=std::error_code())
-            return;
-        auto ser_res = io_context().deserialize(ping);
-        if(ser_res==serialization::SerializationEC::NONE)
-            err.clear();
-        else return;
-        if(ping.data_!=1){
-            err = std::make_error_code(std::errc::bad_message);
-            std::cout<<"Server: Not 1 for ping"<<std::endl;
-        }
-        else ++count_recv;
-        ping.data_=1;
-        if(auto ser_res = io_context().serialize(ping);
-            ser_res!=serialization::SerializationEC::NONE){
-            err = std::make_error_code(std::errc::bad_message);
-            std::cout<<"Server: bad serialization"<<std::endl;
-            return;
-        }
-        else {
-            if(err==std::error_code()){
-                std::cout<<"Server: send ping"<<std::endl;
+        if (err) {
+            if (err == std::errc::connection_reset) {
+                std::cout << "(server) connection closed by peer" << std::endl;
+                io_context().enable_readable(false, err);
             }
-            io_context().send(err);
+            return;
         }
-        if(err!=std::error_code()){
-            std::cout<<err.message()<<std::endl;
-            std::cout<<"Server: Error at sending"<<std::endl;
+        while(io_context().has_to_read()){
+            auto ser_res = io_context().deserialize(ping);
+            if(ser_res==serialization::SerializationEC::NONE)
+                err.clear();
+            else return;
+            if(ping.data_!=1){
+                err = std::make_error_code(std::errc::bad_message);
+                std::cout<<"(server) Not 1 for ping"<<std::endl;
+            }
+            else{
+                std::cout<<"(server) Ping received"<<std::endl;
+                if(!io_context().has_to_read())
+                    ++count_recv;
+            }
+            ping.data_=1;
+            if(auto ser_res = io_context().serialize(ping);
+                ser_res!=serialization::SerializationEC::NONE){
+                err = std::make_error_code(std::errc::bad_message);
+                std::cout<<"(server) bad serialization"<<std::endl;
+                continue;
+            }
+            else {
+                if(err==std::error_code()){
+                    std::cout<<"(server) send ping"<<std::endl;
+                }
+                io_context().send(err);
+            }
+            if(err!=std::error_code()){
+                std::cout<<err.message()<<std::endl;
+                std::cout<<"(server) Error at sending"<<std::endl;
+            }
+            else{
+                std::cout<<"(server) Ping sent"<<std::endl;
+                if(!io_context().has_to_write())
+                    ++count_sent;
+            }
         }
         return;
     }
@@ -114,8 +134,10 @@ class ServerPingProcess:public AbstractConnectionProcess{
     }
 };
 
+int ServerPingProcess::count_sent = 0;
+int ServerPingProcess::count_recv = 0;
+
 class Server:public AbstractServer{
-    int count_recv = 0;
     FRIEND_TEST(Client_server,ping);
 };
 
@@ -146,30 +168,34 @@ TEST(Client_server,ping){
                         {},
                         err);
     server.launch(err);
-    std::this_thread::sleep_for(std::chrono::seconds(1));
+    server.set_processes_at_connections<ServerPingProcess>();
+    //std::this_thread::sleep_for(std::chrono::milliseconds(500));
     Client client(err,10);
     auto hconn = client.connect(
             settings.host_,
             settings.port_,
             Socket::Type::Stream,
             Protocol::TCP,err);
-    std::this_thread::sleep_for(std::chrono::seconds(1));
-    server.set_process<ServerPingProcess>(err);
-    std::this_thread::sleep_for(std::chrono::seconds(1));
     ASSERT_EQ(err,std::error_code());
     {
         std::unique_ptr<ClientPingProcess> proc = std::make_unique<ClientPingProcess>(hconn,err);
-        std::this_thread::sleep_for(std::chrono::seconds(1));
         hconn.add_process(std::move(proc),err);
-        std::vector<std::shared_ptr<BaseCommand>> cmds;
         for(int i=0;i<5;++i){
-            auto result = cmds.emplace_back(client.request<size_t>(hconn,
+            auto cmd = client.request<size_t>(hconn,
                     serialization::serial_size(size_t(1)),
-                    size_t(1),std::monostate()));
+                    size_t(1),std::monostate());
+            cmd->wait_ready();
+            std::cout<<"command "<<i<<" error: "<<cmd->error()->message()<<std::endl;
         }
     }
-    std::this_thread::sleep_for(std::chrono::seconds(2));
-    EXPECT_EQ(server.count_recv,5);
+    EXPECT_EQ(ServerPingProcess::count_recv,5);
+    EXPECT_EQ(ServerPingProcess::count_sent,5);
+    EXPECT_EQ(ClientPingProcess::count_recv,5);
+    EXPECT_EQ(ClientPingProcess::count_sent,5);
+}
+
+TEST(Client_server_ping,HandlingClientDisconnection){
+
 }
 
 int main(int argc, char* argv[]){

@@ -141,18 +141,8 @@ public:
     const_iterator begin() const { return const_iterator(const_cast<RingBuffer*>(this), 0); }
     const_iterator end() const   { return const_iterator(const_cast<RingBuffer*>(this), size()); }
 
-    // Добавление одного символа (возвращает false, если буфер полон)
-    bool push(T c) {
-        if (full_)
-            return false;
-        buffer_[tail_] = c;
-        tail_ = (tail_ + 1) % capacity();
-        full_ = (tail_ == head_);
-        return true;
-    }
-
     // Удаление одного символа (возвращает false, если буфер пуст)
-    bool pop() {
+    bool pop_front() {
         if (empty())
             return false;
         head_ = (head_ + 1) % capacity();
@@ -164,6 +154,52 @@ public:
     void clear() {
         head_ = tail_ = 0;
         full_ = false;
+    }
+
+    bool push_back(T&& value,std::error_code& err) noexcept{
+        if(full_){
+            err = std::make_error_code(std::errc::no_buffer_space);
+            return false;
+        }
+        else{
+            buffer_[tail_]=std::forward<T>(value);
+            if(tail_==buffer_.size()-1)
+                tail_=0;
+            else ++tail_;
+            full_ = (tail_ == head_);
+            err.clear();
+            return true;
+        }
+    }
+
+    bool extract_front(T& value) noexcept{
+        if(empty())
+            return false;
+        else{
+            if constexpr(!std::is_const_v<T>)
+                std::swap(buffer_[head_],value);
+            else
+                value = buffer_[head_];
+            ++head_;
+            if(head_==buffer_.size()-1);
+                head_=0;
+            return true;
+        }
+    }
+
+    bool extract_back(T& value) noexcept{
+        if(empty())
+            return false;
+        else{
+            if constexpr(!std::is_const_v<T>)
+                std::swap(buffer_[tail_-1],value);
+            else
+                value = buffer_[tail_-1];
+            if(tail_==0)
+                tail_=buffer_.size();
+            else --tail_;
+            return true;
+        }
     }
 
     // ----- Методы для vectored I/O -----
@@ -198,6 +234,25 @@ public:
         return result;
     }
 
+    std::pair<std::span<const char>,std::span<const char>> data() const noexcept{
+        std::pair<std::span<const char>,
+                std::span<const char>> result{std::make_pair(
+                    std::span<const char>(buffer_),
+                    std::span<const char>(buffer_))};
+        if (empty()) {
+            return result;
+        }
+        if (head_ < tail_) 
+            result.first = result.first.subspan(head_,tail_ - head_);
+        else if (head_ > tail_ || full_) {
+            result.first = result.first.subspan(head_);
+            result.second = result.second.subspan(0,tail_);
+        } else {
+            // head_ == tail_ и не full? уже empty, но мы уже проверили empty()
+        }
+        return result;
+    }
+
     // Возвращает iovec для занятой области (данные для отправки)
     std::pair<struct iovec, struct iovec> read_vectored() const {
         std::pair<struct iovec, struct iovec> result{};
@@ -224,6 +279,9 @@ public:
     // Уведомить, что записано n байт в свободную область (после readv)
     void commit_write(size_t n) {
         if (n == 0) return;
+        size_t sz = size();
+        if(n>capacity()-sz)
+            n=capacity()-sz;
         // Предполагается, что n не превышает свободного места
         tail_ = (tail_ + n) % capacity();
         full_ = (tail_ == head_);
@@ -232,6 +290,9 @@ public:
     // Уведомить, что прочитано (отправлено) n байт из занятой области (после writev)
     void commit_read(size_t n) {
         if (n == 0) return;
+        size_t sz = size();
+        if(n>sz)
+            n=sz;
         head_ = (head_ + n) % capacity();
         full_ = false; // после чтения уже не полный
     }

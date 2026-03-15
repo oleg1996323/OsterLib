@@ -96,8 +96,10 @@ TEST(Serialization, SerializeInt){
 
     int check_int_1 = 0;
     int check_int_2 = 0;
-    ASSERT_EQ(deserialize<true>(check_int_1,std::span(buf)),serialization::SerializationEC::NONE);
-    ASSERT_EQ(deserialize<true>(check_int_2,std::span(buf).subspan(serial_size(check_int_1))),serialization::SerializationEC::NONE);
+    serialization::StreamSerializer mbv;
+    mbv.push_view(buf);
+    ASSERT_EQ(deserialize<true>(check_int_1,mbv),serialization::SerializationEC::NONE);
+    ASSERT_EQ(deserialize<true>(check_int_2,mbv),serialization::SerializationEC::NONE);
     EXPECT_EQ(check_int_1,integer_1);
     EXPECT_EQ(check_int_2,integer_2);
 }
@@ -119,8 +121,10 @@ TEST(Serialization, SerializeFloatingPoint){
 
     double check_fp_1 = 0;
     double check_fp_2 = 0;
-    ASSERT_EQ(deserialize<true>(check_fp_1,std::span(buf)),serialization::SerializationEC::NONE);
-    ASSERT_EQ(deserialize<true>(check_fp_2,std::span(buf).subspan(serial_size(check_fp_1))),serialization::SerializationEC::NONE);
+    serialization::StreamSerializer mbv;
+    mbv.push_view(buf);
+    ASSERT_EQ(deserialize<true>(check_fp_1,mbv),serialization::SerializationEC::NONE);
+    ASSERT_EQ(deserialize<true>(check_fp_2,mbv),serialization::SerializationEC::NONE);
     EXPECT_EQ(check_fp_1,fp_1);
     EXPECT_EQ(check_fp_2,fp_2);
 }
@@ -137,7 +141,9 @@ TEST(Serialization, SerializeTimePoint){
     EXPECT_TRUE(std::memcmp(&reversed_1,buf.data(),sizeof(reversed_1))==0);
 
     std::chrono::system_clock::time_point check_tp{};
-    ASSERT_EQ(deserialize<true>(check_tp,std::span(buf)),serialization::SerializationEC::NONE);
+    serialization::StreamSerializer mbv;
+    mbv.push_view(buf);
+    ASSERT_EQ(deserialize<true>(check_tp,mbv),serialization::SerializationEC::NONE);
     EXPECT_EQ(check_tp,utc_tp);
 }
 
@@ -153,7 +159,9 @@ TEST(Serialization, SerializeDuration){
     EXPECT_TRUE(std::memcmp(&reversed_1,buf.data(),sizeof(reversed_1))==0);
 
     std::chrono::system_clock::duration check_tp{};
-    ASSERT_EQ(deserialize<true>(check_tp,std::span(buf)),serialization::SerializationEC::NONE);
+    serialization::StreamSerializer mbv;
+    mbv.push_view(buf);
+    ASSERT_EQ(deserialize<true>(check_tp,mbv),serialization::SerializationEC::NONE);
     EXPECT_EQ(check_tp,utc_tp);
 }
 
@@ -169,7 +177,9 @@ TEST(Serialization, SerializeUniquePtr){
     EXPECT_TRUE(std::memcmp(&reversed_1,buf.data()+min_serial_size(fp_unique_),sizeof(reversed_1))==0);
 
     std::unique_ptr<double> check_tp{};
-    ASSERT_EQ(deserialize<true>(check_tp,std::span(buf)),serialization::SerializationEC::NONE);
+    serialization::StreamSerializer mbv;
+    mbv.push_view(buf);
+    ASSERT_EQ(deserialize<true>(check_tp,mbv),serialization::SerializationEC::NONE);
     EXPECT_EQ(*check_tp.get(),*fp_unique_.get());
 
     fp_unique_.reset();
@@ -178,7 +188,8 @@ TEST(Serialization, SerializeUniquePtr){
     EXPECT_EQ(buf.size(),serial_size(fp_unique_));
 
     check_tp.reset();
-    ASSERT_EQ(deserialize<true>(check_tp,std::span(buf)),serialization::SerializationEC::NONE);
+    mbv.push_view(buf);
+    ASSERT_EQ(deserialize<true>(check_tp,mbv),serialization::SerializationEC::NONE);
     EXPECT_EQ(check_tp,fp_unique_);
     EXPECT_FALSE(check_tp);
 }
@@ -195,7 +206,9 @@ TEST(Serialization, SerializeSharedPtr){
     EXPECT_TRUE(std::memcmp(&reversed_1,buf.data()+min_serial_size(fp_shared_),sizeof(reversed_1))==0);
 
     std::shared_ptr<double> check_fp_shared{};
-    ASSERT_EQ(deserialize<true>(check_fp_shared,std::span(buf)),serialization::SerializationEC::NONE);
+    serialization::StreamSerializer mbv;
+    mbv.push_view(buf);
+    ASSERT_EQ(deserialize<true>(check_fp_shared,mbv),serialization::SerializationEC::NONE);
     EXPECT_EQ(*check_fp_shared.get(),*fp_shared_.get());
 
     fp_shared_.reset();
@@ -204,7 +217,8 @@ TEST(Serialization, SerializeSharedPtr){
     EXPECT_EQ(buf.size(),serial_size(fp_shared_));
 
     check_fp_shared.reset();
-    ASSERT_EQ(deserialize<true>(check_fp_shared,std::span(buf)),serialization::SerializationEC::NONE);
+    mbv.push_view(buf);
+    ASSERT_EQ(deserialize<true>(check_fp_shared,mbv),serialization::SerializationEC::NONE);
     EXPECT_EQ(check_fp_shared,fp_shared_);
     EXPECT_FALSE(check_fp_shared);
 }
@@ -221,7 +235,9 @@ TEST(Serialization, SerializePair){
     EXPECT_TRUE(std::memcmp(&reversed_1,buf.data(),sizeof(reversed_1))==0);
 
     std::pair<double,int> check_pair{};
-    ASSERT_EQ(deserialize<true>(check_pair,std::span(buf)),serialization::SerializationEC::NONE);
+    serialization::StreamSerializer mbv;
+    mbv.push_view(buf);
+    ASSERT_EQ(deserialize<true>(check_pair,mbv),serialization::SerializationEC::NONE);
     EXPECT_EQ(check_pair,pair_);
 }
 
@@ -237,7 +253,9 @@ TEST(Serialization, SerializeOptional){
     EXPECT_TRUE(std::memcmp(&reversed_1.value(),buf.data()+min_serial_size(reversed_1),sizeof(reversed_1.value()))==0);
 
     std::optional<double> check_opt{};
-    ASSERT_EQ(deserialize<true>(check_opt,std::span(buf)),serialization::SerializationEC::NONE);
+    serialization::StreamSerializer mbv;
+    mbv.push_view(buf);
+    ASSERT_EQ(deserialize<true>(check_opt,mbv),serialization::SerializationEC::NONE);
     EXPECT_EQ(check_opt,opt_);
 
     opt_.reset();
@@ -246,7 +264,8 @@ TEST(Serialization, SerializeOptional){
     EXPECT_EQ(buf.size(),serial_size(opt_));
 
     check_opt.reset();
-    ASSERT_EQ(deserialize<true>(check_opt,std::span(buf)),serialization::SerializationEC::NONE);
+    mbv.push_view(buf);
+    ASSERT_EQ(deserialize<true>(check_opt,mbv),serialization::SerializationEC::NONE);
     EXPECT_EQ(check_opt,opt_);
     EXPECT_FALSE(check_opt);
 }
@@ -269,7 +288,9 @@ TEST(Serialization, SerializeList){
     EXPECT_EQ(serial_size(reversed_1),buf.size());
 
     std::list<std::pair<int,int>> check_list{};
-    ASSERT_EQ(deserialize<true>(check_list,std::span(buf)),serialization::SerializationEC::NONE);
+    serialization::StreamSerializer mbv;
+    mbv.push_view(buf);
+    ASSERT_EQ(deserialize<true>(check_list,mbv),serialization::SerializationEC::NONE);
     EXPECT_EQ(check_list,list_);
 }
 
@@ -292,7 +313,9 @@ TEST(Serialization, SerializeVector){
     EXPECT_EQ(serial_size(reversed_1),buf.size());
 
     std::vector<std::pair<int,int>> check_vector{};
-    ASSERT_EQ(deserialize<true>(check_vector,std::span(buf)),serialization::SerializationEC::NONE);
+    serialization::StreamSerializer mbv;
+    mbv.push_view(buf);
+    ASSERT_EQ(deserialize<true>(check_vector,mbv),serialization::SerializationEC::NONE);
     EXPECT_EQ(check_vector,vector_);
 }
 
@@ -309,7 +332,9 @@ TEST(Serialization, SerializeString){
     EXPECT_EQ(buf.size(),serial_size(string_));
 
     std::string check_string;
-    ASSERT_EQ(deserialize<true>(check_string,std::span(buf)),serialization::SerializationEC::NONE);
+    serialization::StreamSerializer mbv;
+    mbv.push_view(buf);
+    ASSERT_EQ(deserialize<true>(check_string,mbv),serialization::SerializationEC::NONE);
     EXPECT_EQ(check_string,string_);
 }
 
@@ -331,7 +356,9 @@ TEST(Serialization, SerializeDeque){
     EXPECT_EQ(serial_size(reversed_1),buf.size());
 
     std::deque<std::pair<int,int>> check_deque{};
-    ASSERT_EQ(deserialize<true>(check_deque,std::span(buf)),serialization::SerializationEC::NONE);
+    serialization::StreamSerializer mbv;
+    mbv.push_view(buf);
+    ASSERT_EQ(deserialize<true>(check_deque,mbv),serialization::SerializationEC::NONE);
     EXPECT_EQ(check_deque,deque_);
 }
 
@@ -358,7 +385,9 @@ TEST(Serialization, SerializeSet){
     EXPECT_EQ(serial_size(reversed_1),buf.size());
 
     std::set<double> check_set{};
-    ASSERT_EQ(deserialize<true>(check_set,std::span(buf)),serialization::SerializationEC::NONE);
+    serialization::StreamSerializer mbv;
+    mbv.push_view(buf);
+    ASSERT_EQ(deserialize<true>(check_set,mbv),serialization::SerializationEC::NONE);
     EXPECT_EQ(check_set,set_);
 }
 
@@ -385,7 +414,9 @@ TEST(Serialization, SerializeUnorderedSet){
     EXPECT_EQ(serial_size(reversed_1),buf.size());
 
     std::unordered_set<double> check_uset{};
-    ASSERT_EQ(deserialize<true>(check_uset,std::span(buf)),serialization::SerializationEC::NONE);
+    serialization::StreamSerializer mbv;
+    mbv.push_view(buf);
+    ASSERT_EQ(deserialize<true>(check_uset,mbv),serialization::SerializationEC::NONE);
     EXPECT_EQ(check_uset,uset_);
 }
 
@@ -413,7 +444,9 @@ TEST(Serialization, SerializeMap){
     EXPECT_EQ(serial_size(reversed_1),buf.size());
 
     std::map<double,double> check_map{};
-    ASSERT_EQ(deserialize<true>(check_map,std::span(buf)),serialization::SerializationEC::NONE);
+    serialization::StreamSerializer mbv;
+    mbv.push_view(buf);
+    ASSERT_EQ(deserialize<true>(check_map,mbv),serialization::SerializationEC::NONE);
     EXPECT_EQ(check_map,map_);
 }
 
@@ -440,7 +473,9 @@ TEST(Serialization, SerializeUMap){
     EXPECT_EQ(serial_size(reversed_1),buf.size());
 
     std::unordered_map<double,double> check_umap{};
-    ASSERT_EQ(deserialize<true>(check_umap,std::span(buf)),serialization::SerializationEC::NONE);
+    serialization::StreamSerializer mbv;
+    mbv.push_view(buf);
+    ASSERT_EQ(deserialize<true>(check_umap,mbv),serialization::SerializationEC::NONE);
     EXPECT_EQ(check_umap,umap_);
 }
 
@@ -456,7 +491,9 @@ TEST(Serialization,Variant){
         reversed_1.insert(reversed_1.cend(),reinterpret_cast<const char*>(&index),reinterpret_cast<const char*>(&index)+sizeof(size_t));
         EXPECT_EQ(reversed_1,buf);
         decltype(var_1) var_tmp;
-        EXPECT_EQ(deserialize<true>(var_tmp,std::span<const char>(buf)),SerializationEC::NONE);
+        serialization::StreamSerializer mbv;
+        mbv.push_view(buf);
+        EXPECT_EQ(deserialize<true>(var_tmp,mbv),SerializationEC::NONE);
         EXPECT_EQ(var_tmp,var_1);
         reversed_1.clear();
         buf.clear();
@@ -471,7 +508,9 @@ TEST(Serialization,Variant){
         reversed_1.insert(reversed_1.cend(),reinterpret_cast<const char*>(&tmp),reinterpret_cast<const char*>(&tmp)+sizeof(tmp));
         EXPECT_EQ(reversed_1,buf);
         decltype(var_1) var_tmp;
-        EXPECT_EQ(deserialize<true>(var_tmp,std::span<const char>(buf)),SerializationEC::NONE);
+        serialization::StreamSerializer mbv;
+        mbv.push_view(buf);
+        EXPECT_EQ(deserialize<true>(var_tmp,mbv),SerializationEC::NONE);
         EXPECT_EQ(var_tmp,var_1);
         reversed_1.clear();
         buf.clear();
@@ -486,7 +525,9 @@ TEST(Serialization,Variant){
         reversed_1.insert(reversed_1.cend(),reinterpret_cast<const char*>(&tmp),reinterpret_cast<const char*>(&tmp)+sizeof(tmp));
         EXPECT_EQ(reversed_1,buf);
         decltype(var_1) var_tmp;
-        EXPECT_EQ(deserialize<true>(var_tmp,std::span<const char>(buf)),SerializationEC::NONE);
+        serialization::StreamSerializer mbv;
+        mbv.push_view(buf);
+        EXPECT_EQ(deserialize<true>(var_tmp,mbv),SerializationEC::NONE);
         EXPECT_EQ(var_tmp,var_1);
         reversed_1.clear();
         buf.clear();
@@ -501,7 +542,9 @@ TEST(Serialization,Variant){
         EXPECT_EQ(serialize<true>(tmp,reversed_1),SerializationEC::NONE);
         EXPECT_EQ(reversed_1,buf);
         decltype(var_1) var_tmp;
-        EXPECT_EQ(deserialize<true>(var_tmp,std::span<const char>(buf)),SerializationEC::NONE);
+        serialization::StreamSerializer mbv;
+        mbv.push_view(buf);
+        EXPECT_EQ(deserialize<true>(var_tmp,mbv),SerializationEC::NONE);
         EXPECT_EQ(var_tmp,var_1);
         reversed_1.clear();
         buf.clear();
@@ -562,8 +605,32 @@ TEST(Serialization,SerializationReferenceWrapper){
     std::vector<char> buf;
     ASSERT_TRUE(serialization::serialize_native(reference,buf)==serialization::SerializationEC::NONE);
     int test_int = 0;
-    ASSERT_TRUE(serialization::deserialize_native(test_int,buf)==serialization::SerializationEC::NONE);
+    serialization::StreamSerializer mbv;
+    mbv.push_view(buf);
+    ASSERT_TRUE(serialization::deserialize_native(test_int,mbv)==serialization::SerializationEC::NONE);
     EXPECT_EQ(test_int,integer);
+}
+
+TEST(Serialization,PartialSerialization){
+    std::vector<int> numbers;
+    std::vector<char> buf_1;
+    std::vector<char> buf_2;
+    ASSERT_TRUE(serialization::serialize_native(size_t(6),buf_1)==serialization::SerializationEC::NONE);
+    for(int i = 0;i<3;++i){
+        ASSERT_TRUE(serialization::serialize_native(i,buf_1)==serialization::SerializationEC::NONE);
+        numbers.push_back(i);
+    }
+    for(int i = 3;i<6;++i){
+        ASSERT_TRUE(serialization::serialize_native(i,buf_2)==serialization::SerializationEC::NONE);
+        numbers.push_back(i);
+    }
+    
+    serialization::StreamSerializer mbv;
+    mbv.push_view(buf_1);
+    std::vector<int> control_val;
+    ASSERT_NE(serialization::deserialize_native(control_val,mbv),serialization::SerializationEC::NONE);
+    mbv.push_view(buf_2);
+    ASSERT_EQ(serialization::deserialize_native(control_val,mbv),serialization::SerializationEC::NONE);
 }
 
 TEST(Serialization, SerialLimits){

@@ -19,17 +19,23 @@ namespace network{
     class AbstractServer{
         std::unique_ptr<ConnectionAcceptor> accepter_;
         std::unique_ptr<ThreadPool> processes_pool_;
+
         public:
+        template<typename T>
+        requires (std::is_base_of_v<AbstractConnectionProcess,T>)
+        void set_processes_at_connections() noexcept{
+            if(accepter_)
+                accepter_->set_processes_at_connections<T>();
+        }
+
         ConnectionHandle attach_connection(
             const Address& addr,
             Socket&& socket,
-            std::unique_ptr<AbstractConnectionProcess> proc,
             std::error_code& err)
         {
             return processes_pool_->attach_connection(
                 addr,
                 std::move(socket),
-                std::move(proc),
                 err);
         }
         bool remove_connection(

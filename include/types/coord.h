@@ -44,7 +44,7 @@ struct Serialize<NETWORK_ORDER,Coord>{
 
 template<bool NETWORK_ORDER>
 struct Deserialize<NETWORK_ORDER,Coord>{
-    SerializationEC operator()(Coord& pos,std::span<const char> buf) const noexcept{
+    SerializationEC operator()(Coord& pos,MultiBufferView& buf) const noexcept{
         return deserialize<NETWORK_ORDER>(pos,buf,pos.lat_,pos.lon_);
     }
 };

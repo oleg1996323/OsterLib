@@ -577,11 +577,13 @@ class Connection;
 class AbstractConnectionProcess:public Process{
     mutable ConnectionIO* io_;
     ConnectionHandle hconn_;
-    bool more{false};
     protected:
     ConnectionIO& io_context() const noexcept{
         assert(io_);
         return *io_;
+    }
+    ConnectionHandle connection_handle() const noexcept{
+        return hconn_;
     }
     public:
     virtual void on_read(std::error_code& err) noexcept = 0;
@@ -630,7 +632,15 @@ class AbstractRequestableConnectionProcess:public AbstractConnectionProcess{
     
     virtual bool requestable() const noexcept override final;
     void try_receive(std::error_code& err) noexcept;
-    void try_send(std::error_code& err) noexcept;
+    bool try_send(std::error_code& err) noexcept;
+    virtual void on_bad_serialization(
+            serialization::SerializationEC ser_c,
+            std::error_code& err) noexcept;
+    virtual void on_bad_deserialization(
+            serialization::SerializationEC ser_c,
+            std::error_code& err);
+    virtual void on_bad_send(std::error_code& err) noexcept;
+    virtual void on_bad_receive(std::error_code& err) noexcept;
     void reset_requests(std::error_code& err) noexcept;
     virtual void on_read(std::error_code& err) noexcept override = 0;
     virtual void on_write(std::error_code& err) noexcept override = 0;

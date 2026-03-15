@@ -7,10 +7,13 @@ namespace network{
                 const Socket& socket,
                 VectorizedBuffer& buffer,
                 bool stand) noexcept
-    {    
+    {   
+        auto remain = buffer.remaining();
+        if(remain.first==nullptr)
+            return 0;
         if(auto res = writev(socket.native(),
-                buffer.vbuf_.data()+buffer.active_el_,
-                buffer.vbuf_.size());res==-1)
+                remain.first,
+                remain.second);res==-1)
         {
             err = std::make_error_code(static_cast<std::errc>(errno));
             errno = 0;
@@ -18,9 +21,11 @@ namespace network{
             switch(static_cast<std::errc>(err.value())){
                 case std::errc::resource_unavailable_try_again:
                 case std::errc::operation_in_progress:
-                        return 0;
+                if(!stand)
+                    buffer.consume(res);
+                return 0;
                 default:
-                        return 0;
+                    return 0;
             }
             return 0;
         }

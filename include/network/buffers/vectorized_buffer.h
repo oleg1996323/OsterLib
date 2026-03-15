@@ -25,20 +25,28 @@ namespace network{
                 bool stand) noexcept;
         public:
         VectorizedBuffer(){}
-        void push_buffer(const std::ranges::random_access_range 
-                auto&& range) noexcept{
-            bufs_.push_back(std::forward<decltype(range)>(range));
+        void push_buffer(const std::vector<char>& range) noexcept{
+            if(std::empty(range))
+                return;
+            auto& pushed = bufs_.emplace_back(range);
+            vbuf_.push_back(iovec{.iov_base=pushed.data(),.iov_len=pushed.size()});
+        }
+        void push_buffer(std::vector<char>&& range) noexcept{
+            if(std::empty(range))
+                return;
+            auto& pushed = bufs_.emplace_back(std::move(range));
+            vbuf_.push_back(iovec{.iov_base=pushed.data(),.iov_len=pushed.size()});
         }
         template<typename T>
         serialization::SerializationEC serialize(T&& value) noexcept{
-            serialization::SerializationEC ser_res;
-            if(ser_res = serialization::serialize_network(std::forward<T>(value),
-                bufs_.emplace_back());ser_res!=serialization::SerializationEC::NONE)
-                bufs_.pop_back();
-            else
-                vbuf_.emplace_back(iovec{.iov_base=bufs_.back().data(),
-                        .iov_len=bufs_.back().size()});
-            return ser_res;
+            std::vector<char> buffer;
+            if(auto ser_res = serialization::serialize_network(std::forward<T>(value),
+                buffer);ser_res!=serialization::SerializationEC::NONE)
+                return ser_res;
+            else{
+                push_buffer(std::move(buffer));
+                return ser_res;
+            }   
         }
         void clear_buffer() noexcept;
         std::pair<iovec*, size_t> remaining() noexcept;

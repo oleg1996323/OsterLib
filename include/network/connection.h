@@ -74,6 +74,24 @@ namespace network{
     class AbstractServer;
     class ConnectionAcceptor final
     {
+        struct AbstractProcessFabrique{
+            virtual std::unique_ptr<AbstractConnectionProcess> 
+                    make_process(
+                        ConnectionHandle hconn,
+                        std::error_code& err) const noexcept = 0;
+        };
+        template<typename T>
+        requires (std::is_base_of_v<AbstractConnectionProcess,T>)
+        struct MakeProcess:public AbstractProcessFabrique{
+            using process_v = T;
+            virtual std::unique_ptr<AbstractConnectionProcess> 
+                    make_process(
+                        ConnectionHandle hconn,
+                        std::error_code& err) const noexcept override
+            {
+                return std::make_unique<T>(hconn,err);
+            }
+        };
         std::unique_ptr<Socket> socket_;
         std::unique_ptr<Multiplexor> event_handler_;
         std::unique_ptr<std::jthread> thread_;
@@ -84,6 +102,7 @@ namespace network{
         Connection conn_;
         AbstractServer* owner_;
         uint32_t number_listened_{0};
+        std::unique_ptr<AbstractProcessFabrique> process_fabrique_{};
         
         void accept_error_handling(
                 std::error_code& err) noexcept;
@@ -126,7 +145,11 @@ namespace network{
                 event_handler_->interrupt();
             }
         }
-
+        template<typename T>
+        requires (std::is_base_of_v<AbstractConnectionProcess,T>)
+        void set_processes_at_connections() noexcept{
+            process_fabrique_ = std::make_unique<MakeProcess<T>>();
+        }
         void set_listened_backlog(uint32_t backlog) noexcept{
             number_listened_ = backlog;
         }

@@ -7,26 +7,30 @@ namespace network{
           const Socket& socket,
           RingBuffer<char>& buffer) noexcept
     {
+        auto to_read = buffer.write_vectored();
+        if(to_read.first.iov_len==0 && to_read.second.iov_len==0){
+            err = std::make_error_code(std::errc::no_buffer_space);
+            return 0;
+        }
         if(auto res = readv(socket.native(),
-                reinterpret_cast<const iovec*>(&buffer.read_vectored()),
+                reinterpret_cast<const iovec*>(&to_read),
                 2);res==-1)
         {
             err = std::make_error_code(static_cast<std::errc>(errno));
             errno = 0;
-            using namespace std;
-            switch(static_cast<std::errc>(err.value())){
-                case std::errc::resource_unavailable_try_again:
-                case std::errc::operation_in_progress:
+            if(err == std::errc::resource_unavailable_try_again ||
+                err == std::errc::operation_in_progress){
+                    err.clear();
                     return 0;
-                default:
-                        return 0;
             }
-            return 0;
+            else return 0;
         }
         else{
-            if(res==0)
-                return res;
-            buffer.commit_read(res);
+            if (res == 0) {
+                err = std::make_error_code(std::errc::connection_reset);
+                return 0;
+            }
+            buffer.commit_write(res);
             err.clear();
             return res;
         }

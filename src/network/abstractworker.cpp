@@ -214,9 +214,9 @@ namespace network{
 				std::lock_guard lk(mutex());
 				connections().erase(hconn.id());
 			}
-			return true;
+			return false;
 		}
-		else return false;
+		else return true;
     }
 	std::shared_ptr<BaseCommand> AbstractWorker::extract_command() noexcept{
 		std::lock_guard lk(m_);

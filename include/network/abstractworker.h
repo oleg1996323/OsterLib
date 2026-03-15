@@ -62,10 +62,39 @@ class AbstractWorker{
 			return false;
 		}
 		Event new_events = found->second.events_handled_;
-		if (enable)
+		if (enable){
 			new_events = new_events|Event::Out;
-		else
+			std::cout<<"enable writable"<<std::endl;
+		}
+		else{
 			new_events = new_events&~Event::Out;
+			std::cout<<"disable writable"<<std::endl;
+		}
+		EventHandle ev(hconn.id(), new_events);
+		bool res = modify_tracking_event(found->second.socket_->native(), ev, err);
+		if (err == std::error_code()) {
+			found->second.events_handled_ = new_events;
+		}
+		return res;
+	}
+	bool enable_readable(
+			ConnectionHandle hconn,
+			bool enable,
+			std::error_code& err) noexcept{
+		auto found = connections().find(hconn.id());
+		if (found == connections().end()) {
+			err = std::make_error_code(std::errc::no_such_device);
+			return false;
+		}
+		Event new_events = found->second.events_handled_;
+		if (enable){
+			new_events = new_events|Event::In;
+			std::cout<<"enable readable"<<std::endl;
+		}
+		else{
+			new_events = new_events&~Event::In;
+			std::cout<<"disable readable"<<std::endl;
+		}
 		EventHandle ev(hconn.id(), new_events);
 		bool res = modify_tracking_event(found->second.socket_->native(), ev, err);
 		if (err == std::error_code()) {
@@ -100,7 +129,6 @@ protected:
 	virtual bool attachConnectionInternal(
 			ConnectionHandle hconn,
 			std::unique_ptr<Connection> addr,
-			std::unique_ptr<AbstractConnectionProcess> proc,
 			Socket&& socket,
 			std::error_code& err
 			) noexcept = 0;

@@ -225,15 +225,30 @@ void ConnectionAcceptor::accept(std::stop_token stop,std::error_code& err) noexc
                         std::cout<<"set non-block socket error"<<std::endl;
                         continue;
                     }
-                    owner_->attach_connection(
+                    std::unique_ptr<AbstractConnectionProcess> process;
+                    
+                    auto hconn = owner_->attach_connection(
                         addr,
                         std::move(socket),
-                        std::unique_ptr<AbstractConnectionProcess>(),//@todo
                         err);
-                    after_accept();
-                    std::cout<<"Connection accepted: "<<std::endl;
-                    print_ip_port(std::cout,addr);
-                    continue;
+                    if(process_fabrique_){
+                        process = process_fabrique_->make_process(hconn,err);
+                        hconn.execute_command(
+                        std::make_shared<Command<CommandType::AttachProcess>>(
+                            hconn,std::move(process)),err);
+                    }
+                    if(hconn.is_valid_handler())
+                    {
+                        after_accept();
+                        std::cout<<"Connection accepted: "<<std::endl;
+                        print_ip_port(std::cout,addr);
+                        continue;
+                    }
+                    else{
+                        std::cout<<"Connection refused: "<<std::endl;
+                        print_ip_port(std::cout,addr);
+                        continue;
+                    }
                 }
             }
         }

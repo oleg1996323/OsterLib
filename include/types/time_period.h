@@ -98,7 +98,7 @@ namespace serialization{
 
     template<bool NETWORK_ORDER>
     struct Deserialize<NETWORK_ORDER,TimePeriod>{
-        auto operator()(TimePeriod& val,std::span<const char> buf) const noexcept{
+        auto operator()(TimePeriod& val,StreamSerializer& buf) const noexcept{
             return deserialize<NETWORK_ORDER>(val,buf,val.years_,val.months_,val.days_,val.hours_,val.minutes_,val.seconds_);
         }
     };

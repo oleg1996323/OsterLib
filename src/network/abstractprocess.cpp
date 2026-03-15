@@ -26,53 +26,101 @@ namespace network{
         std::cout<<"try_receive"<<std::endl;
         if(io_context().receive_buffer_size()==0)
             io_context().resize_receive_buffer(8096);
-        if(!active_request_ && !make_active_request())
+        if(!active_request_ && !make_active_request()){
+            io_context().enable_readable(false,err);
             return;
+        }
         io_context().receive(err,
                 active_request_->weak_to_receive_->min_initial_size());
         if(err!=std::error_code())
         {
-            std::cout<<"receiving error: "<<err.message()<<std::endl;
-            complete_current_request(std::make_error_code(std::errc::bad_message));
+            on_bad_receive(err);
             return;
         }
         else {
             if(io_context().received()<
                 active_request_->weak_to_receive_->min_initial_size())
                 return;
-            io_context().deserialize(*active_request_->weak_to_receive_);
-            if(err!=std::error_code()){
-                std::cout<<"deserialize error: "<<err.message()<<std::endl;
+            if(auto ser_res = io_context().deserialize(*active_request_->weak_to_receive_);
+                ser_res!=serialization::SerializationEC::NONE)
+            {
+                on_bad_deserialization(ser_res,err);
                 return;
             }
             else{
                 err.clear();
                 complete_current_request(err);
+                if(!make_active_request())
+                    io_context().enable_writable(false,err);
             }
         }
     }
-    void AbstractRequestableConnectionProcess::try_send(
+    bool AbstractRequestableConnectionProcess::try_send(
             std::error_code& err) noexcept
     {
+        err.clear();
         std::cout<<"try_send"<<std::endl;
-        if(!active_request_ && !make_active_request())
-            return;
+        if(!active_request_ && !make_active_request()){
+            io_context().enable_writable(false,err);
+            return false;
+        }
         if(auto ser_res = io_context().serialize(
                 *active_request_->weak_to_send_);
             ser_res!=serialization::SerializationEC::NONE)
         {
-            err=std::make_error_code(std::errc::bad_message);
-            std::cout<<"serialization error: "<<err.message()<<std::endl;
-            complete_current_request(std::make_error_code(std::errc::bad_message));
-            return;
+            on_bad_serialization(ser_res,err);
+            return false;
         }
-        else {
+        else 
+        {
             io_context().send(err);
             if(err!=std::error_code()){
-                std::cout<<"trying sending error: "<<err.message()<<std::endl;
-                complete_current_request(err);
+                on_bad_send(err);
+                return false;
+            }
+            else{
+                if(!io_context().has_to_write()){
+                    io_context().enable_writable(false,err);
+                    return false;
+                }
+                else return true;
             }
         }
+    }
+    void AbstractRequestableConnectionProcess::on_bad_serialization(
+            serialization::SerializationEC ser_c,
+            std::error_code& err) noexcept
+    {
+        err=std::make_error_code(std::errc::bad_message);
+        std::cout<<"serialization error: "<<err.message()<<std::endl;
+        complete_current_request(std::make_error_code(std::errc::bad_message));
+        if(!make_active_request())
+            io_context().enable_writable(false,err);
+    }
+    void AbstractRequestableConnectionProcess::on_bad_deserialization(
+            serialization::SerializationEC ser_c,
+            std::error_code& err)
+    {
+        if(ser_c == serialization::SerializationEC::UNMATCHED_TYPE){
+            io_context().clear_recv_buffer();
+            complete_current_request(std::make_error_code(std::errc::bad_message));
+            if(!make_active_request())
+                io_context().enable_writable(false,err);
+        }
+        std::cout<<"deserialize error: "<<err.message()<<std::endl;
+    }
+    void AbstractRequestableConnectionProcess::on_bad_send(std::error_code& err) noexcept{
+        std::cout<<"trying sending error: "<<err.message()<<std::endl;
+        complete_current_request(err);
+        if(!make_active_request())
+            io_context().enable_writable(false,err);
+    }
+    void AbstractRequestableConnectionProcess::on_bad_receive(std::error_code& err) noexcept{
+        std::cout<<"receiving error: "<<err.message()<<std::endl;
+        complete_current_request(std::make_error_code(std::errc::bad_message));
+        if(!make_active_request())
+            io_context().enable_writable(false,err);
+        return;
     }
     void AbstractRequestableConnectionProcess::reset_requests(
             std::error_code& err) noexcept
@@ -100,7 +148,7 @@ namespace network{
         std::cout<<"(Process) push_request"<<std::endl;
         if(requests_.empty()){
             active_request_=request;
-            try_send(err);
+            on_write(err);
         }
         else requests_.push(request);
     }

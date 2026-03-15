@@ -17,7 +17,7 @@ namespace network{
         AbstractFrame(){}
 
         virtual serialization::SerializationEC deserialize(
-                std::span<const char> buffer) noexcept = 0;
+                serialization::StreamSerializer& buffer) noexcept = 0;
         virtual serialization::SerializationEC serialize(
                 std::vector<char>& buffer) const noexcept = 0;
         public:
@@ -59,7 +59,7 @@ namespace network{
         virtual serialization::SerializationEC serialize(
                 std::vector<char>& buffer) const noexcept override;
         virtual serialization::SerializationEC deserialize(
-                std::span<const char> buffer) noexcept override;
+                serialization::StreamSerializer& buffer) noexcept override;
         virtual size_t serial_size() const noexcept override;
         virtual size_t min_initial_size() const noexcept override;
     };
@@ -84,7 +84,7 @@ namespace network{
                 std::vector<char>& buffer) const noexcept override;
 
         virtual serialization::SerializationEC deserialize(
-                std::span<const char> buffer) noexcept override;
+                serialization::StreamSerializer& buffer) noexcept override;
         virtual size_t serial_size() const noexcept override;
         virtual size_t min_initial_size() const noexcept override;
     };
@@ -105,7 +105,7 @@ namespace serialization{
     struct Deserialize<NETWORK_ORDER,network::SenderFrame<DATA,START,END>>{
         using type = network::SenderFrame<DATA,START,END>;
         auto operator()(type& val,
-                    std::span<const char> buf) const noexcept{
+                    StreamSerializer& buf) const noexcept{
             static_assert(NETWORK_ORDER==true,"Frames support only network-endianess serialization");
             return deserialize<NETWORK_ORDER>(val,buf,val.frame_val_);
         }
@@ -153,7 +153,7 @@ namespace serialization{
     struct Deserialize<NETWORK_ORDER,network::ReceiverFrame<DATA,START,END>>{
         using type = network::ReceiverFrame<DATA,START,END>;
         auto operator()(type& val,
-                    std::span<const char> buf) const noexcept{
+                    StreamSerializer& buf) const noexcept{
             static_assert(NETWORK_ORDER==true,"Frames support only network-endianess serialization");
             return deserialize<NETWORK_ORDER>(val,buf,val.frame_val_);
         }
@@ -200,7 +200,7 @@ namespace serialization{
     struct Deserialize<NETWORK_ORDER,network::AbstractFrame>{
         using type = network::AbstractFrame;
         auto operator()(type& val,
-                    std::span<const char> buf) const noexcept{
+                    StreamSerializer& buf) const noexcept{
             static_assert(NETWORK_ORDER==true,"Frames support only network-endianess serialization");
             return val.deserialize(buf);
         }
@@ -244,7 +244,7 @@ namespace network{
     }
     template<typename START,typename DATA,typename END>
     serialization::SerializationEC SenderFrame<START,DATA,END>::deserialize(
-            std::span<const char> buffer) noexcept
+            serialization::StreamSerializer& buffer) noexcept
     {
         return serialization::deserialize_network(
             frame_val_,
@@ -271,7 +271,7 @@ namespace network{
     }
     template<typename START,typename DATA,typename END>
     serialization::SerializationEC ReceiverFrame<START,DATA,END>::deserialize(
-            std::span<const char> buffer) noexcept
+            serialization::StreamSerializer& buffer) noexcept
     {
         return serialization::deserialize_network(
             frame_val_,

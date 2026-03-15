@@ -1253,7 +1253,7 @@ namespace serialization{
 
     template<bool NETWORK_ORDER,IsDuration DUR_PRECISION>
     struct Deserialize<NETWORK_ORDER,__time_interval__<DUR_PRECISION>>{
-        auto operator()(__time_interval__<DUR_PRECISION>& val,std::span<const char> buf) const noexcept{
+        auto operator()(__time_interval__<DUR_PRECISION>& val,StreamSerializer& buf) const noexcept{
             return deserialize<NETWORK_ORDER>(val,buf,val.from_,val.to_);
         }
     };
@@ -1292,7 +1292,7 @@ namespace serialization{
 
     template<bool NETWORK_ORDER>
     struct Deserialize<NETWORK_ORDER,DateTimeDiff>{
-        auto operator()(DateTimeDiff& val,std::span<const char> buf) const noexcept{
+        auto operator()(DateTimeDiff& val,StreamSerializer& buf) const noexcept{
             return deserialize<NETWORK_ORDER>(val,buf,val.years_,val.months_,val.days_,val.hours_,val.minutes_,val.seconds_);
         }
     };
@@ -1333,7 +1333,7 @@ namespace serialization{
 
     template<bool NETWORK_ORDER>
     struct Deserialize<NETWORK_ORDER,TimeSequence>{
-        auto operator()(TimeSequence& val,std::span<const char> buf) const noexcept{
+        auto operator()(TimeSequence& val,StreamSerializer& buf) const noexcept{
             return deserialize<NETWORK_ORDER>(val,buf,val.interval_,val.time_duration_,val.intervals_);
         }
     };

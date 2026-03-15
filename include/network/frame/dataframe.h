@@ -13,7 +13,7 @@ namespace network{
         virtual serialization::SerializationEC serialize(
                 std::vector<char>& buf) const noexcept = 0;
         virtual serialization::SerializationEC deserialize(
-                std::span<const char> buf) noexcept = 0;
+                serialization::StreamSerializer& buf) noexcept = 0;
         virtual size_t serial_size() const noexcept = 0;
         virtual size_t min_initial_size() const noexcept = 0;
     };
@@ -28,7 +28,7 @@ namespace network{
             return serialization::serialize<true>(*this,buf,start_,data_,end_);
         }
         virtual serialization::SerializationEC deserialize(
-                std::span<const char> buf) noexcept override{
+                serialization::StreamSerializer& buf) noexcept override{
             return serialization::deserialize<true>(*this,buf,start_,data_,end_);
         }
         virtual size_t serial_size() const noexcept{
@@ -60,7 +60,7 @@ namespace serialization{
     struct Deserialize<NETWORK_ORDER,network::DataFrame<START,DATA,END>>{
         using type = network::DataFrame<START,DATA,END>;
         auto operator()(type& val,
-                    std::span<const char> buf) const noexcept{
+                    StreamSerializer& buf) const noexcept{
             static_assert(NETWORK_ORDER==true,"Frames support only network-endianess serialization");
             return deserialize<NETWORK_ORDER>(val,buf,val.start_,val.data_,val.end_);
         }

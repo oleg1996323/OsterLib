@@ -24,7 +24,7 @@ namespace network{
                             std::move(socket))};
                 conn_stat.connIO_ = make_connectionIO(
                         conn_stat.socket_,hconn,conn_stat.events_handled_,err);
-                conn_stat.events_handled_=Event::Out;
+                conn_stat.events_handled_=Event::Out|Event::Error|Event::HangUp;
                 if(conn_stat.socket_->set_no_block(true,err)==false){
                     std::cout<<"Connection add failed: \n";
                     auto err = std::make_error_code(
@@ -43,7 +43,10 @@ namespace network{
                         conn_stat.conn_->address().get_sockaddr(),
                         conn_stat.conn_->address().length());
                 if(conn_res == 0){
-                    conn_stat.events_handled_=Event::In|Event::EdgeTrigger;
+                    conn_stat.events_handled_=  Event::In|
+                                                Event::EdgeTrigger|
+                                                Event::HangUp|
+                                                Event::Error;
                     ev.set_events(conn_stat.events_handled_);
                     if(modify_tracking_event(conn_stat.socket_->native(),ev,err)){
                         std::cout<<"(modify tracking) Connection add failed: \n";
@@ -87,7 +90,6 @@ namespace network{
     bool Worker::attachConnectionInternal(
 			ConnectionHandle hconn,
 			std::unique_ptr<Connection> conn,
-            std::unique_ptr<AbstractConnectionProcess> proc,
 			Socket&& socket,
 			std::error_code& err
 			) noexcept
@@ -95,10 +97,7 @@ namespace network{
         if(auto found = connections().find(hconn.id());
             found==connections().end())
         {
-            Event events;
-            if(proc.get())
-                events = Event::In;
-            else events = Event::In|Event::EdgeTrigger;
+            Event events = Event::In|Event::EdgeTrigger|Event::Error|Event::HangUp;
             EventHandle ev(hconn.id(),events);
                 add_tracking_event(socket.native(),
                                 ev,
@@ -117,7 +116,7 @@ namespace network{
                     hconn.id(),
                     ConnectionState{
                         .conn_=std::move(conn),
-                        .proc_=std::move(proc),
+                        .proc_={},
                         .socket_=socket_loc,
                         .events_handled_=events
                     }));
@@ -259,7 +258,7 @@ namespace network{
         }
         else{
             conn_stat->proc_.reset();
-            EventHandle ev(hconn.id(),Event::In|Event::EdgeTrigger);
+            EventHandle ev(hconn.id(),conn_stat->events_handled_|Event::EdgeTrigger);
             modify_tracking_event(conn_stat->socket_->native(),ev,err);
             if(err!=std::error_code()){
                 std::cout<<"(Remove process) modify_tracking_event error: "
@@ -283,7 +282,11 @@ namespace network{
                 std::cout<<name_<<" events. Number: "<<events.size()<<std::endl;
                 if((ev.events()&Event::In)!=0)
                     std::cout<<"read event"<<std::endl;
-                else if((ev.events()&Event::Out)!=0)
+                if((ev.events()&Event::HangUp)!=0)
+                    std::cout<<"hangup event"<<std::endl;
+                if((ev.events()&Event::Error)!=0)
+                    std::cout<<"error event"<<std::endl;
+                if((ev.events()&Event::Out)!=0)
                     std::cout<<"write event"<<std::endl;
                 Event e = ev.events();
                 {
@@ -294,7 +297,7 @@ namespace network{
                         err = std::make_error_code(std::errc::no_such_device);
                         continue;
                     }
-                    if(handle_events(connection_handle(ev.get_as_32()),*conn_stat,e,err))
+                    if(!handle_events(connection_handle(ev.get_as_32()),*conn_stat,e,err))
                         continue;
                     if(name_=="server 0"){
                         if(!conn_stat->proc_)
@@ -313,9 +316,9 @@ namespace network{
                             Connection::State::Active);
                             EventHandle ev_tmp = ev;
                             ev_tmp.set_events(
-                                Event::In|Event::EdgeTrigger);
+                                Event::In|Event::EdgeTrigger|Event::HangUp|Event::Error);
                             conn_stat->events_handled_ = 
-                                Event::In|Event::EdgeTrigger;
+                                Event::In|Event::EdgeTrigger|Event::HangUp|Event::Error;
                             modify_tracking_event(conn_stat->socket_->native(),
                                                 ev_tmp,
                                                 err);
@@ -392,7 +395,6 @@ namespace network{
     ConnectionHandle ThreadPool::attach_connection(
         const Address& addr,
         Socket&& socket,
-        std::unique_ptr<AbstractConnectionProcess> proc,
         std::error_code& err) noexcept
     {
         size_t index = next_worker_++ % workers_.size();
@@ -401,7 +403,6 @@ namespace network{
                 std::make_shared<Command<CommandType::AttachConnection>>(
                     hconn,
                     std::make_unique<Connection>(addr),
-                    std::move(proc),
                     std::move(socket)),
                     err);
         return hconn;
