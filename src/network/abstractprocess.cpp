@@ -23,13 +23,11 @@ namespace network{
     void AbstractRequestableConnectionProcess::try_receive(
             std::error_code& err) noexcept
     {
-        std::cout<<"try_receive"<<std::endl;
+        std::cout<<"(client) try_receive"<<std::endl;
         if(io_context().receive_buffer_size()==0)
             io_context().resize_receive_buffer(8096);
-        if(!active_request_ && !make_active_request()){
-            io_context().enable_readable(false,err);
+        if(!active_request_ && !make_active_request())
             return;
-        }
         io_context().receive(err,
                 active_request_->weak_to_receive_->min_initial_size());
         if(err!=std::error_code())
@@ -50,8 +48,8 @@ namespace network{
             else{
                 err.clear();
                 complete_current_request(err);
-                if(!make_active_request())
-                    io_context().enable_writable(false,err);
+                if(make_active_request())
+                    try_send(err);
             }
         }
     }
@@ -60,10 +58,8 @@ namespace network{
     {
         err.clear();
         std::cout<<"try_send"<<std::endl;
-        if(!active_request_ && !make_active_request()){
-            io_context().enable_writable(false,err);
+        if(!active_request_ && !make_active_request())
             return false;
-        }
         if(auto ser_res = io_context().serialize(
                 *active_request_->weak_to_send_);
             ser_res!=serialization::SerializationEC::NONE)
@@ -78,13 +74,7 @@ namespace network{
                 on_bad_send(err);
                 return false;
             }
-            else{
-                if(!io_context().has_to_write()){
-                    io_context().enable_writable(false,err);
-                    return false;
-                }
-                else return true;
-            }
+            else return true;
         }
     }
     void AbstractRequestableConnectionProcess::on_bad_serialization(
@@ -94,8 +84,8 @@ namespace network{
         err=std::make_error_code(std::errc::bad_message);
         std::cout<<"serialization error: "<<err.message()<<std::endl;
         complete_current_request(std::make_error_code(std::errc::bad_message));
-        if(!make_active_request())
-            io_context().enable_writable(false,err);
+        if(make_active_request())
+            try_send(err);
     }
     void AbstractRequestableConnectionProcess::on_bad_deserialization(
             serialization::SerializationEC ser_c,
@@ -104,22 +94,23 @@ namespace network{
         if(ser_c == serialization::SerializationEC::UNMATCHED_TYPE){
             io_context().clear_recv_buffer();
             complete_current_request(std::make_error_code(std::errc::bad_message));
-            if(!make_active_request())
-                io_context().enable_writable(false,err);
+            if(make_active_request())
+                try_send(err);
         }
+        else err = std::make_error_code(std::errc::operation_in_progress);
         std::cout<<"deserialize error: "<<err.message()<<std::endl;
     }
     void AbstractRequestableConnectionProcess::on_bad_send(std::error_code& err) noexcept{
         std::cout<<"trying sending error: "<<err.message()<<std::endl;
         complete_current_request(err);
-        if(!make_active_request())
-            io_context().enable_writable(false,err);
+        if(make_active_request())
+            try_send(err);
     }
     void AbstractRequestableConnectionProcess::on_bad_receive(std::error_code& err) noexcept{
         std::cout<<"receiving error: "<<err.message()<<std::endl;
         complete_current_request(std::make_error_code(std::errc::bad_message));
-        if(!make_active_request())
-            io_context().enable_writable(false,err);
+        if(make_active_request())
+            try_send(err);
         return;
     }
     void AbstractRequestableConnectionProcess::reset_requests(
@@ -128,6 +119,7 @@ namespace network{
         std::cout<<"reset_requests"<<std::endl;
         while(!requests_.empty())
             requests_.pop();
+        complete_current_request(std::make_error_code(std::errc::interrupted));
         active_request_.reset();
     }
     bool AbstractRequestableConnectionProcess::make_active_request() noexcept

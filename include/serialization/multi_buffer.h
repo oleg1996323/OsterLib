@@ -7,6 +7,7 @@
 #include "definitions.h"
 #include "byte_order.h"
 #include "float_conv.h"
+#include <deque>
 
 namespace serialization{
 
@@ -59,7 +60,6 @@ public:
     requires ((std::ranges::random_access_range<std::decay_t<Args>> &&
            std::ranges::contiguous_range<std::decay_t<Args>>) && ...)
     MultiBufferView(auto&... args){
-        buffers_.reserve(sizeof...(args));
         (buffers_.push_back(args),...);
     }
     size_t available() const noexcept {
@@ -198,8 +198,10 @@ public:
 
     size_t flush_deserialized() noexcept{
         size_t decrease_offset_{0};
-        for(int id = 0;id<span_idx_;++id){
-            decrease_offset_+=buffers_[id].size();
+        while(span_idx_>0){
+            decrease_offset_+=buffers_.front().size();
+            buffers_.pop_front();
+            --span_idx_;
         }
         span_idx_=0;
         if(!buffers_.empty())
@@ -210,7 +212,7 @@ public:
     }
 
 private:
-    std::vector<Span> buffers_;
+    std::deque<Span> buffers_;
     size_t span_idx_ = 0;
     size_t offset_ = 0;
     std::vector<std::pair<size_t, size_t>> checkpoints_;

@@ -14,10 +14,25 @@ class ClientPingProcess:public AbstractRequestableConnectionProcess{
     virtual void on_read(std::error_code& err) noexcept override{
         std::cout<<"Client: receive ping"<<std::endl;
         try_receive(err);
-        if(err!=std::error_code())
-            std::cout<<err.message()<<std::endl;
+        if(err !=std::error_code())
+        {   
+            switch(static_cast<std::errc>(err.value())){
+                case std::errc::resource_unavailable_try_again:
+                case std::errc::operation_in_progress:
+                case std::errc::no_buffer_space:
+                    std::cout<<err.message()<<std::endl;
+                    err.clear();
+                    return;
+                default:
+                    complete_current_request(err);
+                    if(make_active_request())
+                        on_write(err);
+                    else return;
+            }
+        }
         else{
-            ++count_recv;
+            if(!io_context().has_to_read())
+                ++count_recv;
             err.clear();
         }
     }
@@ -98,12 +113,13 @@ class ServerPingProcess:public AbstractConnectionProcess{
             else {
                 if(err==std::error_code()){
                     std::cout<<"(server) send ping"<<std::endl;
+                    io_context().send(err);
                 }
-                io_context().send(err);
             }
             if(err!=std::error_code()){
                 std::cout<<err.message()<<std::endl;
                 std::cout<<"(server) Error at sending"<<std::endl;
+                return;
             }
             else{
                 std::cout<<"(server) Ping sent"<<std::endl;
@@ -114,8 +130,7 @@ class ServerPingProcess:public AbstractConnectionProcess{
         return;
     }
     virtual void on_write(std::error_code& err) noexcept override{
-        if(!io_context().has_to_write())
-            io_context().enable_writable(false,err);
+        io_context().send(err);
     }
     virtual void on_task_done(std::error_code& err) noexcept override{
     }
@@ -154,44 +169,46 @@ TEST(Client_server,ping){
     settings.protocol_ = Protocol::TCP;
     settings.num_threads_pool_ = 1;
     settings.timeout_seconds_processes_ = 3;
-    Server server;
-    std::error_code err;
-    std::vector<std::shared_ptr<network::Socket::BaseOption>> options;
-    options.push_back(std::make_shared<Socket::Option<int>>(
-                            Socket::Option(1,Socket::Options::KeepAlive)));
-    options.push_back(std::make_shared<Socket::Option<int>>(
-                            Socket::Option(1,Socket::Options::ReuseAddress)));
-    options.push_back(std::make_shared<Socket::Option<int>>(
-                            Socket::Option(1,Socket::Options::ReusePort)));
-    server.configure(settings,
-                        std::move(options),
-                        {},
-                        err);
-    server.launch(err);
-    server.set_processes_at_connections<ServerPingProcess>();
-    //std::this_thread::sleep_for(std::chrono::milliseconds(500));
-    Client client(err,10);
-    auto hconn = client.connect(
-            settings.host_,
-            settings.port_,
-            Socket::Type::Stream,
-            Protocol::TCP,err);
-    ASSERT_EQ(err,std::error_code());
-    {
-        std::unique_ptr<ClientPingProcess> proc = std::make_unique<ClientPingProcess>(hconn,err);
-        hconn.add_process(std::move(proc),err);
-        for(int i=0;i<5;++i){
-            auto cmd = client.request<size_t>(hconn,
-                    serialization::serial_size(size_t(1)),
-                    size_t(1),std::monostate());
-            cmd->wait_ready();
-            std::cout<<"command "<<i<<" error: "<<cmd->error()->message()<<std::endl;
+    for(int i = 0;i<100;++i){
+        Server server;
+        std::error_code err;
+        std::vector<std::shared_ptr<network::Socket::BaseOption>> options;
+        options.push_back(std::make_shared<Socket::Option<int>>(
+                                Socket::Option(1,Socket::Options::KeepAlive)));
+        options.push_back(std::make_shared<Socket::Option<int>>(
+                                Socket::Option(1,Socket::Options::ReuseAddress)));
+        options.push_back(std::make_shared<Socket::Option<int>>(
+                                Socket::Option(1,Socket::Options::ReusePort)));
+        server.configure(settings,
+                            std::move(options),
+                            {},
+                            err);
+        server.launch(err);
+        server.set_processes_at_connections<ServerPingProcess>();
+        //std::this_thread::sleep_for(std::chrono::milliseconds(500));
+        Client client(err,10);
+        auto hconn = client.connect(
+                settings.host_,
+                settings.port_,
+                Socket::Type::Stream,
+                Protocol::TCP,err);
+        ASSERT_EQ(err,std::error_code());
+        {
+            std::unique_ptr<ClientPingProcess> proc = std::make_unique<ClientPingProcess>(hconn,err);
+            hconn.add_process(std::move(proc),err);
+            for(int i=0;i<5;++i){
+                auto cmd = client.request<size_t>(hconn,
+                        serialization::serial_size(size_t(1)),
+                        size_t(1),std::monostate());
+                cmd->wait_ready();
+                std::cout<<"command "<<i<<" error: "<<cmd->error()->message()<<std::endl;
+            }
         }
+        EXPECT_EQ(ServerPingProcess::count_recv,5);
+        EXPECT_EQ(ServerPingProcess::count_sent,5);
+        EXPECT_EQ(ClientPingProcess::count_recv,5);
+        EXPECT_EQ(ClientPingProcess::count_sent,5);
     }
-    EXPECT_EQ(ServerPingProcess::count_recv,5);
-    EXPECT_EQ(ServerPingProcess::count_sent,5);
-    EXPECT_EQ(ClientPingProcess::count_recv,5);
-    EXPECT_EQ(ClientPingProcess::count_sent,5);
 }
 
 TEST(Client_server_ping,HandlingClientDisconnection){

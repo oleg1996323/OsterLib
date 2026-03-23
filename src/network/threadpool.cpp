@@ -273,6 +273,7 @@ namespace network{
     void Worker::run(std::stop_token st,std::error_code& err){
         while (!stop_requested()) {
             auto events = wait(err,3000);
+            handle_worker_commands();
             if(st.stop_requested())
                 break;
             handle_pending(err);
@@ -344,13 +345,6 @@ namespace network{
                             }
                         } else {
                             std::vector<std::shared_ptr<BaseCommand>> cmds;
-                            cmds.emplace_back(std::make_shared<
-                                Command<
-                                CommandType::ShutDownConnection>>(
-                                    connection_handle(ev.get_as_32())));
-                            cmds.emplace_back(std::make_shared<Command<
-                                CommandType::RequestStop>>(
-                                    connection_handle(ev.get_as_32())));
                             cmds.emplace_back(std::make_shared<Command<
                                 CommandType::RemoveConnection>>(
                                     connection_handle(ev.get_as_32())));
@@ -364,6 +358,20 @@ namespace network{
                     {
                         std::error_code err;
                         conn_stat->proc_->handle_event(e,err);
+                        switch(static_cast<std::errc>(err.value())){
+                            case std::errc::operation_in_progress:
+                            case std::errc::no_buffer_space:
+                            case std::errc::resource_unavailable_try_again:
+                                err.clear();
+                                break;
+                            default:
+                                conn_stat->socket_->close();
+                                conn_stat->proc_.reset();
+                                conn_stat->connIO_.reset();
+                                push_command(std::make_shared<Command<
+                                CommandType::RemoveConnection>>(
+                                    connection_handle(ev.get_as_32())));
+                        }
                     }
                 }
             }
@@ -389,7 +397,7 @@ namespace network{
     }
 
     ThreadPool::~ThreadPool() {
-        for (auto& w : workers_) w->stop(false,0);
+        for (auto& w : workers_) w->command_worker(Worker::WorkerCommand::Stop);
     }
 
     ConnectionHandle ThreadPool::attach_connection(
@@ -434,8 +442,6 @@ namespace network{
                 uint16_t timeout_sec) noexcept
     {
         for (auto& w : workers_) 
-            w->stop(
-                wait_for_end_connections,
-                timeout_sec);
+            w->command_worker(Worker::WorkerCommand::Stop);
     }
 }

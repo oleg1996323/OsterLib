@@ -71,10 +71,6 @@ class ConnectionIO{
         }
         if(send_buffer_.has_to_write())
             enable_writable(true,err);
-        if(err!=std::error_code()){
-            enable_writable(false,err);
-            return;
-        }
         while (send_buffer_.has_to_write()) {
             auto send_res = ::network::send_vectorized(
                 err, *sock, send_buffer_);
@@ -85,10 +81,13 @@ class ConnectionIO{
                         send_buffer_.consume(send_res);
                         err.clear();
                         return; // ждём следующего Out
-                    default:
+                    default:{
+                        std::error_code tmp_err = err;
                         enable_writable(false, err); // попытка отключить, но игнорируем ошибку
                         clear_send_buffers();
+                        err=tmp_err;
                         return; // возвращаем ошибку
+                    }
                 }
             }
             send_buffer_.consume(send_res);

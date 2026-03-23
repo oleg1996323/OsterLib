@@ -44,7 +44,7 @@ epollfd(epoll_create(mp_controled)){
         err = std::make_error_code(static_cast<std::errc>(errno));
         errno = 0;
         std::cout<<err.message()<<std::endl;
-        std::terminate();
+        return;
     }
     __set_interruptor__(err);
     if(epollfd==-1){
@@ -257,7 +257,8 @@ bool network::Multiplexor::modify(
 }
 void network::Multiplexor::interrupt() noexcept{
     uint64_t one = 1;
-    write(interruptor->fd_, &one, sizeof(one));
+    if(interruptor.get()!=nullptr)
+        write(interruptor->fd_, &one, sizeof(one));
 }
 /**
  * @param timeout - in milliseconds

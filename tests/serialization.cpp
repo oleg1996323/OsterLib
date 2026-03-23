@@ -631,6 +631,232 @@ TEST(Serialization,PartialSerialization){
     ASSERT_NE(serialization::deserialize_native(control_val,mbv),serialization::SerializationEC::NONE);
     mbv.push_view(buf_2);
     ASSERT_EQ(serialization::deserialize_native(control_val,mbv),serialization::SerializationEC::NONE);
+    ASSERT_EQ(control_val,numbers);
+}
+
+TEST(Serialization,MultiPartialSerialization){
+    std::vector<int> numbers;
+    std::vector<char> buf_1;
+    std::vector<char> buf_2;
+    std::vector<char> buf_3;
+    std::vector<char> buf_4;
+    std::vector<char> buf_5;
+    std::vector<char> buf_6;
+    std::vector<char> buf_7;
+    std::vector<char> buf_8;
+    std::vector<char> buf_9;
+    std::vector<char> buf_10;
+    std::string any_string("hello world");
+    bool is = true;
+    std::variant<std::monostate,std::list<std::pair<double,int>>> variable;
+    auto& list = variable.emplace<std::list<std::pair<double,int>>>();
+    for(int i=0;i<4;++i){
+        double d = std::rand();
+        d/=std::rand();
+        int integer = std::rand();
+        list.push_back(std::make_pair(d,integer));
+    }
+    serialization::serialize_native(size_t(10),buf_1);
+    for(int i=0;i<10;++i){
+        if(i<4)
+            serialization::serialize_native(i,buf_1);
+        else if(i<7)
+            serialization::serialize_native(i,buf_2);
+        else serialization::serialize_native(i,buf_3);
+        numbers.push_back(i);
+    }
+    serialization::serialize_native(any_string.size(),buf_4);
+    for(int i=0;i<any_string.size();++i)
+        if(i<any_string.size()/2)
+            serialization::serialize_native(any_string[i],buf_4);
+        else serialization::serialize_native(any_string[i],buf_5);
+    serialization::serialize_native(is,buf_5);
+    {
+        std::vector<char> tmp_buf;
+        serialization::serialize_native(variable.index(),tmp_buf);
+        for(int i=0;i<tmp_buf.size();++i)
+            if(i<tmp_buf.size()/2)
+                serialization::serialize_native(tmp_buf[i],buf_5);
+            else serialization::serialize_native(tmp_buf[i],buf_6);
+    }
+    {
+        std::vector<char> tmp_buf;
+        serialization::serialize_native(list.size(),tmp_buf);
+        for(int i=0;i<tmp_buf.size();++i)
+            if(i<tmp_buf.size()/2)
+                serialization::serialize_native(tmp_buf[i],buf_6);
+            else serialization::serialize_native(tmp_buf[i],buf_7);
+    }
+    for(int i=0;i<list.size();++i){
+        if(i<list.size()/2){
+            serialization::serialize_native(*std::next(list.begin(),i),buf_7);
+        }
+        else if(i==2){
+            std::vector<char> tmp_buf;
+            auto val = *std::next(list.begin(),i);
+            serialization::serialize_native(*std::next(list.begin(),i),tmp_buf);
+            for(int j=0;j<tmp_buf.size();++j){
+                if(j<tmp_buf.size()/2)
+                    serialization::serialize_native(tmp_buf[j],buf_7);
+                else serialization::serialize_native(tmp_buf[j],buf_8);
+            }
+        }
+        else serialization::serialize_native(*std::next(list.begin(),i),buf_8);
+    }
+    std::unique_ptr<int> unique = std::make_unique<int>(10);
+    std::optional<std::string> str = "any string";
+    serialization::serialize_native(true,buf_8);
+    serialization::serialize_native(*unique,buf_9);
+    serialization::serialize_native(true,buf_9);
+    serialization::serialize_native(*str,buf_10);
+    
+    serialization::StreamSerializer mbv;
+    mbv.push_view(buf_1);
+    mbv.push_view(buf_2);
+    mbv.push_view(buf_3);
+    mbv.push_view(buf_4);
+    mbv.push_view(buf_5);
+    mbv.push_view(buf_6);
+    mbv.push_view(buf_7);
+    mbv.push_view(buf_8);
+    mbv.push_view(buf_9);
+    mbv.push_view(buf_10);
+    std::vector<int> numbers_ctrl;
+    std::string any_string_ctrl;
+    bool is_ctrl{false};
+    decltype(variable) variable_ctrl;
+    decltype(unique) unique_ctrl;
+    decltype(str) str_ctrl;
+    ASSERT_EQ(serialization::deserialize_native(numbers_ctrl,mbv),serialization::SerializationEC::NONE);
+    ASSERT_EQ(serialization::deserialize_native(any_string_ctrl,mbv),serialization::SerializationEC::NONE);
+    ASSERT_EQ(serialization::deserialize_native(is_ctrl,mbv),serialization::SerializationEC::NONE);
+    ASSERT_EQ(serialization::deserialize_native(variable_ctrl,mbv),serialization::SerializationEC::NONE);
+    ASSERT_EQ(serialization::deserialize_native(unique_ctrl,mbv),serialization::SerializationEC::NONE);
+    ASSERT_EQ(serialization::deserialize_native(str_ctrl,mbv),serialization::SerializationEC::NONE);
+    ASSERT_EQ(numbers_ctrl,numbers);
+    ASSERT_EQ(any_string_ctrl,any_string);
+    ASSERT_EQ(is_ctrl,is);
+    ASSERT_EQ(variable_ctrl,variable);
+    ASSERT_NE(unique_ctrl.get(),nullptr);
+    ASSERT_EQ(*unique_ctrl,*unique);
+    ASSERT_EQ(str_ctrl,str);
+}
+
+TEST(Serialization,SeparatedMultiPartialSerialization){
+    std::vector<int> numbers;
+    std::vector<char> buf_1;
+    std::vector<char> buf_2;
+    std::vector<char> buf_3;
+    std::vector<char> buf_4;
+    std::vector<char> buf_5;
+    std::vector<char> buf_6;
+    std::vector<char> buf_7;
+    std::vector<char> buf_8;
+    std::vector<char> buf_9;
+    std::vector<char> buf_10;
+    std::string any_string("hello world");
+    bool is = true;
+    std::variant<std::monostate,std::list<std::pair<double,int>>> variable;
+    auto& list = variable.emplace<std::list<std::pair<double,int>>>();
+    for(int i=0;i<4;++i){
+        double d = std::rand();
+        d/=std::rand();
+        int integer = std::rand();
+        list.push_back(std::make_pair(d,integer));
+    }
+    serialization::serialize_native(size_t(10),buf_1);
+    for(int i=0;i<10;++i){
+        if(i<4)
+            serialization::serialize_native(i,buf_1);
+        else if(i<7)
+            serialization::serialize_native(i,buf_2);
+        else serialization::serialize_native(i,buf_3);
+        numbers.push_back(i);
+    }
+    serialization::serialize_native(any_string.size(),buf_4);
+    for(int i=0;i<any_string.size();++i)
+        if(i<any_string.size()/2)
+            serialization::serialize_native(any_string[i],buf_4);
+        else serialization::serialize_native(any_string[i],buf_5);
+    serialization::serialize_native(is,buf_5);
+    {
+        std::vector<char> tmp_buf;
+        serialization::serialize_native(variable.index(),tmp_buf);
+        for(int i=0;i<tmp_buf.size();++i)
+            if(i<tmp_buf.size()/2)
+                serialization::serialize_native(tmp_buf[i],buf_5);
+            else serialization::serialize_native(tmp_buf[i],buf_6);
+    }
+    {
+        std::vector<char> tmp_buf;
+        serialization::serialize_native(list.size(),tmp_buf);
+        for(int i=0;i<tmp_buf.size();++i)
+            if(i<tmp_buf.size()/2)
+                serialization::serialize_native(tmp_buf[i],buf_6);
+            else serialization::serialize_native(tmp_buf[i],buf_7);
+    }
+    for(int i=0;i<list.size();++i){
+        if(i<list.size()/2){
+            serialization::serialize_native(*std::next(list.begin(),i),buf_7);
+        }
+        else if(i==2){
+            std::vector<char> tmp_buf;
+            auto val = *std::next(list.begin(),i);
+            serialization::serialize_native(*std::next(list.begin(),i),tmp_buf);
+            for(int j=0;j<tmp_buf.size();++j){
+                if(j<tmp_buf.size()/2)
+                    serialization::serialize_native(tmp_buf[j],buf_7);
+                else serialization::serialize_native(tmp_buf[j],buf_8);
+            }
+        }
+        else serialization::serialize_native(*std::next(list.begin(),i),buf_8);
+    }
+    std::unique_ptr<int> unique = std::make_unique<int>(10);
+    std::optional<std::string> str = "any string";
+    serialization::serialize_native(true,buf_8);
+    serialization::serialize_native(*unique,buf_9);
+    serialization::serialize_native(true,buf_9);
+    serialization::serialize_native(*str,buf_10);
+    
+    serialization::StreamSerializer mbv;
+    mbv.push_view(buf_1);
+    
+    std::vector<int> numbers_ctrl;
+    std::string any_string_ctrl;
+    bool is_ctrl{false};
+    decltype(variable) variable_ctrl;
+    decltype(unique) unique_ctrl;
+    decltype(str) str_ctrl;
+    ASSERT_NE(serialization::deserialize_native(numbers_ctrl,mbv),serialization::SerializationEC::NONE);
+    mbv.push_view(buf_2);
+    ASSERT_NE(serialization::deserialize_native(numbers_ctrl,mbv),serialization::SerializationEC::NONE);
+    mbv.push_view(buf_3);
+    ASSERT_EQ(serialization::deserialize_native(numbers_ctrl,mbv),serialization::SerializationEC::NONE);
+    ASSERT_EQ(numbers_ctrl,numbers);
+    mbv.push_view(buf_4);
+    ASSERT_NE(serialization::deserialize_native(any_string_ctrl,mbv),serialization::SerializationEC::NONE);
+    mbv.push_view(buf_5);
+    ASSERT_EQ(serialization::deserialize_native(any_string_ctrl,mbv),serialization::SerializationEC::NONE);
+    ASSERT_EQ(any_string_ctrl,any_string);
+    ASSERT_EQ(serialization::deserialize_native(is_ctrl,mbv),serialization::SerializationEC::NONE);
+    ASSERT_EQ(is_ctrl,is);
+    ASSERT_NE(serialization::deserialize_native(variable_ctrl,mbv),serialization::SerializationEC::NONE);
+    mbv.push_view(buf_6);
+    ASSERT_NE(serialization::deserialize_native(variable_ctrl,mbv),serialization::SerializationEC::NONE);
+    mbv.push_view(buf_7);
+    ASSERT_NE(serialization::deserialize_native(variable_ctrl,mbv),serialization::SerializationEC::NONE);
+    mbv.push_view(buf_8);
+    ASSERT_EQ(serialization::deserialize_native(variable_ctrl,mbv),serialization::SerializationEC::NONE);
+    ASSERT_EQ(variable_ctrl,variable);
+    ASSERT_NE(serialization::deserialize_native(unique_ctrl,mbv),serialization::SerializationEC::NONE);
+    mbv.push_view(buf_9);
+    ASSERT_EQ(serialization::deserialize_native(unique_ctrl,mbv),serialization::SerializationEC::NONE);
+    ASSERT_NE(unique_ctrl.get(),nullptr);
+    ASSERT_EQ(*unique_ctrl,*unique);
+    ASSERT_NE(serialization::deserialize_native(str_ctrl,mbv),serialization::SerializationEC::NONE);
+    mbv.push_view(buf_10);
+    ASSERT_EQ(serialization::deserialize_native(str_ctrl,mbv),serialization::SerializationEC::NONE);
+    ASSERT_EQ(str_ctrl,str);
 }
 
 TEST(Serialization, SerialLimits){

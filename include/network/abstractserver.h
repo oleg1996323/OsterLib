@@ -80,6 +80,11 @@ namespace network{
                 processes_pool_ = std::move(
                     std::make_unique<ThreadPool>(settings.num_threads_pool_,
                         err));
+                if(err!=std::error_code()){
+                    processes_pool_.reset();
+                    return;
+                }
+                
                 accepter_ = make_connection_acceptor(
                         this,
                         settings.host_,

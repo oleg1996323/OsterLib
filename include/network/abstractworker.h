@@ -11,6 +11,10 @@ namespace network{
 class AbstractProcess;
 class AbstractWorker{
 	public:
+	enum class WorkerCommand{
+		None,
+		Stop
+	};
 	template<CommandType T,typename... ARGS>
 	friend struct Command;
 	struct ConnectionState{
@@ -21,7 +25,11 @@ class AbstractWorker{
 		Event events_handled_;
 	};
     AbstractWorker(uint32_t order_lenght,std::error_code& err):
-    		multiplexor_(order_lenght,err){}
+    		multiplexor_(order_lenght,err)
+	{
+		if(err!=std::error_code())
+			return;
+	}
 	virtual ~AbstractWorker(){
 		if(stop_possible())
 			thread().request_stop();
@@ -36,19 +44,7 @@ class AbstractWorker{
             run(st,err); });
 		stop_ = thread().get_stop_source().get_token();
     }
-    void stop(bool wait_for_end_connections,
-            uint16_t timeout_sec){
-        std::error_code err;
-        for(auto& [conn,conn_state]:connections()){
-            if(conn_state.proc_)
-                conn_state.proc_->request_stop(
-                    wait_for_end_connections,
-                    timeout_sec,err);
-        }
-        thread().request_stop();
-		wake_event();
-		if (thread().joinable()) thread().join();
-    }
+    
 
 	void push_command(std::shared_ptr<BaseCommand> cmd) noexcept;
 	void push_commands(std::vector<std::shared_ptr<BaseCommand>>&& cmds) noexcept;
@@ -121,7 +117,26 @@ class AbstractWorker{
 	void shutdown_all(std::error_code& err) noexcept;
 	void remove_all(std::error_code& err) noexcept;
 	virtual void run(std::stop_token st,std::error_code& err) = 0;
+	void command_worker(WorkerCommand cmd) noexcept{
+		{
+			std::lock_guard lk(mutex());
+			w_cmds_.push(cmd);
+		}
+		wake_event();
+	}
 protected:
+	void stop(bool wait_for_end_connections,
+            uint16_t timeout_sec){
+        std::error_code err;
+        for(auto& [conn,conn_state]:connections()){
+            if(conn_state.proc_.get()!=nullptr)
+                conn_state.proc_->request_stop(
+                    wait_for_end_connections,
+                    timeout_sec,err);
+        }
+        thread().request_stop();
+		wake_event();
+    }
 	virtual bool connectInternal(
 			const ConnectionHandle& hconn,
 			std::unique_ptr<Connection> conn,
@@ -150,7 +165,6 @@ protected:
             bool wait_for_end_connections,
             uint16_t timeout_sec,
 			std::error_code& err) noexcept = 0;
-
 	std::unique_ptr<ConnectionIO> make_connectionIO(
 				std::shared_ptr<Socket> sock_ptr,
 				ConnectionHandle hconn,
@@ -192,12 +206,25 @@ protected:
 	bool stop_possible() noexcept{
 		return stop_.stop_possible();
 	}
+	void handle_worker_commands() noexcept{
+		WorkerCommand cmd;
+		{
+			std::lock_guard lk(mutex());
+			if(w_cmds_.empty())
+				return;
+			cmd = w_cmds_.front();
+			w_cmds_.pop();
+		}
+		if(cmd==WorkerCommand::Stop)
+			stop(false,0);
+	}
 private:
 	mutable std::jthread thread_;
 	mutable std::mutex m_;
     std::unordered_map<ConnectionId,
         ConnectionState> connections_;
 	std::queue<std::shared_ptr<BaseCommand>> cmds_;
+	std::queue<WorkerCommand> w_cmds_;
 	Multiplexor multiplexor_;
 	std::stop_token stop_;
 };
