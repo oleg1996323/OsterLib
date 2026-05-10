@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <cstdint>
+#include <thread>
 #include "definitions/protocol.h"
 #include "commonsocket.h"
         /* AcceptConnections = SO_ACCEPTCONN,  //Socket is accepting connections.

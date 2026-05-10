@@ -58,12 +58,16 @@ namespace network{
     {
         err.clear();
         std::cout<<"try_send"<<std::endl;
-        if(!active_request_ && !make_active_request())
+        if(!active_request_ && !make_active_request()){
+            io_context().enable_writable(false,err);
             return false;
+        }
         if(auto ser_res = io_context().serialize(
                 *active_request_->weak_to_send_);
             ser_res!=serialization::SerializationEC::NONE)
         {
+            std::error_code loc_err;
+            io_context().enable_writable(false,loc_err);
             on_bad_serialization(ser_res,err);
             return false;
         }

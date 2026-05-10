@@ -217,15 +217,11 @@ namespace network{
                         conn_stat->conn_->state()==
                         Connection::State::Connecting)
                     {
-                        assert((conn_stat->events_handled_&Event::Out)==0);
-                        if(!conn_stat->proc_)
-                            assert((conn_stat->events_handled_&Event::EdgeTrigger)!=0);
-                        else assert((conn_stat->events_handled_&Event::EdgeTrigger)==0);
                         conn_stat->proc_=std::move(proc);
                         conn_stat->proc_->set_connectionIO(
                             conn_stat->connIO_.get());
                         conn_stat->events_handled_ = 
-                            conn_stat->events_handled_&~Event::EdgeTrigger;
+                            conn_stat->events_handled_&~(Event::EdgeTrigger|Event::Out);
                         EventHandle ev(hconn.id(),conn_stat->events_handled_);
                         modify_tracking_event(conn_stat->socket_->native(),
                             ev,
@@ -276,19 +272,16 @@ namespace network{
             handle_worker_commands();
             if(st.stop_requested())
                 break;
-            handle_pending(err);
+            this->handle_pending(err);
             for (const auto& ev : events) {
-                std::cout<<"Interrupted: \""<<name_<<"\""<<std::endl;
-                // В вашем Multiplexor::Event_t — это epoll_event, где data.fd — это fd сокета.
-                std::cout<<name_<<" events. Number: "<<events.size()<<std::endl;
                 if((ev.events()&Event::In)!=0)
-                    std::cout<<"read event"<<std::endl;
+                    std::cout<<"("<<name_<<") "<<"read event"<<std::endl;
                 if((ev.events()&Event::HangUp)!=0)
-                    std::cout<<"hangup event"<<std::endl;
+                    std::cout<<"("<<name_<<") "<<"hangup event"<<std::endl;
                 if((ev.events()&Event::Error)!=0)
-                    std::cout<<"error event"<<std::endl;
+                    std::cout<<"("<<name_<<") "<<"error event"<<std::endl;
                 if((ev.events()&Event::Out)!=0)
-                    std::cout<<"write event"<<std::endl;
+                    std::cout<<"("<<name_<<") "<<"write event"<<std::endl;
                 Event e = ev.events();
                 {
                     ConnectionState* conn_stat=nullptr;
@@ -300,6 +293,7 @@ namespace network{
                     }
                     if(!handle_events(connection_handle(ev.get_as_32()),*conn_stat,e,err))
                         continue;
+                    //delete
                     if(name_=="server 0"){
                         if(!conn_stat->proc_)
                             assert(conn_stat->events_handled_&(Event::EdgeTrigger|Event::In));
@@ -318,28 +312,19 @@ namespace network{
                             EventHandle ev_tmp = ev;
                             ev_tmp.set_events(
                                 Event::In|Event::EdgeTrigger|Event::HangUp|Event::Error);
-                            conn_stat->events_handled_ = 
-                                Event::In|Event::EdgeTrigger|Event::HangUp|Event::Error;
                             modify_tracking_event(conn_stat->socket_->native(),
-                                                ev_tmp,
-                                                err);
+                                            ev_tmp,
+                                            err);
                             if(err!=std::error_code()){
                                 std::cout<<"Connection add failed: \n";
                                 std::cout<<err.message()<<std::endl;
-                                std::vector<std::shared_ptr<BaseCommand>> cmds;
-                                cmds.emplace_back(std::make_shared<
-                                    Command<
-                                    CommandType::ShutDownConnection>>(
-                                        connection_handle(ev.get_as_32())));
-                                cmds.emplace_back(std::make_shared<Command<
-                                    CommandType::RequestStop>>(
-                                        connection_handle(ev.get_as_32())));
-                                cmds.emplace_back(std::make_shared<Command<
+                                push_command(std::make_shared<Command<
                                     CommandType::RemoveConnection>>(
                                         connection_handle(ev.get_as_32())));
-                                push_commands(std::move(cmds));
                             }
                             else{
+                                conn_stat->events_handled_ = 
+                                    Event::In|Event::EdgeTrigger|Event::HangUp|Event::Error;
                                 std::cout<<"Connection established: \n";
                                 print_ip_port(std::cout,conn_stat->conn_->address());
                             }
@@ -358,6 +343,7 @@ namespace network{
                     {
                         std::error_code err;
                         conn_stat->proc_->handle_event(e,err);
+                        if(err!=std::error_code())
                         switch(static_cast<std::errc>(err.value())){
                             case std::errc::operation_in_progress:
                             case std::errc::no_buffer_space:

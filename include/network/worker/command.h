@@ -18,7 +18,14 @@ namespace network
 	class BaseCommand:public std::enable_shared_from_this<BaseCommand>
 	{
 		friend class AbstractWorker;
+		std::string attribute_;
 		public:
+		void set_attribute(const std::string& attribute) noexcept{
+			attribute_=attribute;
+		}
+		const std::string& attribute() const noexcept{
+			return attribute_;
+		}
 		virtual ~BaseCommand() = default;
 		virtual void execute(AbstractWorker* worker){
 			execute_internal(worker);
@@ -255,6 +262,7 @@ namespace network{
 				set_error(err);
 				set_ready();
 			}
+			else set_ready();
 		}
 	};
 }

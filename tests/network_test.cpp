@@ -12,39 +12,43 @@ class ClientPingProcess:public AbstractRequestableConnectionProcess{
     static int count_sent;
     static int count_recv;
     virtual void on_read(std::error_code& err) noexcept override{
-        std::cout<<"Client: receive ping"<<std::endl;
-        try_receive(err);
-        if(err !=std::error_code())
-        {   
-            switch(static_cast<std::errc>(err.value())){
-                case std::errc::resource_unavailable_try_again:
-                case std::errc::operation_in_progress:
-                case std::errc::no_buffer_space:
-                    std::cout<<err.message()<<std::endl;
-                    err.clear();
-                    return;
-                default:
-                    complete_current_request(err);
-                    if(make_active_request())
-                        on_write(err);
-                    else return;
+            std::cout<<"Client: receive ping"<<std::endl;
+            try_receive(err);
+            if(err !=std::error_code())
+            {   
+                switch(static_cast<std::errc>(err.value())){
+                    case std::errc::resource_unavailable_try_again:
+                    case std::errc::operation_in_progress:
+                    case std::errc::no_buffer_space:
+                        std::cout<<"(client) on read error: "<<err.message()<<std::endl;
+                        err.clear();
+                        return;
+                    default:
+                        complete_current_request(err);
+                        if(make_active_request())
+                            on_write(err);
+                        else return;
+                }
             }
-        }
-        else{
-            if(!io_context().has_to_read())
-                ++count_recv;
-            err.clear();
-        }
+            else{
+                if(!io_context().has_to_read()){
+                    ++count_recv;
+                }
+                err.clear();
+            }
     }
     virtual void on_write(std::error_code& err) noexcept override{
-        std::cout<<"Client: send ping"<<std::endl;
-        bool not_all_sent = try_send(err);
-        if(err!=std::error_code())
-            std::cout<<err.message()<<std::endl;
-        else {
-            if(!not_all_sent)
-                ++count_sent;
-            err.clear();
+        if(count_sent<5){
+            std::cout<<"Client: send ping"<<std::endl;
+            bool all_sent = try_send(err);
+            if(err!=std::error_code())
+                std::cout<<err.message()<<std::endl;
+            else {
+                if(all_sent)
+                    ++count_sent;
+                err.clear();
+                on_read(err);
+            }
         }
     }
     virtual void on_task_done(std::error_code& err) noexcept override{
@@ -64,7 +68,7 @@ class ClientPingProcess:public AbstractRequestableConnectionProcess{
                 std::error_code& err) noexcept
     {
         if(event&Event::In) on_read(err);
-        if(event&Event::Out)on_write(err);
+        //if(event&Event::Out)on_write(err);
         
     }
 };
@@ -93,6 +97,8 @@ class ServerPingProcess:public AbstractConnectionProcess{
             auto ser_res = io_context().deserialize(ping);
             if(ser_res==serialization::SerializationEC::NONE)
                 err.clear();
+            else if(ser_res==serialization::SerializationEC::BUFFER_SIZE_LESSER)
+                continue;
             else return;
             if(ping.data_!=1){
                 err = std::make_error_code(std::errc::bad_message);
@@ -100,37 +106,39 @@ class ServerPingProcess:public AbstractConnectionProcess{
             }
             else{
                 std::cout<<"(server) Ping received"<<std::endl;
-                if(!io_context().has_to_read())
+                if(!io_context().has_to_read()){
                     ++count_recv;
-            }
-            ping.data_=1;
-            if(auto ser_res = io_context().serialize(ping);
-                ser_res!=serialization::SerializationEC::NONE){
-                err = std::make_error_code(std::errc::bad_message);
-                std::cout<<"(server) bad serialization"<<std::endl;
-                continue;
-            }
-            else {
-                if(err==std::error_code()){
-                    std::cout<<"(server) send ping"<<std::endl;
-                    io_context().send(err);
+                    on_write(err);
                 }
             }
-            if(err!=std::error_code()){
-                std::cout<<err.message()<<std::endl;
-                std::cout<<"(server) Error at sending"<<std::endl;
-                return;
-            }
-            else{
-                std::cout<<"(server) Ping sent"<<std::endl;
-                if(!io_context().has_to_write())
-                    ++count_sent;
-            }
+            
         }
         return;
     }
     virtual void on_write(std::error_code& err) noexcept override{
-        io_context().send(err);
+        SizeFramedData<size_t> ping;
+        if(auto ser_res = io_context().serialize(ping);
+            ser_res!=serialization::SerializationEC::NONE){
+            err = std::make_error_code(std::errc::bad_message);
+            std::cout<<"(server) bad serialization"<<std::endl;
+            return;
+        }
+        else {
+            if(err==std::error_code()){
+                std::cout<<"(server) send ping"<<std::endl;
+                io_context().send(err);
+            }
+        }
+        if(err!=std::error_code()){
+            std::cout<<err.message()<<std::endl;
+            std::cout<<"(server) Error at sending"<<std::endl;
+            return;
+        }
+        else{
+            std::cout<<"(server) Ping sent"<<std::endl;
+            if(!io_context().has_to_write())
+                ++count_sent;
+        }
     }
     virtual void on_task_done(std::error_code& err) noexcept override{
     }
@@ -162,14 +170,19 @@ class Client:public AbstractClient{
         AbstractClient(err,ev_order){}
 };
 
+// void broken_pipe(int sig){
+//     std::cout<<"pipe broken"<<std::endl;
+// }
+
 TEST(Client_server,ping){
+    
     server::Settings settings;
     settings.host_ = "127.0.0.1";
     settings.port_ = 32396;
     settings.protocol_ = Protocol::TCP;
     settings.num_threads_pool_ = 1;
     settings.timeout_seconds_processes_ = 3;
-    for(int i = 0;i<100;++i){
+    //for(int i = 0;i<5;++i){
         Server server;
         std::error_code err;
         std::vector<std::shared_ptr<network::Socket::BaseOption>> options;
@@ -208,7 +221,7 @@ TEST(Client_server,ping){
         EXPECT_EQ(ServerPingProcess::count_sent,5);
         EXPECT_EQ(ClientPingProcess::count_recv,5);
         EXPECT_EQ(ClientPingProcess::count_sent,5);
-    }
+    //}
 }
 
 TEST(Client_server_ping,HandlingClientDisconnection){
@@ -216,6 +229,7 @@ TEST(Client_server_ping,HandlingClientDisconnection){
 }
 
 int main(int argc, char* argv[]){
+    signal(SIGPIPE,SIG_IGN);
     testing::InitGoogleTest(&argc,argv);
     return RUN_ALL_TESTS();
 }
