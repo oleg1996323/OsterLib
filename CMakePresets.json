@@ -11,23 +11,33 @@
             "$comment": ["Configuration for basic building and intalling by Unix Makefiles in Unix systems"],
             "name": "default",
             "displayName": "Configuration",
-            "description": "Default build using Ninja generator",
-            "generator": "Ninja",
+            "description": "Default build",
             "binaryDir": "${sourceDir}/build",
             "cmakeExecutable": "cmake",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE":"Debug",
-                "CMAKE_CXX_COMPILER":"$env{HOME}/gcc/gcc-install/bin/g++",
-                "CMAKE_C_COMPILER":"$env{HOME}/gcc/gcc-install/bin/gcc",
+                "CMAKE_CXX_COMPILER":"$env{HOME}/gcc-install/bin/g++",
+                "CMAKE_C_COMPILER":"$env{HOME}/gcc-install/bin/gcc",
                 "CMAKE_INSTALL_PREFIX":"$env{HOME}/OsterLib-install",
                 "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
             },
             "vendor": {}
         },
         {
-            "name":"default-Debug",
+            "name":"Ninja",
             "inherits":"default",
-            "displayName": "Configuration-Debug",
+            "displayName": "Ninja Configuration-Debug",
+            "$comment": "Configuration for basic building and intalling by Ninja in Unix systems",
+            "generator": "Ninja",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE":"",
+                "CMAKE_INSTALL_PREFIX":"$env{HOME}/OsterLib-install"
+            }
+        },
+        {
+            "name":"Makefiles",
+            "inherits":"default",
+            "displayName": "Makefiles Configuration-Debug",
             "$comment": "Configuration for basic building and intalling by Unix Makefiles in Unix systems",
             "generator": "Unix Makefiles",
             "cacheVariables": {
@@ -42,8 +52,8 @@
             "$comment": "Configuration for basic building and intalling by Unix Makefiles in Unix systems",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE":"Release",
-                "CMAKE_CXX_COMPILER":"$env{HOME}/gcc/gcc-install/bin/g++",
-                "CMAKE_C_COMPILER":"$env{HOME}/gcc/gcc-install/bin/gcc",
+                "CMAKE_CXX_COMPILER":"$env{HOME}/gcc-install/bin/g++",
+                "CMAKE_C_COMPILER":"$env{HOME}/gcc-install/bin/gcc",
                 "CMAKE_INSTALL_PREFIX":"$env{HOME}/OsterLib-install",
                 "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
             }
@@ -71,7 +81,7 @@
         {
         "name": "default",
         "configurePreset": "default",
-        "jobs": 12
+        "jobs": 16
         }
     ],
     "testPresets": [

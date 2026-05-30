@@ -44,8 +44,6 @@ class AbstractWorker{
             run(st,err); });
 		stop_ = thread().get_stop_source().get_token();
     }
-    
-
 	void push_command(std::shared_ptr<BaseCommand> cmd) noexcept;
 	void push_commands(std::vector<std::shared_ptr<BaseCommand>>&& cmds) noexcept;
 	bool enable_writing(
@@ -124,6 +122,7 @@ class AbstractWorker{
 		}
 		wake_event();
 	}
+	Connection::Properties connection_properties(ConnectionHandle hconn) const noexcept;
 protected:
 	void stop(bool wait_for_end_connections,
             uint16_t timeout_sec){
@@ -175,6 +174,8 @@ protected:
 	void wake_event() noexcept;
 	std::span<network::EventHandle> wait(std::error_code& err,
         	int32_t timeout) noexcept;
+	const std::shared_ptr<Socket> socket_by_id(ConnectionId id) const noexcept;
+	const ConnectionState* connection_state_by_id(ConnectionId id) const noexcept;
 	std::shared_ptr<Socket> socket_by_id(ConnectionId id) noexcept;
 	ConnectionState* connection_state_by_id(ConnectionId id) noexcept;
 	const std::unordered_map<ConnectionId,

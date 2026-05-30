@@ -10,6 +10,7 @@
 #include "commonsocket.h"
 #include <expected>
 #include "command_types.h"
+#include "clientsettings.h"
 
 namespace network
 {	class Connection;
@@ -77,6 +78,7 @@ namespace network
 	struct Command<CommandType::AddConnection> :public BaseCommand
 	{
 		ConnectionHandle hconn_;
+		client::Settings settings_;
 		std::string host_;
 		Port port_;
 		Socket::Type type_;
@@ -85,7 +87,8 @@ namespace network
 				std::string host,
 				Port port,
 				Socket::Type type,
-				Protocol proto);
+				Protocol proto,
+				const client::Settings& settings);
 		virtual void execute_internal(
 				AbstractWorker* w) noexcept override;
 	};

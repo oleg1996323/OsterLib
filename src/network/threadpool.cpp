@@ -63,6 +63,7 @@ namespace network{
                     set_connection_state(conn_stat.conn_.get(),
                         Connection::State::Active);
                     std::cout<<"Connection add success (connected): \n";
+                    after_connection(&conn_stat,err);
                 }
                 else if (errno == EINPROGRESS){
                     auto inserted = connections().insert(std::make_pair(hconn.id(),
@@ -74,11 +75,13 @@ namespace network{
                     set_connection_state(conn_stat.conn_.get(),
                         Connection::State::Connecting);
                     std::cout<<"Connection add success (connecting): \n";
+                    after_connection(&conn_stat,err);
                 }
                 else{
                     std::cout<<"Connection add failed: \n";
                     auto err = std::make_error_code(
                         static_cast<std::errc>(errno));
+                    after_connection(&conn_stat,err);
                     return false;
                 }
             }
@@ -125,6 +128,7 @@ namespace network{
                 std::cout<<"Connection attach failed: \n";
                 print_ip_port(std::cout,inserted.first->second.conn_->address());
                 err = std::make_error_code(std::errc::already_connected);
+                after_attach_connection(&inserted.first->second,err);
                 return false;
             }
             else{
@@ -140,6 +144,7 @@ namespace network{
                             Connection::State::Active);
                 assert(inserted.first->second.socket_->is_non_block(err));
                 print_ip_port(std::cout,inserted.first->second.conn_->address());
+                after_attach_connection(&inserted.first->second,err);
                 err.clear();
                 return true;
             }
@@ -148,6 +153,7 @@ namespace network{
             std::cout<<"Connection attach failed: \n";
             print_ip_port(std::cout,conn->address());
             err = std::make_error_code(std::errc::already_connected);
+            after_attach_connection(&found->second,err);
             return false;
         }
     }
@@ -164,6 +170,7 @@ namespace network{
             if(err!=std::error_code()){
                 std::cout<<"("<<name_<<")"<<"Erasing id="<<found->first<<std::endl;
                 connections().erase(found);
+                after_remove_connection(&found->second,err);
                 return false;
             }
             else{
@@ -171,6 +178,7 @@ namespace network{
                     found->second.socket_->native(),err);
                 found->second.socket_->close();
                 std::cout<<"("<<name_<<")"<<"Erasing id="<<found->first<<std::endl;
+                after_remove_connection(&found->second,err);
                 connections().erase(found);
                 return res;
             }
@@ -186,14 +194,15 @@ namespace network{
             std::span<std::shared_ptr<Socket::BaseOption>> options,
             std::error_code& err) noexcept
     {
-        std::shared_ptr<Socket> socket;
-        socket = socket_by_id(hconn.id());
-        if(socket==nullptr){
+        auto connstat = connection_state_by_id(hconn.id());
+        if(connstat==nullptr){
             err = std::make_error_code(std::errc::no_such_device);
+            after_modify_connection(connstat,err);
             return false;
         }
         else{
-            socket->set_options(err,std::span(options));
+            connstat->socket_->set_options(err,std::span(options));
+            after_modify_connection(connstat,err);
             return true;
         }
         return true;
@@ -209,6 +218,7 @@ namespace network{
                 if(conn_stat==nullptr){
                     err = std::make_error_code(std::errc::not_connected);
                     std::cout<<name_<<": (Attach process) "<<err.message()<<std::endl;
+                    after_add_connection_process(conn_stat,err);
                     return false;
                 }
                 else{
@@ -226,12 +236,14 @@ namespace network{
                         modify_tracking_event(conn_stat->socket_->native(),
                             ev,
                             err);
+                        after_add_connection_process(conn_stat,err);
                         return true;
                     }
                     else{
                         err =std::make_error_code(
                         std::errc::not_connected);
                         std::cout<<name_<<": (Attach process) "<<err.message()<<std::endl;
+                        after_add_connection_process(conn_stat,err);
                         return false;
                     }
                 }
@@ -250,6 +262,7 @@ namespace network{
         if(conn_stat==nullptr){
             err =std::make_error_code(
                 std::errc::not_connected);
+                after_remove_connection_process(conn_stat,err);
                 return false;
         }
         else{
@@ -259,12 +272,13 @@ namespace network{
             if(err!=std::error_code()){
                 std::cout<<"(Remove process) modify_tracking_event error: "
                 <<err.message()<<std::endl;
+                after_remove_connection_process(conn_stat,err);
                 return false;
             }
             conn_stat->events_handled_=Event::In|Event::EdgeTrigger;
+            after_remove_connection_process(conn_stat,err);
             return true;
         }
-        return true;
     }
     void Worker::run(std::stop_token st,std::error_code& err){
         while (!stop_requested()) {
@@ -403,7 +417,7 @@ namespace network{
     }
 
     bool ThreadPool::modifyConnection(
-                const ConnectionHandle& hconn,
+                ConnectionHandle hconn,
                 std::vector<std::shared_ptr<Socket::BaseOption>>&& options,
                 std::error_code& err) noexcept
     {

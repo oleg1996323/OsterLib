@@ -64,10 +64,10 @@ std::expected<T,std::exception> from_json(const boost::json::value& val){
     if(val.is_null())
         return std::unexpected(std::exception());
     else{
-        if(auto opt_res = from_json<T>(val);!opt_res.has_value())
+        if(auto opt_res = from_json<typename T::value_type>(val);!opt_res.has_value())
             return std::unexpected(std::exception());
         else{
-            std::optional<T> result = std::move(opt_res.value());
+            T result = std::move(opt_res.value());
             return result;
         }
     }
@@ -204,3 +204,17 @@ boost::json::value to_json(const RANGE& range){
         return result;
     }
 }
+
+#include "sys/socket.h"
+
+template<>
+boost::json::value to_json(const linger& val);
+
+template<>
+std::expected<linger,std::exception> from_json(const boost::json::value& val);
+
+template<>
+boost::json::value to_json(const timeval& val);
+
+template<>
+std::expected<timeval,std::exception> from_json(const boost::json::value& val);

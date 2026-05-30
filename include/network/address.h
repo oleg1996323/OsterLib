@@ -8,6 +8,7 @@
 #include <utility>
 #include <array>
 #include <string>
+#include "boost_functional/json.h"
 
 namespace network{
     using Port = uint16_t;
@@ -99,4 +100,19 @@ namespace network{
         const std::string& host,
         Port port,
         std::error_code& err) noexcept;
+
+    std::ostream& print_ip_port(std::ostream& stream,const Address& addr) noexcept;
+    std::string ip_to_text(const Address& addr) noexcept;
+    std::string port_to_text(const Address& addr) noexcept;
+    std::string protocol_to_text(const Address& addr) noexcept;
+    bool is_correct_address(const std::string& text) noexcept;
+    bool is_correct_address(std::string_view text) noexcept;
+    socklen_t address_struct_size(const sockaddr_storage& storage) noexcept;
 }
+
+template<>
+boost::json::value to_json(const network::Address& val);
+
+template<>
+std::expected<network::Address,std::exception> 
+    from_json(const boost::json::value& val);

@@ -22,10 +22,13 @@ class ConnectionHandle{
     friend class ConnectionIO;
     ConnectionHandle(AbstractWorker* owner,ConnectionId conn_id):
     conn_id_(conn_id),owner_(owner){}
-    AbstractWorker* owner() const noexcept{
+    AbstractWorker* owner() noexcept{
         return owner_;
     }
     public:
+    const AbstractWorker* owner() const noexcept{
+        return owner_;
+    }
     ConnectionHandle(AbstractWorker* owner):
     conn_id_(id_counter.fetch_add(1, std::memory_order_relaxed)),
         owner_(owner)
@@ -54,9 +57,9 @@ class ConnectionHandle{
     ConnectionId id() const noexcept{
         return conn_id_;
     }
-    bool execute_command(std::shared_ptr<BaseCommand> cmd, std::error_code& err) const noexcept;
+    bool execute_command(std::shared_ptr<BaseCommand> cmd, std::error_code& err) noexcept;
 	bool execute_commands(std::vector<std::shared_ptr<BaseCommand>>&& cmds,
-                std::error_code& err) const noexcept;
+                std::error_code& err) noexcept;
     bool is_valid_handler() const noexcept{
         return owner_ != nullptr && conn_id_ != 0;
     }

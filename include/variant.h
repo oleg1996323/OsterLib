@@ -28,15 +28,18 @@ private:
             bool err = false;
             auto try_emplace = [&]<size_t ID>()
             {
-                  static_assert(((sizeof...(ARGS)>0?std::is_constructible_v<std::variant_alternative_t<ID, VariantType>,ARGS...>:false) || 
-                              (sizeof...(ARGS)==0?std::is_default_constructible_v<std::variant_alternative_t<ID, VariantType>>:false)));
-                  using Type = typename std::variant_alternative<ID, VariantType>::type;
-                  if(index!=ID)
-                        return false;
-                  if constexpr (sizeof...(ARGS)>0)
-                        result.template emplace<typename std::variant_alternative<ID,VariantType>::type>(std::forward<ARGS>(args)...);
-                  else result.template emplace<typename std::variant_alternative<ID,VariantType>::type>();
-                  return true;
+                using Type = typename std::variant_alternative<ID, VariantType>::type;
+                if(index!=ID)
+                    return false;
+                if constexpr (sizeof...(ARGS)>0 && std::is_constructible_v<std::variant_alternative_t<ID, VariantType>,ARGS...>){
+                    result.template emplace<typename std::variant_alternative<ID,VariantType>::type>(std::forward<ARGS>(args)...);
+                    return true;
+                }
+                else if constexpr (sizeof...(ARGS)==0 && std::is_default_constructible_v<std::variant_alternative_t<ID, VariantType>>){
+                    result.template emplace<typename std::variant_alternative<ID,VariantType>::type>();
+                    return true;
+                }
+                else return false;
             };
             ((err!=true?(err = try_emplace.template operator()<Is>()):(err=err)),...);
             return err;

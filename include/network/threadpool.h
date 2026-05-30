@@ -13,6 +13,7 @@ public:
             uint32_t order_length,
             std::error_code& err);
     virtual ~Worker();
+protected:
     virtual bool connectInternal(
             const ConnectionHandle& hconn,
             std::unique_ptr<Connection> conn,
@@ -42,6 +43,24 @@ public:
             uint16_t timeout_sec,
             std::error_code& err) noexcept override;
     virtual void run(std::stop_token st,std::error_code& err) override;
+    virtual void after_connection(
+            ConnectionState* connstat,
+            std::error_code& err) noexcept{}
+    virtual void after_attach_connection(
+            ConnectionState* connstat,
+            std::error_code& err) noexcept{}
+    virtual void after_remove_connection(
+            ConnectionState* connstat,
+            std::error_code& err) noexcept{}
+    virtual void after_modify_connection(
+            ConnectionState* connstat,
+            std::error_code& err) noexcept{}
+    virtual void after_add_connection_process(
+            ConnectionState* connstat,
+            std::error_code& err) noexcept{}
+    virtual void after_remove_connection_process(
+            ConnectionState* connstat,
+            std::error_code& err) noexcept{}
 private:
     virtual void handle_pending(std::error_code& err) noexcept override;
 };
@@ -84,7 +103,7 @@ public:
         std::error_code& err) noexcept;
 
     bool modifyConnection(
-                const ConnectionHandle& hconn,
+                ConnectionHandle hconn,
                 std::vector<std::shared_ptr<Socket::BaseOption>>&& options,
                 std::error_code& err) noexcept;
 
@@ -103,7 +122,7 @@ public:
     }
 
     bool removeProcess(
-            const ConnectionHandle& hconn,
+            ConnectionHandle hconn,
             bool wait,
             uint16_t timeout_sec,
             std::error_code& err) noexcept;

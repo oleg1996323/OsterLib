@@ -31,11 +31,11 @@ class Connection{
     public:
     enum class State: uint8_t
     {
+        Closed,
         Connecting,
         Active,
         Shutdowned,
         Closing,
-        Closed
     };
     private:
     friend class AbstractWorker;
@@ -45,6 +45,10 @@ class Connection{
     Address storage_;
     std::atomic<State> state_;
     public:
+    struct Properties{
+        Address address;
+        State state;
+    };
     Connection(Address addr) noexcept:
         storage_(std::move(addr)){}
     Connection(Connection&& other) = delete;

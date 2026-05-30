@@ -7,8 +7,10 @@ namespace network{
 				std::string host,
 				Port port,
 				Socket::Type type,
-				Protocol proto):
+				Protocol proto,
+				const client::Settings& settings):
 				hconn_(hconn),
+				settings_(settings),
 				host_(host),
 				port_(port),
 				type_(type),

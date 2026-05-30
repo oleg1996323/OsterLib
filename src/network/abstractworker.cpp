@@ -155,14 +155,20 @@ namespace network{
 		return multiplexor_.wait(err,timeout);
 	}
 	std::shared_ptr<Socket> AbstractWorker::socket_by_id(ConnectionId id) noexcept{
+		return const_cast<AbstractWorker*>(this)->socket_by_id(id);
+	}
+	const std::shared_ptr<Socket> AbstractWorker::socket_by_id(ConnectionId id) const noexcept{
 		if(auto found = connections().find(id);found!=connections().end())
 			return found->second.socket_;
 		else return nullptr;
 	}
-	AbstractWorker::ConnectionState* AbstractWorker::connection_state_by_id(ConnectionId id) noexcept{
+	const AbstractWorker::ConnectionState* AbstractWorker::connection_state_by_id(ConnectionId id) const noexcept{
 		if(auto found = connections().find(id);found!=connections().end())
 			return &found->second;
 		else return nullptr;
+	}
+	AbstractWorker::ConnectionState* AbstractWorker::connection_state_by_id(ConnectionId id) noexcept{
+		return const_cast<AbstractWorker*>(this)->connection_state_by_id(id);
 	}
 	const std::unordered_map<ConnectionId,
         AbstractWorker::ConnectionState>& AbstractWorker::connections() const noexcept{
@@ -171,6 +177,16 @@ namespace network{
 	std::unordered_map<ConnectionId,
         AbstractWorker::ConnectionState>& AbstractWorker::connections() noexcept{
 		return this->connections_;
+	}
+	Connection::Properties AbstractWorker::connection_properties(ConnectionHandle hconn) const noexcept{
+		std::lock_guard lock(mutex());
+		auto connstat = connection_state_by_id(hconn.id());
+		if(connstat && connstat->conn_){
+			return Connection::Properties{
+					.address = connstat->conn_->address(),
+					.state = connstat->conn_->state()};
+		}
+		else return Connection::Properties{};
 	}
 	void AbstractWorker::set_connection_state(Connection* conn,Connection::State state) noexcept{
 		if(conn)

@@ -4,6 +4,7 @@
 #include <thread>
 #include "definitions/protocol.h"
 #include "commonsocket.h"
+#include "connection_options.h"
         /* AcceptConnections = SO_ACCEPTCONN,  //Socket is accepting connections.
         BroadCast = SO_BROADCAST,           //Transmission of broadcast messages is supported.
         Debug = SO_DEBUG,                   //Debugging information is being recorded.
@@ -22,38 +23,16 @@
         SocketType = SO_TYPE                //Socket type. */
 namespace network::server{
 struct Settings{
-    template<network::Socket::Options OPT>
-    struct OptionType{};
-
-    struct OptionsStruct{
-        std::pair<int,
-            OptionType<Socket::ReuseAddress>> reuse_address_ = {false,{}};
-        std::pair<int,
-            OptionType<Socket::ReusePort>> reuse_port_ = {false,{}};
-        std::pair<int,OptionType<Socket::AcceptConnections>> socket_accept_conn_ = {false,{}};
-        std::pair<int,OptionType<Socket::BroadCast>> broadcast_socket_ = {false,{}};
-        std::pair<int,OptionType<Socket::DontRoute>> dont_route_ = {false,{}};
-        std::pair<int,OptionType<Socket::KeepAlive>> keep_alive_ = {false,{}};
-        std::pair<linger,OptionType<Socket::Lingers>> linger_ = {linger{.l_onoff=false,
-                            .l_linger=-1},{}};
-        std::pair<timeval,OptionType<Socket::TimeOutOut>> timeout_send_{};
-        std::pair<timeval,OptionType<Socket::TimeOutIn>> timeout_input_{};
-        std::pair<int,OptionType<Socket::LowWaterMarkIn>> expect_min_bytes_available_={1,{}};
-        std::pair<int,OptionType<Socket::BufferSizeIn>> buffer_size_in_{1024,{}};
-        std::pair<int,OptionType<Socket::BufferSizeOut>> buffer_size_out_{1024,{}};
-        std::pair<int,OptionType<Socket::BroadCast>> debug_mode = {false,{}};
-    };
 
     std::string host_;
     std::string service_;
     Protocol protocol_ = Protocol::TCP;
-    int timeout_seconds_processes_=20;
+    int timeout_seconds_processes_=-1;
     int32_t port_{-1};
     uint32_t num_threads_pool_=std::thread::hardware_concurrency();
     uint32_t number_events_{10};
-    OptionsStruct options_ = {};
+    ConnectionOptions options_ = {};
     
-
     Settings() = default;
     Settings(
         std::string host,
@@ -61,7 +40,7 @@ struct Settings{
         Protocol proto,
         int timeout,
         int32_t port,
-        OptionsStruct options,
+        ConnectionOptions options,
         uint32_t num_threads_pool=std::thread::hardware_concurrency()):
             host_(host),
             service_(service),
@@ -120,3 +99,11 @@ struct Settings{
     }  
 };
 }
+
+#include "boost_functional/json.h"
+
+template<>
+boost::json::value to_json(const network::server::Settings& val);
+
+template<>
+std::expected<network::server::Settings,std::exception> from_json(const boost::json::value& val);

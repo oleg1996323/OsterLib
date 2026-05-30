@@ -62,10 +62,10 @@ target_include_directories(boost_functional PUBLIC
                 "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/boost_functional>"
                 "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>")
 
-file(GLOB_RECURSE Network_lib_SOURCES ${CMAKE_SOURCE_DIR}/src/network/**.cpp)
+file(GLOB_RECURSE Network_lib_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/network/**.cpp)
 
-add_library(network SHARED ${Network_lib_SOURCES})
-target_link_libraries(network PUBLIC serial bytes)
+add_library(network STATIC ${Network_lib_SOURCES})
+target_link_libraries(network PUBLIC serial bytes boost_functional)
 target_include_directories(network PUBLIC 
 		"$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/network>"
                 "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/>"
@@ -79,7 +79,7 @@ add_library(types STATIC src/types/coord.cpp
                 src/types/time_period.cpp)
 target_include_directories(types PUBLIC 
                                 "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/types>"
-                                "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/>"
+                                "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
                                 "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>")
 target_link_libraries(types PUBLIC boost_functional)
 add_library(utilities STATIC    src/directories.cpp

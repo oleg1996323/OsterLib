@@ -204,7 +204,9 @@ TEST(Client_server,ping){
                 settings.host_,
                 settings.port_,
                 Socket::Type::Stream,
-                Protocol::TCP,err);
+                Protocol::TCP,
+                client::Settings(),
+                err);
         ASSERT_EQ(err,std::error_code());
         {
             std::unique_ptr<ClientPingProcess> proc = std::make_unique<ClientPingProcess>(hconn,err);

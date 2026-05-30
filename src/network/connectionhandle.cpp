@@ -24,7 +24,7 @@ bool ConnectionHandle::close(std::error_code& err) noexcept{
 }
 bool ConnectionHandle::execute_command(
             std::shared_ptr<BaseCommand> cmd,
-            std::error_code& err) const noexcept
+            std::error_code& err) noexcept
 {
     if(is_valid_handler()){
         owner()->push_command(std::move(cmd));
@@ -36,7 +36,7 @@ bool ConnectionHandle::execute_command(
     }
 }
 bool ConnectionHandle::execute_commands(std::vector<std::shared_ptr<BaseCommand>>&& cmds,
-            std::error_code& err) const noexcept{
+            std::error_code& err) noexcept{
     if(is_valid_handler()){
         owner()->push_commands(std::move(cmds));
         return true;

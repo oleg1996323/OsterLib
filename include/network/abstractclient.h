@@ -7,6 +7,7 @@
 #include "commonsocket.h"
 #include "abstractprocess.h"
 #include "threadpool.h"
+#include "clientsettings.h"
 
 namespace network{
     class ClientsHandler;
@@ -65,6 +66,7 @@ namespace network{
                 uint16_t port,
                 Socket::Type type,
                 Protocol proto,
+                const client::Settings& settings,
                 std::error_code& err)
         {
             if(!connections_){
@@ -76,7 +78,8 @@ namespace network{
                     host,
                     port,
                     type,
-                    proto);
+                    proto,
+                    settings);
             connections_->push_command(cmd);
             cmd->wait_ready();
             if(cmd->successed()){

@@ -88,8 +88,7 @@ namespace serialization{
         void set_container_size(size_t sz) noexcept{
             cont_sizes_[cont_sz_iter_]=sz;
         }
-        template<std::ranges::common_range T>
-        size_t remained_container_elements(const T& range) const noexcept{
+        size_t remained_container_elements() const noexcept{
             return cont_sizes_.at(cont_sz_iter_);
         }
         void reset_all() noexcept{
@@ -424,10 +423,12 @@ namespace serialization{
     }
 
     template<typename... ARGS>
+    requires (sizeof...(ARGS)>0)
     size_t min_serial_size(const ARGS&... val) noexcept{
         return min_serial_size<ARGS...>();
     }
     template<typename... ARGS>
+    requires (sizeof...(ARGS)>0)
     size_t max_serial_size(const ARGS&...val) noexcept{
         return max_serial_size<ARGS...>();
     }
@@ -525,9 +526,10 @@ namespace serialization{
             size_t range_sz = 0;
             SerializationEC code;
             if(buf.advance_if_deserialized(range_sz)){
-                range_sz = buf.remained_container_elements(to_deserialize);
+                range_sz = buf.remained_container_elements();
             }
             else{
+                to_deserialize.clear();
                 code = buf.deserialize<NETWORK_ORDER>(range_sz);
                 if(code!=SerializationEC::NONE)
                     return code;
@@ -759,24 +761,28 @@ template<bool NETWORK_ORDER,typename T>
     }
 
     template<typename T,typename... ARGS>
+    requires (sizeof...(ARGS)>0)
     SerializationEC serialize_native(const T& val,std::vector<char>& buf,const ARGS&... args) noexcept{
         if constexpr (sizeof...(ARGS)>1)
             return serialize<false,std::decay_t<T>>(val,buf,args...);
         else return Serialize<false,std::decay_t<T>>{}(val,buf);
     }
     template<typename T,typename... ARGS>
+    requires (sizeof...(ARGS)>0)
     SerializationEC serialize_network(const T& val,std::vector<char>& buf,const ARGS&... args) noexcept{
         if constexpr (sizeof...(ARGS)>1)
             return serialize<true,std::decay_t<T>>(val,buf,args...);
         else return Serialize<true,std::decay_t<T>>{}(val,buf);
     }
     template<typename T,typename... ARGS>
+    requires (sizeof...(ARGS)>0)
     SerializationEC deserialize_native(const T& to_deserialize,StreamSerializer& buf,ARGS&... args) noexcept{
         if constexpr (sizeof...(ARGS)>1)
             return deserialize<false,std::decay_t<T>>(to_deserialize,buf,args...);
         else return deserialize<false>(to_deserialize,buf);
     }
     template<typename T,typename... ARGS>
+    requires (sizeof...(ARGS)>0)
     SerializationEC deserialize_network(const T& to_deserialize,StreamSerializer& buf,ARGS&... args) noexcept{
         if constexpr (sizeof...(ARGS)>1)
             return deserialize<true,std::decay_t<T>>(to_deserialize,buf,args...);
