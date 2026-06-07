@@ -42,66 +42,78 @@ std::expected<DateTimeDiff,std::exception> from_json<DateTimeDiff>(const boost::
 
 #include "parsing.h"
 
+int32_t find_char(std::string_view input){
+    int32_t i=0;
+    for(i;i<input.size();++i){
+        if(input[i]>47 && input[i]<58)
+            continue;
+        else break;
+    }
+    return i-1;
+}
+
 template<>
 DateTimeDiff boost::lexical_cast(const std::string& input){
     using namespace std::string_literals;
     DateTimeDiff result;
-    std::vector<std::string_view> tokens = split<std::string_view>(std::string_view(input),":");
-    if(!tokens.empty()){
-        for(std::string_view token:tokens){
-            auto tmp(from_chars<int>(token.substr(1)));
-            if(!tmp.has_value())
-                throw std::invalid_argument(input);
-            else{
-                if(tmp.value()<0){
-                    throw std::invalid_argument("Invalid time offset token input "s+std::string(token));
-                }
-                else if(tmp.value()==0){
-                    std::cout<<"Ignored value: "s<<token<<std::endl;
-                    continue;
-                }
-            }
-            if(token.size()>0){
-                if(iend_with(token,std::string_view("h")) &&
-                (tmp.value()<=std::numeric_limits<decltype(DateTimeDiff::hours_)>::max() &&
-                tmp.value()>=std::numeric_limits<decltype(DateTimeDiff::hours_)>::min()))
-                    result.hours_ = tmp.value();
-                else if(iend_with(token,std::string_view("y")) &&
-                (tmp.value()<=std::numeric_limits<decltype(DateTimeDiff::years_)>::max() &&
-                tmp.value()>=std::numeric_limits<decltype(DateTimeDiff::years_)>::min()))
-                    result.years_ = tmp.value();
-                else if(iend_with(token,std::string_view("m")) &&
-                (tmp.value()<=std::numeric_limits<decltype(DateTimeDiff::months_)>::max() &&
-                tmp.value()>=std::numeric_limits<decltype(DateTimeDiff::months_)>::min()))
-                    result.months_ = tmp.value();
-                else if(iend_with(token,std::string_view("d")) &&
-                (tmp.value()<=std::numeric_limits<decltype(DateTimeDiff::days_)>::max() &&
-                tmp.value()>=std::numeric_limits<decltype(DateTimeDiff::days_)>::min()))
-                    result.days_ = tmp.value();
-                else if(iend_with(token,std::string_view("min")) &&
-                (tmp.value()<=std::numeric_limits<decltype(DateTimeDiff::minutes_)>::max() &&
-                tmp.value()>=std::numeric_limits<decltype(DateTimeDiff::minutes_)>::min()))
-                    result.days_ = tmp.value();
-                else if(iend_with(token,std::string_view("s")) &&
-                (tmp.value()<=std::numeric_limits<decltype(DateTimeDiff::seconds_)>::max() &&
-                tmp.value()>=std::numeric_limits<decltype(DateTimeDiff::seconds_)>::min()))
-                    result.days_ = tmp.value();
-                else{
-                    std::cout<<"Unknown time offset token"<<std::endl;
-                    throw std::invalid_argument(input);
-                }
-            }
-            else{
-                std::cout<<"Missed time offset token"<<std::endl;
-                throw std::invalid_argument(input);
-            }
+    std::string_view current(input);
+    for(;;)
+    {
+        int32_t pos=find_char(current);
+        if(pos==-1 || current.size()<=pos+1)
+            std::runtime_error("invalid DateTimeDiff input");
+        uint32_t tmp;
+        auto fcerr = std::from_chars(
+            current.data(),
+            current.data()+pos,
+            tmp);
+        if(fcerr.ec!=std::errc())
+            std::runtime_error("invalid DateTimeDiff input");
+        if(iend_with(current.substr(0,pos+1),std::string_view("h")) &&
+        (tmp<=std::numeric_limits<decltype(DateTimeDiff::hours_)>::max() &&
+        tmp>=std::numeric_limits<decltype(DateTimeDiff::hours_)>::min())){
+            result.hours_ = tmp;
+            current = current.substr(pos+2);
         }
-        return result;
+        else if(iend_with(current.substr(0,pos+1),std::string_view("y")) &&
+        (tmp<=std::numeric_limits<decltype(DateTimeDiff::years_)>::max() &&
+        tmp>=std::numeric_limits<decltype(DateTimeDiff::years_)>::min())){
+            result.years_ = tmp;
+            current = current.substr(pos+2);
+        }
+        else if(iend_with(current.substr(0,pos+1),std::string_view("m")) &&
+        (tmp<=std::numeric_limits<decltype(DateTimeDiff::months_)>::max() &&
+        tmp>=std::numeric_limits<decltype(DateTimeDiff::months_)>::min())){
+            result.months_ = tmp;
+            current = current.substr(pos+2);
+        }
+        else if(iend_with(current.substr(0,pos+1),std::string_view("d")) &&
+        (tmp<=std::numeric_limits<decltype(DateTimeDiff::days_)>::max() &&
+        tmp>=std::numeric_limits<decltype(DateTimeDiff::days_)>::min())){
+            result.days_ = tmp;
+            current = current.substr(pos+2);
+        }
+        else if(iend_with(current.substr(0,pos+3),std::string_view("min")) &&
+        (tmp<=std::numeric_limits<decltype(DateTimeDiff::minutes_)>::max() &&
+        tmp>=std::numeric_limits<decltype(DateTimeDiff::minutes_)>::min())){
+            result.days_ = tmp;
+            current = current.substr(pos+4);
+        }
+        else if(iend_with(current.substr(0,pos+1),std::string_view("s")) &&
+        (tmp<=std::numeric_limits<decltype(DateTimeDiff::seconds_)>::max() &&
+        tmp>=std::numeric_limits<decltype(DateTimeDiff::seconds_)>::min())){
+            result.days_ = tmp;
+            current = current.substr(pos+2);
+        }
+        else{
+            using namespace std::string_literals;
+            throw std::runtime_error("invalid DateTimeDiff input: "s+input);
+        }
+        if(current.empty())
+            return result;
     }
-    else{
-        std::cout<<"Empty string at time offset definition"<<std::endl;
-        throw std::invalid_argument(input);
-    }
+    using namespace std::string_literals;
+    throw std::runtime_error("invalid DateTimeDiff input: "s+input+". Empty string");
 }
 template<>
 std::string boost::lexical_cast(const DateTimeDiff& input){
@@ -121,4 +133,23 @@ std::string boost::lexical_cast(const DateTimeDiff& input){
     if(result.empty())
         result+="0s";
     return result;
+}
+
+namespace CLI {
+    namespace detail {
+        template <>
+        bool lexical_cast<DateTimeDiff>(const std::string& input, DateTimeDiff& output) {
+            try{
+                output = boost::lexical_cast<DateTimeDiff>(input);
+                return true;
+            }
+            catch(...){
+                return false;
+            }
+        }
+        template<>
+        std::string to_string(const DateTimeDiff& val){
+            return boost::lexical_cast<std::string>(val);
+        }
+    }
 }
