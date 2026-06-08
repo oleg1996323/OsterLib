@@ -168,7 +168,9 @@ namespace network{
 		else return nullptr;
 	}
 	AbstractWorker::ConnectionState* AbstractWorker::connection_state_by_id(ConnectionId id) noexcept{
-		return const_cast<AbstractWorker*>(this)->connection_state_by_id(id);
+		if(auto found = connections().find(id);found!=connections().end())
+			return &found->second;
+		else return nullptr;
 	}
 	const std::unordered_map<ConnectionId,
         AbstractWorker::ConnectionState>& AbstractWorker::connections() const noexcept{
@@ -189,9 +191,12 @@ namespace network{
 		else return Connection::Properties{};
 	}
 	void AbstractWorker::set_connection_state(Connection* conn,Connection::State state) noexcept{
-		if(conn)
+		if(conn){
 			conn->state_.store(
 				state,std::memory_order::release);
+			return;
+		}
+		assert(false);
 	}
 	ConnectionHandle AbstractWorker::connection_handle(ConnectionId id) noexcept{
 		return ConnectionHandle(this,id);

@@ -25,6 +25,7 @@ class ClientPingProcess:public AbstractRequestableConnectionProcess{
                         return;
                     default:
                         complete_current_request(err);
+                        err.clear();
                         if(make_active_request())
                             on_write(err);
                         else return;

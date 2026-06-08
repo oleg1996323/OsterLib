@@ -18,7 +18,6 @@ namespace network{
             active_request_->set_ready();
         }
         active_request_.reset();
-        make_active_request();
     }
     void AbstractRequestableConnectionProcess::try_receive(
             std::error_code& err) noexcept
@@ -88,6 +87,7 @@ namespace network{
         err=std::make_error_code(std::errc::bad_message);
         std::cout<<"serialization error: "<<err.message()<<std::endl;
         complete_current_request(std::make_error_code(std::errc::bad_message));
+        err.clear();
         if(make_active_request())
             try_send(err);
     }
@@ -98,6 +98,7 @@ namespace network{
         if(ser_c == serialization::SerializationEC::UNMATCHED_TYPE){
             io_context().clear_recv_buffer();
             complete_current_request(std::make_error_code(std::errc::bad_message));
+            err.clear();
             if(make_active_request())
                 try_send(err);
         }
@@ -107,12 +108,14 @@ namespace network{
     void AbstractRequestableConnectionProcess::on_bad_send(std::error_code& err) noexcept{
         std::cout<<"trying sending error: "<<err.message()<<std::endl;
         complete_current_request(err);
+        err.clear();
         if(make_active_request())
             try_send(err);
     }
     void AbstractRequestableConnectionProcess::on_bad_receive(std::error_code& err) noexcept{
         std::cout<<"receiving error: "<<err.message()<<std::endl;
         complete_current_request(std::make_error_code(std::errc::bad_message));
+        err.clear();
         if(make_active_request())
             try_send(err);
         return;
@@ -124,6 +127,7 @@ namespace network{
         while(!requests_.empty())
             requests_.pop();
         complete_current_request(std::make_error_code(std::errc::interrupted));
+        err.clear();
         active_request_.reset();
     }
     bool AbstractRequestableConnectionProcess::make_active_request() noexcept

@@ -55,6 +55,15 @@ namespace network{
                 frame_val_.end_ = std::forward<END>(end);
             
         }
+        START& start_frame(){
+            return frame_val_.start_;
+        }
+        DATA& data_frame(){
+            return frame_val_.data_;
+        }
+        END& end_frame(){
+            return frame_val_.end_;
+        }
         private:
         virtual serialization::SerializationEC serialize(
                 std::vector<char>& buffer) const noexcept override;
@@ -79,6 +88,15 @@ namespace network{
         DataFrame<START,DATA,END> frame_val_;
         public:
         ReceiverFrame(){}
+        START& start_frame(){
+            return frame_val_.start_;
+        }
+        DATA& data_frame(){
+            return frame_val_.data_;
+        }
+        END& end_frame(){
+            return frame_val_.end_;
+        }
         private:
         virtual serialization::SerializationEC serialize(
                 std::vector<char>& buffer) const noexcept override;
