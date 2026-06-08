@@ -48,6 +48,20 @@ namespace network{
                 return ser_res;
             }   
         }
+        template<typename... ARGS>
+        requires (sizeof...(ARGS)>1)
+        serialization::SerializationEC serialize(ARGS&&... values) noexcept{
+            std::vector<char> buffer;
+            serialization::SerializationEC err = serialization::SerializationEC::NONE;
+            (((err=serialization::serialize_network(std::forward<ARGS>(values), buffer))==
+                serialization::SerializationEC::NONE) && ...);
+            if(err!=serialization::SerializationEC::NONE)
+                return err;
+            else{
+                push_buffer(std::move(buffer));
+                return err;
+            }   
+        }
         void clear_buffer() noexcept;
         std::pair<iovec*, size_t> remaining() noexcept;
         void consume(size_t bytes_sent) noexcept;

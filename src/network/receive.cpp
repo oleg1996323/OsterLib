@@ -7,6 +7,7 @@ namespace network{
           const Socket& socket,
           RingBuffer<char>& buffer) noexcept
     {
+        err.clear();
         auto to_read = buffer.write_vectored();
         if(to_read.first.iov_len==0 && to_read.second.iov_len==0){
             err = std::make_error_code(std::errc::no_buffer_space);

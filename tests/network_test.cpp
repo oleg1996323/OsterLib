@@ -39,7 +39,7 @@ class ClientPingProcess:public AbstractRequestableConnectionProcess{
             }
     }
     virtual void on_write(std::error_code& err) noexcept override{
-        if(count_sent<5){
+        if(count_sent<6){
             std::cout<<"Client: send ping"<<std::endl;
             bool all_sent = try_send(err);
             if(err!=std::error_code())
@@ -86,59 +86,47 @@ class ServerPingProcess:public AbstractConnectionProcess{
         SizeFramedData<size_t> ping;
         if(io_context().receive_buffer_size()==0)
             io_context().resize_receive_buffer(8096);
-        io_context().receive(err,ping.min_initial_size());
-        if (err) {
+        io_context().receive(err,ping.start_,ping.data_);
+        if(auto err_val = static_cast<std::errc>(err.value());
+            err_val!=std::errc::operation_in_progress &&
+            err!=std::error_code() &&
+            err_val!=std::errc::resource_unavailable_try_again)
+        {
             if (err == std::errc::connection_reset) {
                 std::cout << "(server) connection closed by peer" << std::endl;
                 io_context().enable_readable(false, err);
             }
             return;
         }
-        while(io_context().has_to_read()){
-            auto ser_res = io_context().deserialize(ping);
-            if(ser_res==serialization::SerializationEC::NONE)
-                err.clear();
-            else if(ser_res==serialization::SerializationEC::BUFFER_SIZE_LESSER)
-                continue;
-            else return;
-            if(ping.data_!=1){
-                err = std::make_error_code(std::errc::bad_message);
-                std::cout<<"(server) Not 1 for ping"<<std::endl;
+        if(ping.data_!=1){
+            err = std::make_error_code(std::errc::bad_message);
+            std::cout<<"(server) Not 1 for ping"<<std::endl;
+        }
+        else{
+            std::cout<<"(server) Ping received"<<std::endl;
+            if(!io_context().has_to_read()){
+                ++count_recv;
+                on_write(err);
             }
-            else{
-                std::cout<<"(server) Ping received"<<std::endl;
-                if(!io_context().has_to_read()){
-                    ++count_recv;
-                    on_write(err);
-                }
-            }
-            
         }
         return;
     }
     virtual void on_write(std::error_code& err) noexcept override{
         SizeFramedData<size_t> ping;
-        if(auto ser_res = io_context().serialize(ping);
-            ser_res!=serialization::SerializationEC::NONE){
-            err = std::make_error_code(std::errc::bad_message);
-            std::cout<<"(server) bad serialization"<<std::endl;
-            return;
-        }
-        else {
-            if(err==std::error_code()){
-                std::cout<<"(server) send ping"<<std::endl;
-                io_context().send(err);
-            }
-        }
-        if(err!=std::error_code()){
+        ping.start_=1;ping.data_=1;
+        io_context().send(err,ping.start_,ping.data_);
+        if(err!=std::error_code() &&
+            static_cast<std::errc>(err.value())!=
+            std::errc::operation_in_progress)
+        {
             std::cout<<err.message()<<std::endl;
             std::cout<<"(server) Error at sending"<<std::endl;
+            io_context().clear_send_buffers();
             return;
         }
         else{
             std::cout<<"(server) Ping sent"<<std::endl;
-            if(!io_context().has_to_write())
-                ++count_sent;
+            ++count_sent;
         }
     }
     virtual void on_task_done(std::error_code& err) noexcept override{
