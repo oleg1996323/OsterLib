@@ -73,6 +73,7 @@ class ServerWorker:public Worker{
             uint32_t order_length,
             std::error_code& err):
             Worker(worker_name,order_length,err){}
+    ~ServerWorker() = default;
     template<typename CONN_PROC>
     requires (std::is_base_of_v<AbstractConnectionProcess,CONN_PROC> ||
                 std::is_same_v<CONN_PROC,AbstractConnectionProcess>)

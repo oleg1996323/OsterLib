@@ -1,6 +1,38 @@
 #include "abstractworker.h"
 
 namespace network{
+	AbstractWorker::AbstractWorker(uint32_t order_lenght,std::error_code& err):
+    		multiplexor_(order_lenght,err)
+	{
+		if(err!=std::error_code())
+			return;
+	}
+	AbstractWorker::~AbstractWorker(){
+		if(stop_possible()){
+			std::cout<<"Stop requested"<<std::endl;
+			stop(false,0);
+		}
+		if (thread().joinable()) thread().join();
+		std::cout<<"thread joined"<<std::endl;
+	}
+	void AbstractWorker::stop(bool wait_for_end_connections,
+            uint16_t timeout_sec){
+        std::error_code err;
+        for(auto& [conn,conn_state]:connections()){
+            if(conn_state.proc_.get()!=nullptr)
+                conn_state.proc_->request_stop(
+                    wait_for_end_connections,
+                    timeout_sec,err);
+        }
+        thread().request_stop();
+		wake_event();
+    }
+	void AbstractWorker::start(){
+        thread() = std::jthread([this](std::stop_token st) { 
+            std::error_code err;
+            run(st,err); });
+		stop_ = thread().get_stop_source().get_token();
+    }
     bool AbstractWorker::set_options(
 			std::error_code& err,
 			const ConnectionHandle& hconn,

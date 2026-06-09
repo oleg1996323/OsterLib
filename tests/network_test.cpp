@@ -160,54 +160,59 @@ class Client:public AbstractClient{
 // }
 
 TEST(Client_server,ping){
-    
-    server::Settings settings;
-    settings.host_ = "127.0.0.1";
-    settings.port_ = 32396;
-    settings.protocol_ = Protocol::TCP;
-    settings.num_threads_pool_ = 1;
-    settings.timeout_seconds_processes_ = 3;
-    //for(int i = 0;i<5;++i){
-        Server server;
-        std::error_code err;
-        std::vector<std::shared_ptr<network::Socket::BaseOption>> options;
-        options.push_back(std::make_shared<Socket::Option<int>>(
-                                Socket::Option(1,Socket::Options::KeepAlive)));
-        options.push_back(std::make_shared<Socket::Option<int>>(
-                                Socket::Option(1,Socket::Options::ReuseAddress)));
-        options.push_back(std::make_shared<Socket::Option<int>>(
-                                Socket::Option(1,Socket::Options::ReusePort)));
-        server.configure(settings,
-                            std::move(options),
-                            {},
-                            err);
-        server.launch(err);
-        server.set_processes_at_connections<ServerPingProcess>();
-        //std::this_thread::sleep_for(std::chrono::milliseconds(500));
-        Client client(err,10);
-        auto hconn = client.connect(
-                settings.host_,
-                settings.port_,
-                Socket::Type::Stream,
-                Protocol::TCP,
-                client::Settings(),
-                err);
-        ASSERT_EQ(err,std::error_code());
-        {
-            std::unique_ptr<ClientPingProcess> proc = std::make_unique<ClientPingProcess>(hconn,err);
-            hconn.add_process(std::move(proc),err);
-            for(int i=0;i<5;++i){
-                auto cmd = client.request<size_t>(hconn,
-                        serialization::serial_size(size_t(1)),
-                        size_t(1),std::monostate());
-                cmd->wait_ready();
-                std::cout<<"command "<<i<<" error: "<<cmd->error()->message()<<std::endl;
+    for(int i=0;i<10;++i){
+        server::Settings settings;
+        settings.host_ = "127.0.0.1";
+        settings.port_ = 32396;
+        settings.protocol_ = Protocol::TCP;
+        settings.num_threads_pool_ = 1;
+        settings.timeout_seconds_processes_ = 3;
+        //for(int i = 0;i<5;++i){
+            Server server;
+            std::error_code err;
+            std::vector<std::shared_ptr<network::Socket::BaseOption>> options;
+            options.push_back(std::make_shared<Socket::Option<int>>(
+                                    Socket::Option(1,Socket::Options::KeepAlive)));
+            options.push_back(std::make_shared<Socket::Option<int>>(
+                                    Socket::Option(1,Socket::Options::ReuseAddress)));
+            options.push_back(std::make_shared<Socket::Option<int>>(
+                                    Socket::Option(1,Socket::Options::ReusePort)));
+            server.configure(settings,
+                                std::move(options),
+                                {},
+                                err);
+            server.launch(err);
+            server.set_processes_at_connections<ServerPingProcess>();
+            //std::this_thread::sleep_for(std::chrono::milliseconds(500));
+            Client client(err,10);
+            auto hconn = client.connect(
+                    settings.host_,
+                    settings.port_,
+                    Socket::Type::Stream,
+                    Protocol::TCP,
+                    client::Settings(),
+                    err);
+            ASSERT_EQ(err,std::error_code());
+            {
+                std::unique_ptr<ClientPingProcess> proc = std::make_unique<ClientPingProcess>(hconn,err);
+                hconn.add_process(std::move(proc),err);
+                for(int i=0;i<5;++i){
+                    auto cmd = client.request<size_t>(hconn,
+                            serialization::serial_size(size_t(1)),
+                            size_t(1),std::monostate());
+                    cmd->wait_ready();
+                    std::cout<<"command "<<i<<" error: "<<cmd->error()->message()<<std::endl;
+                }
             }
-        }
-        EXPECT_EQ(ServerPingProcess::count_recv,5);
-        EXPECT_EQ(ServerPingProcess::count_sent,5);
-        EXPECT_EQ(ClientPingProcess::count_recv,5);
-        EXPECT_EQ(ClientPingProcess::count_sent,5);
+            EXPECT_EQ(ServerPingProcess::count_recv,5);
+            EXPECT_EQ(ServerPingProcess::count_sent,5);
+            EXPECT_EQ(ClientPingProcess::count_recv,5);
+            EXPECT_EQ(ClientPingProcess::count_sent,5);
+            ServerPingProcess::count_recv = 0;
+            ServerPingProcess::count_sent = 0;
+            ClientPingProcess::count_recv = 0;
+            ClientPingProcess::count_sent = 0;
+    }
     //}
 }
 

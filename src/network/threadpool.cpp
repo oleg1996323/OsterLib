@@ -173,8 +173,8 @@ namespace network{
             found->second.socket_->shutdown_all(err);
             if(err!=std::error_code()){
                 std::cout<<"("<<name_<<")"<<"Erasing id="<<found->first<<std::endl;
-                connections().erase(found);
-                after_remove_connection(&found->second,err);
+                auto conn = std::move(connections().extract(found));
+                after_remove_connection(&conn.mapped(),err);
                 return false;
             }
             else{
@@ -182,8 +182,8 @@ namespace network{
                     found->second.socket_->native(),err);
                 found->second.socket_->close();
                 std::cout<<"("<<name_<<")"<<"Erasing id="<<found->first<<std::endl;
-                after_remove_connection(&found->second,err);
-                connections().erase(found);
+                auto conn = std::move(connections().extract(found));
+                after_remove_connection(&conn.mapped(),err);
                 return res;
             }
         }
