@@ -14,7 +14,7 @@ class ClientPingProcess:public AbstractRequestableConnectionProcess{
     virtual void on_read(std::error_code& err) noexcept override{
             std::cout<<"Client: receive ping"<<std::endl;
             try_receive(err);
-            if(err !=std::error_code())
+            if(err)
             {   
                 switch(static_cast<std::errc>(err.value())){
                     case std::errc::resource_unavailable_try_again:
@@ -26,15 +26,15 @@ class ClientPingProcess:public AbstractRequestableConnectionProcess{
                     default:
                         complete_current_request(err);
                         err.clear();
-                        if(make_active_request())
-                            on_write(err);
-                        else return;
+                        make_active_request();
+                        return;
                 }
             }
             else{
                 if(!io_context().has_to_read()){
                     ++count_recv;
                 }
+                complete_current_request(err);
                 err.clear();
             }
     }
@@ -48,7 +48,6 @@ class ClientPingProcess:public AbstractRequestableConnectionProcess{
                 if(all_sent)
                     ++count_sent;
                 err.clear();
-                on_read(err);
             }
         }
     }
@@ -84,23 +83,20 @@ class ServerPingProcess:public AbstractConnectionProcess{
     static int count_recv;
     virtual void on_read(std::error_code& err) noexcept override{
         SizeFramedData<size_t> ping;
-        if(io_context().receive_buffer_size()==0)
-            io_context().resize_receive_buffer(8096);
         io_context().receive(err,ping.start_,ping.data_);
         if(auto err_val = static_cast<std::errc>(err.value());
             err_val!=std::errc::operation_in_progress &&
             err!=std::error_code() &&
             err_val!=std::errc::resource_unavailable_try_again)
         {
-            if (err == std::errc::connection_reset) {
+            if (err == std::errc::connection_reset)
                 std::cout << "(server) connection closed by peer" << std::endl;
-                io_context().enable_readable(false, err);
-            }
             return;
         }
-        if(ping.data_!=1){
+        if(ping.data_!=1 || ping.start_!=8){
             err = std::make_error_code(std::errc::bad_message);
             std::cout<<"(server) Not 1 for ping"<<std::endl;
+            std::cout<<"start="<<ping.start_<<";data="<<ping.data_<<std::endl;
         }
         else{
             std::cout<<"(server) Ping received"<<std::endl;
@@ -121,7 +117,7 @@ class ServerPingProcess:public AbstractConnectionProcess{
         {
             std::cout<<err.message()<<std::endl;
             std::cout<<"(server) Error at sending"<<std::endl;
-            io_context().clear_send_buffers();
+            io_context().clear_send_buffer();
             return;
         }
         else{

@@ -10,6 +10,7 @@ namespace network{
     bool Worker::connectInternal(
             const ConnectionHandle& hconn,
             std::unique_ptr<Connection> conn,
+            const client::Settings& settings,
             Socket&& socket,
             std::error_code& err) noexcept
     {
@@ -23,7 +24,7 @@ namespace network{
                         .socket_ = std::make_shared<Socket>(
                             std::move(socket))};
                 conn_stat.connIO_ = make_connectionIO(
-                        conn_stat.socket_,hconn,conn_stat.events_handled_,err);
+                        conn_stat.socket_,hconn,1024*8,conn_stat.events_handled_,err);
                 conn_stat.events_handled_=Event::Out|Event::Error|Event::HangUp;
                 if(conn_stat.socket_->set_no_block(true,err)==false){
                     std::cout<<"("<<name_<<"):"<<"Connection add failed: \n";
@@ -48,7 +49,7 @@ namespace network{
                                                 Event::HangUp|
                                                 Event::Error;
                     ev.set_events(conn_stat.events_handled_);
-                    if(modify_tracking_event(conn_stat.socket_->native(),ev,err)){
+                    if(!modify_tracking_event(conn_stat.socket_->native(),ev,err)){
                         std::cout<<"("<<name_<<"):"<<"(modify tracking) Connection add failed: \n";
                         auto err = std::make_error_code(
                             static_cast<std::errc>(errno));
@@ -94,6 +95,7 @@ namespace network{
     bool Worker::attachConnectionInternal(
 			ConnectionHandle hconn,
 			std::unique_ptr<Connection> conn,
+            const server::Settings& settings,
 			Socket&& socket,
 			std::error_code& err
 			) noexcept
@@ -136,6 +138,7 @@ namespace network{
                 auto connIO=make_connectionIO(
                     socket_loc,
                     hconn,
+                    settings.options_.buffer_size_in_.first,
                     inserted.first->second.events_handled_,
                     err);
                 inserted.first->second.connIO_=std::move(connIO);
@@ -234,10 +237,14 @@ namespace network{
                         conn_stat->events_handled_ = 
                             conn_stat->events_handled_&~(Event::EdgeTrigger|Event::Out);
                         EventHandle ev(hconn.id(),conn_stat->events_handled_);
-                        modify_tracking_event(conn_stat->socket_->native(),
+                        if(!modify_tracking_event(conn_stat->socket_->native(),
                             ev,
-                            err);
+                            err))
+                            return false;
+                        err.clear();
                         after_add_connection_process(conn_stat,err);
+                        if(err)
+                            return false;
                         return true;
                     }
                     else{
@@ -269,7 +276,8 @@ namespace network{
         else{
             conn_stat->proc_.reset();
             EventHandle ev(hconn.id(),conn_stat->events_handled_|Event::EdgeTrigger);
-            modify_tracking_event(conn_stat->socket_->native(),ev,err);
+            if(!modify_tracking_event(conn_stat->socket_->native(),ev,err))
+                return false;
             if(err!=std::error_code()){
                 std::cout<<"("<<name_<<")"<<"(Remove process) modify_tracking_event error: "
                 <<err.message()<<std::endl;
@@ -327,10 +335,9 @@ namespace network{
                             EventHandle ev_tmp = ev;
                             ev_tmp.set_events(
                                 Event::In|Event::EdgeTrigger|Event::HangUp|Event::Error);
-                            modify_tracking_event(conn_stat->socket_->native(),
+                            if(!modify_tracking_event(conn_stat->socket_->native(),
                                             ev_tmp,
-                                            err);
-                            if(err!=std::error_code()){
+                                            err)){
                                 std::cout<<"("<<name_<<")"<<"Connection add failed: \n";
                                 std::cout<<"("<<name_<<")"<<err.message()<<std::endl;
                                 push_command(std::make_shared<Command<
@@ -403,6 +410,7 @@ namespace network{
 
     ConnectionHandle ThreadPool::attach_connection(
         const Address& addr,
+        const server::Settings& settings,
         Socket&& socket,
         std::error_code& err) noexcept
     {
@@ -412,6 +420,24 @@ namespace network{
                 std::make_shared<Command<CommandType::AttachConnection>>(
                     hconn,
                     std::make_unique<Connection>(addr),
+                    settings,
+                    std::move(socket)),
+                    err);
+        return hconn;
+    }
+    ConnectionHandle ThreadPool::attach_connection(
+        const Address& addr,
+        server::Settings&& settings,
+        Socket&& socket,
+        std::error_code& err) noexcept
+    {
+        size_t index = next_worker_++ % workers_.size();
+        ConnectionHandle hconn(workers_[index].get());
+        hconn.execute_command(
+                std::make_shared<Command<CommandType::AttachConnection>>(
+                    hconn,
+                    std::make_unique<Connection>(addr),
+                    std::move(settings),
                     std::move(socket)),
                     err);
         return hconn;

@@ -6,6 +6,8 @@
 #include <span>
 #include "worker/command.h"
 #include "connectionIO.h"
+#include "serversettings.h"
+#include "clientsettings.h"
 
 namespace network{
 class AbstractProcess;
@@ -49,53 +51,11 @@ class AbstractWorker{
 	bool enable_writing(
 			ConnectionHandle hconn,
 			bool enable,
-			std::error_code& err) noexcept{
-		auto found = connections().find(hconn.id());
-		if (found == connections().end()) {
-			err = std::make_error_code(std::errc::no_such_device);
-			return false;
-		}
-		Event new_events = found->second.events_handled_;
-		if (enable){
-			new_events = new_events|Event::Out;
-			std::cout<<"enable writable"<<std::endl;
-		}
-		else{
-			new_events = new_events&~Event::Out;
-			std::cout<<"disable writable"<<std::endl;
-		}
-		EventHandle ev(hconn.id(), new_events);
-		bool res = modify_tracking_event(found->second.socket_->native(), ev, err);
-		if (err == std::error_code()) {
-			found->second.events_handled_ = new_events;
-		}
-		return res;
-	}
+			std::error_code& err) noexcept;
 	bool enable_readable(
 			ConnectionHandle hconn,
 			bool enable,
-			std::error_code& err) noexcept{
-		auto found = connections().find(hconn.id());
-		if (found == connections().end()) {
-			err = std::make_error_code(std::errc::no_such_device);
-			return false;
-		}
-		Event new_events = found->second.events_handled_;
-		if (enable){
-			new_events = new_events|Event::In;
-			std::cout<<"enable readable"<<std::endl;
-		}
-		else{
-			new_events = new_events&~Event::In;
-			std::cout<<"disable readable"<<std::endl;
-		}
-		EventHandle ev(hconn.id(), new_events);
-		bool res = modify_tracking_event(found->second.socket_->native(), ev, err);
-		if (err == std::error_code()) {
-			found->second.events_handled_ = new_events;
-		}
-		return res;
-	}
+			std::error_code& err) noexcept;
 
 	bool contains_connection(const ConnectionHandle& hconn) noexcept;
 	bool stop_process(const ConnectionHandle& hconn,bool wait, uint16_t timeout_sec,std::error_code& err) noexcept;
@@ -139,10 +99,12 @@ protected:
 	virtual bool connectInternal(
 			const ConnectionHandle& hconn,
 			std::unique_ptr<Connection> conn,
+			const client::Settings& settings,
             Socket&& socket,std::error_code& err) noexcept = 0;
 	virtual bool attachConnectionInternal(
 			ConnectionHandle hconn,
 			std::unique_ptr<Connection> addr,
+			const server::Settings& settings,
 			Socket&& socket,
 			std::error_code& err
 			) noexcept = 0;
@@ -167,6 +129,7 @@ protected:
 	std::unique_ptr<ConnectionIO> make_connectionIO(
 				std::shared_ptr<Socket> sock_ptr,
 				ConnectionHandle hconn,
+				size_t recv_buf_sz,
 				const Event& events,
 				std::error_code& err) noexcept;
 	std::jthread& thread() const noexcept;

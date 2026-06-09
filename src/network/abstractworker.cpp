@@ -23,6 +23,58 @@ namespace network{
 			return false;
 		}
     }
+	bool AbstractWorker::enable_writing(
+			ConnectionHandle hconn,
+			bool enable,
+			std::error_code& err) noexcept{
+		auto found = connections().find(hconn.id());
+		if (found == connections().end()) {
+			err = std::make_error_code(std::errc::no_such_device);
+			return false;
+		}
+		Event new_events = found->second.events_handled_;
+		if (enable){
+			new_events = new_events|Event::Out;
+			assert((new_events&Event::Out)==Event::Out);
+			std::cout<<"enable writable: id="<<hconn.id()<<std::endl;
+		}
+		else{
+			new_events = new_events&~Event::Out;
+			assert((new_events&Event::Out)==0);
+			std::cout<<"disable writable: id="<<hconn.id()<<std::endl;
+		}
+		EventHandle ev(hconn.id(), new_events);
+		bool res = modify_tracking_event(found->second.socket_->native(), ev, err);
+		if (err == std::error_code()) {
+			found->second.events_handled_ = new_events;
+		}
+		return res;
+	}
+	bool AbstractWorker::enable_readable(
+			ConnectionHandle hconn,
+			bool enable,
+			std::error_code& err) noexcept{
+		auto found = connections().find(hconn.id());
+		if (found == connections().end()) {
+			err = std::make_error_code(std::errc::no_such_device);
+			return false;
+		}
+		Event new_events = found->second.events_handled_;
+		if (enable){
+			new_events = new_events|Event::In;
+			std::cout<<"enable readable"<<std::endl;
+		}
+		else{
+			new_events = new_events&~Event::In;
+			std::cout<<"disable readable"<<std::endl;
+		}
+		EventHandle ev(hconn.id(), new_events);
+		bool res = modify_tracking_event(found->second.socket_->native(), ev, err);
+		if (err == std::error_code()) {
+			found->second.events_handled_ = new_events;
+		}
+		return res;
+	}
 	bool AbstractWorker::set_option(
 			std::error_code& err,
 			const ConnectionHandle& hconn,
@@ -128,13 +180,14 @@ namespace network{
 	std::unique_ptr<ConnectionIO> AbstractWorker::make_connectionIO(
 				std::shared_ptr<Socket> sock_ptr,
 				ConnectionHandle hconn,
+				size_t recv_buf_sz,
 				const Event& events,
 				std::error_code& err) noexcept
 	{
 		if(sock_ptr){
 			err.clear();
 			//@todo make configurable buffer size
-			return std::make_unique<ConnectionIO>(sock_ptr,hconn,&events,4096,err);
+			return std::make_unique<ConnectionIO>(sock_ptr,hconn,&events,recv_buf_sz,err);
 		}
 		else{
 			err = std::make_error_code(std::errc::invalid_argument);

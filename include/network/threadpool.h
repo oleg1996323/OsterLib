@@ -17,11 +17,13 @@ protected:
     virtual bool connectInternal(
             const ConnectionHandle& hconn,
             std::unique_ptr<Connection> conn,
+            const client::Settings& settings,
             Socket&& socket,
             std::error_code& err) noexcept override;
     virtual bool attachConnectionInternal(
 			ConnectionHandle hconn,
 			std::unique_ptr<Connection> addr,
+            const server::Settings& settings,
 			Socket&& socket,
 			std::error_code& err
 			) noexcept override;
@@ -99,6 +101,13 @@ public:
 
     ConnectionHandle attach_connection(
         const Address& addr,
+        const server::Settings& settings,
+        Socket&& socket,
+        std::error_code& err) noexcept;
+
+    ConnectionHandle attach_connection(
+        const Address& addr,
+        server::Settings&& settings,
         Socket&& socket,
         std::error_code& err) noexcept;
 

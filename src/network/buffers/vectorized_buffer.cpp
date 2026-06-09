@@ -6,6 +6,7 @@ namespace network{
         void VectorizedBuffer::clear_buffer() noexcept{
             vbuf_.clear();
             bufs_.clear();
+            active_el_=0;
         }
         std::pair<iovec*, size_t> VectorizedBuffer::remaining() noexcept{
             if (active_el_ >= vbuf_.size())

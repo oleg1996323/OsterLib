@@ -16,11 +16,35 @@ namespace network{
 				type_(type),
 				proto_(proto){}
 
+	Command<CommandType::AddConnection>::Command(ConnectionHandle hconn,
+				std::string host,
+				Port port,
+				Socket::Type type,
+				Protocol proto,
+				client::Settings&& settings):
+				hconn_(hconn),
+				settings_(std::move(settings)),
+				host_(host),
+				port_(port),
+				type_(type),
+				proto_(proto){}
+
 	Command<CommandType::AttachConnection>::Command(ConnectionHandle hconn,
 			std::unique_ptr<Connection>&& conn,
+			const server::Settings& settings,
 			Socket&& sock):
 			hconn_(hconn),
 			conn_(std::move(conn)),
+			settings_(settings),
+			socket_(std::move(sock)){}
+
+	Command<CommandType::AttachConnection>::Command(ConnectionHandle hconn,
+			std::unique_ptr<Connection>&& conn,
+			server::Settings&& settings,
+			Socket&& sock):
+			hconn_(hconn),
+			conn_(std::move(conn)),
+			settings_(std::move(settings)),
 			socket_(std::move(sock)){}
 
 	Command<CommandType::RemoveConnection>::Command(ConnectionHandle hconn,
@@ -82,6 +106,7 @@ namespace network{
 					w->connectInternal(
 						hconn_,
 						std::move(conn),
+						settings_,
 						std::move(sock),
 						err);
 					if(err!=std::error_code())
@@ -110,6 +135,7 @@ namespace network{
 		w->attachConnectionInternal(
 			hconn_,
 			std::move(conn_),
+			settings_,
 			std::move(socket_),
 			err);
 		set_error(err);

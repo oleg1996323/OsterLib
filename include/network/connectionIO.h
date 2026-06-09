@@ -34,7 +34,6 @@ class ConnectionIO{
     RingBuffer<char> recv_buffer_;
     serialization::StreamSerializer serializer_;
     const Event* sock_events_;
-    bool writable;
 
     template<typename T>
     serialization::SerializationEC deserialize(T& value) noexcept{
@@ -62,15 +61,87 @@ class ConnectionIO{
         serialization::SerializationEC err = serialization::SerializationEC::NONE;
         (((err=serialization::deserialize_network(values, serializer_))==
             serialization::SerializationEC::NONE) && ...);
-        if(err!=serialization::SerializationEC::NONE){
+        switch(err){
+            case serialization::SerializationEC::NONE:
+            case serialization::SerializationEC::BUFFER_SIZE_LESSER:
+                serializer_.flush();
+                recv_buffer_.commit_read(serialization::serial_size(values...));
+                return err;
+            default:
             clear_recv_buffer(); //flush errorness sequence
             std::cout<<"deserialize error"<<std::endl;
             return err;
         }
-        else{
-            recv_buffer_.commit_read(serialization::serial_size(values...));
-            return err;
+    }
+    void __send_internal__(std::error_code& err) noexcept{
+        auto sock = socket_.lock();
+        if(!sock || !sock->valid()){
+            err = std::make_error_code(std::errc::bad_file_descriptor);
+            return;
         }
+        if(send_buffer_.has_to_write())
+            enable_writable(true,err);
+        else{
+            enable_writable(false, err);
+            return;
+        }
+        auto send_res = ::network::send_vectorized(
+            err, *sock, send_buffer_);
+        if (err != std::error_code()) {
+            std::cout<<err.message()<<std::endl;
+            switch (static_cast<std::errc>(err.value())) {
+                case std::errc::resource_unavailable_try_again:
+                case std::errc::operation_in_progress:
+                    err.clear();
+                    return;
+                case std::errc::no_buffer_space:
+                    enable_writable(false, err);
+                    return; 
+                default:{
+                    std::error_code tmp_err = err;
+                    enable_writable(false, err);
+                    clear_send_buffer();
+                    err=tmp_err;
+                    return;
+                }
+            }
+        }
+        if (!send_buffer_.has_to_write()) {
+            enable_writable(false, err);
+            clear_send_buffer();
+        }
+    }
+    std::int64_t __recv_internal__(std::error_code& err) noexcept{
+        auto sock = socket_.lock();
+        if(!sock || !sock->valid()){
+            err = std::make_error_code(std::errc::bad_file_descriptor);
+            clear_recv_buffer();
+            return -1;
+        }
+        if(free_space()==0)
+        {
+            err = std::make_error_code(std::errc::no_buffer_space);
+            enable_readable(false,err);
+            return 0;
+        }
+        if(auto recv_res = ::network::receive_to_ring_buffer(err,
+            *sock,recv_buffer_);
+            err!=std::error_code())
+        {
+            switch(static_cast<std::errc>(err.value())){
+                case std::errc::resource_unavailable_try_again:
+                case std::errc::operation_in_progress:
+                    return recv_res;
+                    break;
+                case std::errc::no_buffer_space:
+                    enable_readable(false,err);
+                    return recv_res;
+                default:{
+                    return -1;
+                }
+            }
+        }
+        else return recv_res;
     }
     public:
     ConnectionIO(
@@ -108,110 +179,46 @@ class ConnectionIO{
     template<typename... ARGS>
     void send(std::error_code& err,ARGS&&... values) noexcept
     {
-        auto sock = socket_.lock();
         if(serialize(std::forward<ARGS>(values)...)!=serialization::SerializationEC::NONE){
             enable_writable(false, err); // попытка отключить, но игнорируем ошибку
-            clear_send_buffers();
+            clear_send_buffer();
             err=std::make_error_code(std::errc::operation_canceled);
             return;
         }
-
-        if(!sock || !sock->valid()){
-            err = std::make_error_code(std::errc::bad_file_descriptor);
-            return;
-        }
-        if(send_buffer_.has_to_write())
-            enable_writable(true,err);
-        while (send_buffer_.has_to_write()) {
-            auto send_res = ::network::send_vectorized(
-                err, *sock, send_buffer_);
-            if (err != std::error_code()) {
-                switch (static_cast<std::errc>(err.value())) {
-                    case std::errc::resource_unavailable_try_again:
-                    case std::errc::operation_in_progress:
-                        send_buffer_.consume(send_res);
-                        return; // ждём следующего Out
-                    default:{
-                        std::error_code tmp_err = err;
-                        enable_writable(false, err); // попытка отключить, но игнорируем ошибку
-                        clear_send_buffers();
-                        err=tmp_err;
-                        return; // возвращаем ошибку
-                    }
-                }
-            }
-            send_buffer_.consume(send_res);
-        }
-        if (!send_buffer_.has_to_write()) {
-            enable_writable(false, err);
-        }
+        else __send_internal__(err);
     }
     template<typename... ARGS>
-    void receive(std::error_code& err,ARGS&... values) noexcept
+    std::int64_t receive(std::error_code& err,ARGS&... values) noexcept
     {
-        auto sock = socket_.lock();
-        assert(recv_buffer_.capacity()>0);
-        if(recv_buffer_.size()>0){
-            auto ser_res = deserialize(values...);
-            if(ser_res == serialization::SerializationEC::UNMATCHED_TYPE){
-                clear_recv_buffer();
-                err = std::make_error_code(std::errc::bad_message);
-                return;
-            }
-            else err = std::make_error_code(std::errc::operation_in_progress);
+        assert(recv_buffer_.capacity()>0);        
+        if(auto recv_res = __recv_internal__(err);
+            err!=std::error_code() ||
+            recv_res==-1){
+            return recv_res;
         }
-        if(!sock || !sock->valid()){
-            err = std::make_error_code(std::errc::bad_file_descriptor);
-            return;
-        }
-        while(true){
-            if(free_space()==0)
-            {
-                err = std::make_error_code(std::errc::no_buffer_space);
-                enable_readable(false,err);
-                return;
+        else{
+            if(auto ser_res = deserialize(values...);
+                ser_res==serialization::SerializationEC::NONE){
+                err.clear();
+                return recv_res;
             }
-            if(auto recv_res = ::network::receive_to_ring_buffer(err,
-                    *sock,recv_buffer_);
-                    err!=std::error_code())
-            {
-                switch(static_cast<std::errc>(err.value())){
-                    case std::errc::resource_unavailable_try_again:
-                    case std::errc::operation_in_progress:
-                        err.clear();
-                        return;
-                        break;
-                    case std::errc::no_buffer_space:
-                        enable_readable(false,err);
-                        return;
-                    default:{
-                        return;
-                    }
-                }
+            else if(ser_res==serialization::SerializationEC::BUFFER_SIZE_LESSER){
+                err = std::make_error_code(std::errc::resource_unavailable_try_again);
+                return recv_res;
             }
             else{
-                if(recv_res==0)
-                {
-                    if(deserialize(values...)==serialization::SerializationEC::NONE){
-                        err.clear();
-                        return;
-                    }
-                    else{
-                        err = std::make_error_code(std::errc::resource_unavailable_try_again);
-                        return;
-                    }
-                }
-                else{
-                    err = std::make_error_code(std::errc::resource_unavailable_try_again);
-                    return;
-                }
+                err = std::make_error_code(std::errc::bad_message);
+                clear_recv_buffer();
+                return -1;
             }
         }
     }
-    size_t received() const noexcept{
+    size_t in_recv_buffer() const noexcept{
         return recv_buffer_.size();
     }
-    size_t read_exact(std::span<char> buffer, size_t n, std::error_code& err) noexcept;
+    size_t in_send_buffer() const noexcept{
+        return recv_buffer_.size();
+    }
     template<typename T>
     serialization::SerializationEC serialize(T&& value) noexcept{
         return send_buffer_.serialize(std::forward<T>(value));
@@ -223,12 +230,14 @@ class ConnectionIO{
     }
     void clear_recv_buffer() noexcept{
         recv_buffer_.clear();
+        serializer_.reset_all();
     }
-    void clear_send_buffers() noexcept{
+    void clear_send_buffer() noexcept{
         send_buffer_.compact();
     }
-    void resize_receive_buffer(size_t bufsiz) noexcept{
-        recv_buffer_.set_capacity(bufsiz);
+    void clear_buffers() noexcept{
+        send_buffer_.compact();
+        recv_buffer_.clear();
     }
     size_t receive_buffer_size() const noexcept{
         return recv_buffer_.size();

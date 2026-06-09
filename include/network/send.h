@@ -11,6 +11,7 @@
 #include <iostream>
 #include "serialization.h"
 #include "buffers/vectorized_buffer.h"
+#include "buffers/ring_buffer.h"
 
 namespace network{
      enum class SEND_FLAGS:int{
@@ -131,6 +132,11 @@ namespace network{
           std::error_code& err,
           const Socket& socket,
           VectorizedBuffer& buffer,
+          bool stand = false) noexcept;
+     size_t send_to_ring_buffer(
+          std::error_code& err,
+          const Socket& socket,
+          RingBuffer<char>& buffer,
           bool stand = false) noexcept;
      #endif
 }

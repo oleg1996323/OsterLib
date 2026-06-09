@@ -11,6 +11,7 @@
 #include <expected>
 #include "command_types.h"
 #include "clientsettings.h"
+#include "serversettings.h"
 
 namespace network
 {	class Connection;
@@ -64,7 +65,7 @@ namespace network
 		}
 		void set_ready() noexcept{
 			ready_.store(true,std::memory_order::release);
-			ready_.notify_all();
+			ready_.notify_one();
 		}
 		private:
 		std::atomic<bool> ready_{false};
@@ -78,7 +79,7 @@ namespace network
 	struct Command<CommandType::AddConnection> :public BaseCommand
 	{
 		ConnectionHandle hconn_;
-		client::Settings settings_;
+		const client::Settings& settings_;
 		std::string host_;
 		Port port_;
 		Socket::Type type_;
@@ -89,6 +90,12 @@ namespace network
 				Socket::Type type,
 				Protocol proto,
 				const client::Settings& settings);
+		Command(ConnectionHandle hconn,
+				std::string host,
+				Port port,
+				Socket::Type type,
+				Protocol proto,
+				client::Settings&& settings);
 		virtual void execute_internal(
 				AbstractWorker* w) noexcept override;
 	};
@@ -97,10 +104,16 @@ namespace network
 	struct Command<CommandType::AttachConnection> :public BaseCommand
 	{
 		ConnectionHandle hconn_;
+		const network::server::Settings& settings_;
 		std::unique_ptr<Connection> conn_;
 		Socket socket_;
 		Command(ConnectionHandle hconn,
 				std::unique_ptr<Connection>&& conn,
+				const server::Settings& settings,
+				Socket&& sock);
+		Command(ConnectionHandle hconn,
+				std::unique_ptr<Connection>&& conn,
+				server::Settings&& settings,
 				Socket&& sock);
 		virtual void execute_internal(
 				AbstractWorker* w) noexcept override;
@@ -265,7 +278,6 @@ namespace network{
 				set_error(err);
 				set_ready();
 			}
-			else set_ready();
 		}
 	};
 }

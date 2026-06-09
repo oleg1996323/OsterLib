@@ -23,24 +23,22 @@ namespace network{
             std::error_code& err) noexcept
     {
         std::cout<<"(client) try_receive"<<std::endl;
-        if(io_context().receive_buffer_size()==0)
-            io_context().resize_receive_buffer(8096);
-        if(!active_request_ && !make_active_request())
+        if(!active_request_)
             return;
         io_context().receive(err,
                 *active_request_->weak_to_receive_);
-        if(auto err_val = static_cast<std::errc>(err.value());
-            err_val!=std::errc::operation_in_progress &&
-            err!=std::error_code() &&
-            err_val!=std::errc::resource_unavailable_try_again)
-        {
-            complete_current_request(err);
-            err.clear();
-            return;
-        }
-        else {
-            err.clear();
-            complete_current_request(err);
+        if(err)
+        switch(static_cast<std::errc>(err.value())){
+            case std::errc::operation_in_progress:
+            case std::errc::resource_unavailable_try_again:
+            case std::errc::no_buffer_space:
+                err.clear();
+                return;
+            default:
+                std::cout<<"client receive error"<<std::endl;
+                complete_current_request(err);
+                err.clear();
+                return;
         }
     }
     bool AbstractRequestableConnectionProcess::try_send(
@@ -53,27 +51,30 @@ namespace network{
             return false;
         }
         io_context().send(err,*active_request_->weak_to_send_);
-        if(auto err_val = static_cast<std::errc>(err.value());
-            err_val!=std::errc::operation_in_progress &&
-            err!=std::error_code() &&
-            err_val!=std::errc::resource_unavailable_try_again)
-        {
-            complete_current_request(std::make_error_code(std::errc::bad_message));
-            io_context().enable_writable(false,err);
-            err.clear();
-            return false;
-        }
-        else 
-        {
-            io_context().send(err,*active_request_->weak_to_send_);
-            if(err!=std::error_code()){
-                complete_current_request(err);
-                err.clear();
-                if(make_active_request())
-                    try_send(err);
-                return false;
+        if(err){
+            switch(static_cast<std::errc>(err.value())){
+                case std::errc::operation_in_progress:
+                case std::errc::resource_unavailable_try_again:
+                    err.clear();
+                    return true;
+                    break;
+                case std::errc::no_buffer_space:
+                    io_context().enable_writable(false,err);
+                    err.clear();
+                    return true;
+                    break;
+                default:
+                    std::cout<<"client sending error"<<std::endl;
+                    complete_current_request(std::make_error_code(std::errc::bad_message));
+                    err.clear();
+                    io_context().clear_buffers();
+                    return false;
             }
-            else return true;
+        }
+        else{
+            err.clear();
+            io_context().enable_writable(false,err);
+            return true;
         }
     }
     void AbstractRequestableConnectionProcess::reset_requests(

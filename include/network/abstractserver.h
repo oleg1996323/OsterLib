@@ -19,6 +19,7 @@ namespace network{
     class AbstractServer{
         std::unique_ptr<ConnectionAcceptor> accepter_;
         std::unique_ptr<ThreadPool> processes_pool_;
+        server::Settings settings_;
 
         public:
         template<typename T>
@@ -35,6 +36,7 @@ namespace network{
         {
             return processes_pool_->attach_connection(
                 addr,
+                settings_,
                 std::move(socket),
                 err);
         }
@@ -76,9 +78,10 @@ namespace network{
                 std::vector<std::shared_ptr<Socket::BaseOption>>&& acceptor_options,
                 std::vector<std::shared_ptr<Socket::BaseOption>>&& sock_accepted_options,
                 std::error_code& err) noexcept{
+            settings_ = settings;
             if(!is_launched()){
                 processes_pool_ = std::move(
-                    std::make_unique<ThreadPool>(settings.num_threads_pool_,
+                    std::make_unique<ThreadPool>(settings_.num_threads_pool_,
                         err));
                 if(err!=std::error_code()){
                     processes_pool_.reset();
@@ -87,11 +90,11 @@ namespace network{
                 
                 accepter_ = make_connection_acceptor(
                         this,
-                        settings.host_,
-                        settings.port_,
+                        settings_.host_,
+                        settings_.port_,
                         Socket::Type::Stream,
-                        settings.protocol_,
-                        settings.number_events_,
+                        settings_.protocol_,
+                        settings_.number_events_,
                         std::move(acceptor_options),
                         std::move(sock_accepted_options),
                         err);

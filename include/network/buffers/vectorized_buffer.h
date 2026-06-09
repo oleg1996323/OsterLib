@@ -18,7 +18,7 @@ namespace network{
         const iovec* native() const noexcept{
             return vbuf_.data();
         }
-        friend size_t send_vectorized(
+        friend size_t send_to_ring_buffer(
                 std::error_code& err,
                 const Socket& socket,
                 VectorizedBuffer& buffer,
