@@ -93,7 +93,7 @@ bool send_file_with_progress(int socket_fd, const std::string& file_path) {
         // offset автоматически обновлён (sendfile изменяет его, если передан указатель)
         // Вычисляем процент выполнения
         int percent = static_cast<int>((static_cast<double>(sent_total) / file_size) * 100);
-        std::cout << "\rПрогресс: " << percent << "% (" << sent_total << "/" << file_size << " байт)" << std::flush;
+        //std::cout << "\rПрогресс: " << percent << "% (" << sent_total << "/" << file_size << " байт)" << std::flush;
 
         // Можно также рассчитать скорость и оставшееся время
         auto now = std::chrono::steady_clock::now();
@@ -104,7 +104,7 @@ bool send_file_with_progress(int socket_fd, const std::string& file_path) {
         }
     }
 
-    std::cout << std::endl << "Файл успешно отправлен." << std::endl;
+    //std::cout << std::endl << "Файл успешно отправлен." << std::endl;
     close(file_fd);
     return true;
 }

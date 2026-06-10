@@ -86,7 +86,7 @@ namespace network{
 		if(!hconn_.is_valid_handler() || 
 			!hconn_.same_owner(w)){
 			err = std::make_error_code(std::errc::invalid_argument);
-			std::cout<<err.message()<<std::endl;
+			//r1std::cout<<err.message()<<std::endl;
 			set_error(err);
 			set_ready();
 		}
@@ -110,20 +110,20 @@ namespace network{
 						std::move(sock),
 						err);
 					if(err!=std::error_code())
-						std::cout<<"Command AddConnection: "<<err.message()<<std::endl;
+						//r1std::cout<<"Command AddConnection: "<<err.message()<<std::endl;
 					set_error(err);
 					set_ready();
 				}
 				return;
 			}
 			else{
-				std::cout<<"Command AddConnection: "<<err.message()<<std::endl;
+				//r1std::cout<<"Command AddConnection: "<<err.message()<<std::endl;
 				set_error(err);
 				set_ready();
 			}
 		}
 		else{
-			std::cout<<"Command AddConnection: "<<err.message()<<std::endl;
+			//r1std::cout<<"Command AddConnection: "<<err.message()<<std::endl;
 			set_error(err);
 			set_ready();
 		}
@@ -140,7 +140,7 @@ namespace network{
 			err);
 		set_error(err);
 		set_ready();
-		//std::cout<<"Attach Connection command done"<<std::endl;
+		////r1std::cout<<"Attach Connection command done"<<std::endl;
 		return;
 	}
 
@@ -150,7 +150,7 @@ namespace network{
 		w->removeConnectionInternal(hconn_,wait_,timeout_sec_,err);
 		set_error(err);
 		set_ready();
-		//std::cout<<"Remove Connection command done"<<std::endl;
+		////r1std::cout<<"Remove Connection command done"<<std::endl;
 		return;
 	}
 
@@ -160,7 +160,7 @@ namespace network{
 		w->modifyConnectionInternal(hconn_,options_,err);
 		set_error(err);
 		set_ready();
-		//std::cout<<"Modify Connection command done"<<std::endl;
+		////r1std::cout<<"Modify Connection command done"<<std::endl;
 		return;
 	}
 
@@ -170,7 +170,7 @@ namespace network{
 		w->addConnectionProcessInternal(hconn_,std::move(proc_),err);
 		set_error(err);
 		set_ready();
-		//std::cout<<"Attach Process command done"<<std::endl;
+		////r1std::cout<<"Attach Process command done"<<std::endl;
 		return;
 	}
 
@@ -180,7 +180,7 @@ namespace network{
 		w->removeConnectionProcessInternal(hconn_,wait_,timeout_sec_,err);
 		set_error(err);
 		set_ready();
-		//std::cout<<"Remove Process command done"<<std::endl;
+		////r1std::cout<<"Remove Process command done"<<std::endl;
 		return;
 	}
 	
@@ -190,7 +190,7 @@ namespace network{
 		w->stop_process(hconn_,wait_,timeout_sec_,err);
 		set_error(err);
 		set_ready();
-		std::cout<<"Request Stop command done"<<std::endl;
+		//r1std::cout<<"Request Stop command done"<<std::endl;
 		return;
 	}
 
@@ -200,7 +200,7 @@ namespace network{
 		w->shutdown_connection(err,hconn_);
 		set_error(err);
 		set_ready();
-		std::cout<<"Shutdown command done"<<std::endl;
+		//r1std::cout<<"Shutdown command done"<<std::endl;
 		return;
 	}
 

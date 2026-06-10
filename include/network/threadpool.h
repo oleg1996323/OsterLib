@@ -80,7 +80,7 @@ class ServerWorker:public Worker{
     void set_processes(
                 std::error_code& err) noexcept
     {
-        std::cout<<"("<<name_<<")"<<"Number connections: "<<connections().size()<<std::endl;
+        //std::cout<<"("<<name_<<")"<<"Number connections: "<<connections().size()<<std::endl;
         for(auto& [id,conn_stat]:connections()){
             ConnectionHandle hconn = this->connection_handle(id);
             auto proc = std::make_unique<CONN_PROC>(hconn,err);

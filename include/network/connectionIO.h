@@ -44,7 +44,7 @@ class ConnectionIO{
                 value,
                 serializer_);ser_res!=serialization::SerializationEC::NONE){
             clear_recv_buffer(); //flush errorness sequence
-            std::cout<<"deserialize error"<<std::endl;
+            //std::cout<<"deserialize error"<<std::endl;
             return ser_res;
         }
         else{
@@ -69,7 +69,7 @@ class ConnectionIO{
                 return err;
             default:
             clear_recv_buffer(); //flush errorness sequence
-            std::cout<<"deserialize error"<<std::endl;
+            //std::cout<<"deserialize error"<<std::endl;
             return err;
         }
     }
@@ -88,7 +88,7 @@ class ConnectionIO{
         auto send_res = ::network::send_vectorized(
             err, *sock, send_buffer_);
         if (err != std::error_code()) {
-            std::cout<<err.message()<<std::endl;
+            //std::cout<<err.message()<<std::endl;
             switch (static_cast<std::errc>(err.value())) {
                 case std::errc::resource_unavailable_try_again:
                 case std::errc::operation_in_progress:

@@ -22,7 +22,7 @@ namespace network{
     void AbstractRequestableConnectionProcess::try_receive(
             std::error_code& err) noexcept
     {
-        std::cout<<"(client) try_receive"<<std::endl;
+        //std::cout<<"(client) try_receive"<<std::endl;
         if(!active_request_)
             return;
         io_context().receive(err,
@@ -35,7 +35,7 @@ namespace network{
                 err.clear();
                 return;
             default:
-                std::cout<<"client receive error"<<std::endl;
+                //std::cout<<"client receive error"<<std::endl;
                 complete_current_request(err);
                 err.clear();
                 return;
@@ -45,7 +45,7 @@ namespace network{
             std::error_code& err) noexcept
     {
         err.clear();
-        std::cout<<"try_send"<<std::endl;
+        //std::cout<<"try_send"<<std::endl;
         if(!active_request_ && !make_active_request()){
             io_context().enable_writable(false,err);
             return false;
@@ -64,7 +64,7 @@ namespace network{
                     return true;
                     break;
                 default:
-                    std::cout<<"client sending error"<<std::endl;
+                    //std::cout<<"client sending error"<<std::endl;
                     complete_current_request(std::make_error_code(std::errc::bad_message));
                     err.clear();
                     io_context().clear_buffers();
@@ -80,7 +80,7 @@ namespace network{
     void AbstractRequestableConnectionProcess::reset_requests(
             std::error_code& err) noexcept
     {
-        std::cout<<"reset_requests"<<std::endl;
+        //std::cout<<"reset_requests"<<std::endl;
         while(!requests_.empty())
             requests_.pop();
         complete_current_request(std::make_error_code(std::errc::interrupted));
@@ -89,7 +89,7 @@ namespace network{
     }
     bool AbstractRequestableConnectionProcess::make_active_request() noexcept
     {
-        std::cout<<"make_active_request"<<std::endl;
+        //std::cout<<"make_active_request"<<std::endl;
         while(!requests_.empty()){
             active_request_ = requests_.front();
             requests_.pop();
@@ -102,7 +102,7 @@ namespace network{
     void AbstractRequestableConnectionProcess::push_request(
             std::shared_ptr<Command<CommandType::RequestData>> request,
             std::error_code& err) noexcept{
-        std::cout<<"(Process) push_request"<<std::endl;
+        //std::cout<<"(Process) push_request"<<std::endl;
         if(requests_.empty()){
             active_request_=request;
             on_write(err);
@@ -114,16 +114,16 @@ namespace network{
         std::shared_ptr<Command<CommandType::RequestData>> cmd,
         std::error_code err) noexcept
     {
-        std::cout<<"mark_error_request"<<std::endl;
+        //std::cout<<"mark_error_request"<<std::endl;
         if(err!=std::error_code())
-            std::cout<<err.message()<<std::endl;
+            //std::cout<<err.message()<<std::endl;
         if(cmd)
             cmd->set_error(err);
     }
     void AbstractRequestableConnectionProcess::mark_notify_request(
             std::shared_ptr<Command<CommandType::RequestData>> cmd) noexcept
     {
-        std::cout<<"mark_notify_request"<<std::endl;
+        //std::cout<<"mark_notify_request"<<std::endl;
         if(cmd)
             cmd->set_ready();
     }

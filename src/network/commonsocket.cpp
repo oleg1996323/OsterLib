@@ -62,7 +62,7 @@ namespace network{
                 fcntl(fd_,F_SETFL,flags|O_NONBLOCK)==-1)
             {
                 #ifdef DEBUG
-                    std::cout<<strerror(errno)<<std::endl;
+                    //std::cout<<strerror(errno)<<std::endl;
                 #endif
                 err = std::make_error_code(
                     static_cast<std::errc>(errno));

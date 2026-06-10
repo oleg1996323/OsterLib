@@ -53,6 +53,7 @@ void ConnectionAcceptor::listen(std::error_code& err) noexcept{
 
 void ConnectionAcceptor::graceful_close(std::error_code& err) noexcept
 {
+    std::lock_guard lock(m_);
     if(socket_){
         socket_->shutdown_all(err);
         event_handler_->remove(socket_->native(),err);
@@ -72,21 +73,22 @@ void ConnectionAcceptor::accept_error_handling(
 }
 
 void ConnectionAcceptor::launch() noexcept{
+    std::lock_guard lock(m_);
     thread_ = std::make_unique<std::jthread>([this]
         (std::stop_token st)
     {
-        std::cout<<"acceptor launched"<<std::endl;
+        //std::cout<<"acceptor launched"<<std::endl;
         std::error_code err;
         socket_=std::move(make_socket(err,acceptor_options_));
         if(!socket_)
         {
             err = std::make_error_code(
                 std::errc::bad_file_descriptor);
-            std::cout<<"Acceptor: "<<err.message()<<std::endl;
+            //std::cout<<"Acceptor: "<<err.message()<<std::endl;
             return;
         }
         else if(err!=std::error_code()){
-            std::cout<<"Acceptor: "<<err.message()<<std::endl;
+            //std::cout<<"Acceptor: "<<err.message()<<std::endl;
             return;
         }
         else if(!event_handler_->add(
@@ -94,7 +96,7 @@ void ConnectionAcceptor::launch() noexcept{
                 Event::In | Event::EdgeTrigger,
                 err))
         {
-            std::cout<<"Acceptor: "<<err.message()<<std::endl;
+            //std::cout<<"Acceptor: "<<err.message()<<std::endl;
             graceful_close(err);
             return;
         }
@@ -107,18 +109,23 @@ std::unique_ptr<Socket> ConnectionAcceptor::make_socket(
         std::error_code& err,
         const std::vector<std::shared_ptr<Socket::BaseOption>>& options) noexcept
 {
-    if(Socket sock = socket(conn_.address(),
+    Address addr_;
+    {
+        std::lock_guard lock(m_);
+        addr_ = conn_.address();
+    }
+    if(Socket sock = socket(addr_,
         sock_type_,
         used_protocol_,
         err);
         sock.native()==-1)
     {
         err = std::make_error_code(static_cast<std::errc>(errno));
-        std::cout<<"Acceptor "<<err.message()<<std::endl;
+        //std::cout<<"Acceptor "<<err.message()<<std::endl;
         return {};
     }
     else {
-        sock.bind(conn_.address(),err);
+        sock.bind(addr_,err);
         if(err!=std::error_code())
             return {};
         if(sock.set_options(err,std::span(options)))
@@ -135,7 +142,7 @@ std::unique_ptr<Socket> ConnectionAcceptor::make_socket(
         else
         {
             err = std::make_error_code(static_cast<std::errc>(errno));
-            std::cout<<"Acceptor "<<err.message()<<std::endl;
+            //std::cout<<"Acceptor "<<err.message()<<std::endl;
             return {};
         }
     }
@@ -144,8 +151,10 @@ std::unique_ptr<Socket> ConnectionAcceptor::make_socket(
 bool ConnectionAcceptor::stop(std::error_code& err) noexcept
 {
     if(thread_){
+        std::lock_guard lock(m_);
         bool stopped = thread_->request_stop();
         event_handler_->interrupt();
+        thread_.reset();
         return stopped;
     }
     else return false;
@@ -159,6 +168,7 @@ bool ConnectionAcceptor::set_option(
         err = std::make_error_code(std::errc::no_such_device);
         return false;
     }
+    std::lock_guard lock(m_);
     return socket_->set_option(std::move(option),err);
 }
 bool ConnectionAcceptor::set_options(std::error_code& err,std::span<
@@ -168,6 +178,7 @@ bool ConnectionAcceptor::set_options(std::error_code& err,std::span<
         err = std::make_error_code(std::errc::no_such_device);
         return false;
     }
+    std::lock_guard lock(m_);
     return socket_->set_options(err,std::move(options));
 }
 bool ConnectionAcceptor::stopped() const noexcept{
@@ -179,6 +190,7 @@ bool ConnectionAcceptor::shutdown_read(std::error_code& err) noexcept
         err = std::make_error_code(std::errc::no_such_device);
         return false;
     }
+    std::lock_guard lock(m_);
     return socket_->shutdown_read(err);
 }
 bool ConnectionAcceptor::shutdown_write(std::error_code& err) noexcept
@@ -187,6 +199,7 @@ bool ConnectionAcceptor::shutdown_write(std::error_code& err) noexcept
         err = std::make_error_code(std::errc::no_such_device);
         return false;
     }
+    std::lock_guard lock(m_);
     return socket_->shutdown_write(err);
 }
 bool ConnectionAcceptor::shutdown_all(std::error_code& err) noexcept
@@ -195,6 +208,7 @@ bool ConnectionAcceptor::shutdown_all(std::error_code& err) noexcept
         err = std::make_error_code(std::errc::no_such_device);
         return false;
     }
+    std::lock_guard lock(m_);
     return socket_->shutdown_all(err);
 }
 
@@ -210,9 +224,9 @@ void ConnectionAcceptor::accept(std::stop_token stop,std::error_code& err) noexc
                         reinterpret_cast<sockaddr*>(&storage),&sz);
                         raw_sock==-1)
                 {
-                    std::cout<<"Connection refused: ";
+                    //std::cout<<"Connection refused: ";
                     Address addr(storage,err);
-                    print_ip_port(std::cout,addr);
+                    //print_ip_port(std::cout,addr);
                     accept_error_handling(err);
                     continue;
                 }
@@ -222,7 +236,7 @@ void ConnectionAcceptor::accept(std::stop_token stop,std::error_code& err) noexc
                     Socket socket(raw_sock);
                     socket.set_no_block(true,err);
                     if(err!=std::error_code()){
-                        std::cout<<"set non-block socket error"<<std::endl;
+                        //std::cout<<"set non-block socket error"<<std::endl;
                         continue;
                     }
                     std::unique_ptr<AbstractConnectionProcess> process;
@@ -240,13 +254,13 @@ void ConnectionAcceptor::accept(std::stop_token stop,std::error_code& err) noexc
                     if(hconn.is_valid_handler())
                     {
                         after_accept();
-                        std::cout<<"Connection accepted: "<<std::endl;
-                        print_ip_port(std::cout,addr);
+                        //std::cout<<"Connection accepted: "<<std::endl;
+                        //print_ip_port(std::cout,addr);
                         continue;
                     }
                     else{
-                        std::cout<<"Connection refused: "<<std::endl;
-                        print_ip_port(std::cout,addr);
+                        //std::cout<<"Connection refused: "<<std::endl;
+                        //print_ip_port(std::cout,addr);
                         continue;
                     }
                 }

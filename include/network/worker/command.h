@@ -274,7 +274,7 @@ namespace network{
 				w);
 				err!=std::error_code())
 			{
-				std::cout<<"Command request: "<<err.message()<<std::endl;
+				//std::cout<<"Command request: "<<err.message()<<std::endl;
 				set_error(err);
 				set_ready();
 			}

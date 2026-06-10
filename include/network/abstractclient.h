@@ -35,7 +35,7 @@ namespace network{
             connections_(std::make_unique<Worker>("client",events_in_order,err))
         {
                 if(err!=std::error_code()){
-                    std::cout<<err.message()<<std::endl;
+                    //std::cout<<err.message()<<std::endl;
                     connections_.reset();
                 }
                 else connections_->start();

@@ -43,7 +43,7 @@ epollfd(epoll_create(mp_controled)){
     if(errno!=0){
         err = std::make_error_code(static_cast<std::errc>(errno));
         errno = 0;
-        std::cout<<err.message()<<std::endl;
+        //std::cout<<err.message()<<std::endl;
         return;
     }
     __set_interruptor__(err);

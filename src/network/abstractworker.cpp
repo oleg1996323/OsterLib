@@ -7,14 +7,6 @@ namespace network{
 		if(err!=std::error_code())
 			return;
 	}
-	AbstractWorker::~AbstractWorker(){
-		if(stop_possible()){
-			std::cout<<"Stop requested"<<std::endl;
-			stop(false,0);
-		}
-		if (thread().joinable()) thread().join();
-		std::cout<<"thread joined"<<std::endl;
-	}
 	void AbstractWorker::stop(bool wait_for_end_connections,
             uint16_t timeout_sec){
         std::error_code err;
@@ -28,10 +20,10 @@ namespace network{
 		wake_event();
     }
 	void AbstractWorker::start(){
+		std::lock_guard lk(mutex());
         thread() = std::jthread([this](std::stop_token st) { 
             std::error_code err;
             run(st,err); });
-		stop_ = thread().get_stop_source().get_token();
     }
     bool AbstractWorker::set_options(
 			std::error_code& err,
@@ -68,12 +60,12 @@ namespace network{
 		if (enable){
 			new_events = new_events|Event::Out;
 			assert((new_events&Event::Out)==Event::Out);
-			std::cout<<"enable writable: id="<<hconn.id()<<std::endl;
+			//r1std::cout<<"enable writable: id="<<hconn.id()<<std::endl;
 		}
 		else{
 			new_events = new_events&~Event::Out;
 			assert((new_events&Event::Out)==0);
-			std::cout<<"disable writable: id="<<hconn.id()<<std::endl;
+			//r1std::cout<<"disable writable: id="<<hconn.id()<<std::endl;
 		}
 		EventHandle ev(hconn.id(), new_events);
 		bool res = modify_tracking_event(found->second.socket_->native(), ev, err);
@@ -94,11 +86,11 @@ namespace network{
 		Event new_events = found->second.events_handled_;
 		if (enable){
 			new_events = new_events|Event::In;
-			std::cout<<"enable readable"<<std::endl;
+			//r1std::cout<<"enable readable"<<std::endl;
 		}
 		else{
 			new_events = new_events&~Event::In;
-			std::cout<<"disable readable"<<std::endl;
+			//r1std::cout<<"disable readable"<<std::endl;
 		}
 		EventHandle ev(hconn.id(), new_events);
 		bool res = modify_tracking_event(found->second.socket_->native(), ev, err);
@@ -172,7 +164,7 @@ namespace network{
 						std::memory_order_acq_rel);
 			multiplexor_.remove(found->second.socket_->native(),err);
 			found->second.socket_->close();
-			std::cout<<"Erasing id="<<found->first<<std::endl;
+			//r1std::cout<<"Erasing id="<<found->first<<std::endl;
 			connections_.erase(found);
 			return true;
         }
@@ -308,7 +300,7 @@ namespace network{
 				std::error_code& err) noexcept
     {
 		if(events&Event::Error || events&Event::HangUp){
-			std::cout<<"Handling error: id="<<hconn.id()<<std::endl;
+			//r1std::cout<<"Handling error: id="<<hconn.id()<<std::endl;
 			state.conn_->state_ = Connection::State::Closed;
 			state.socket_->close();
 			state.proc_.reset();

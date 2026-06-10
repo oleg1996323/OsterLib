@@ -27,7 +27,7 @@ class AbstractWorker{
 		Event events_handled_;
 	};
     AbstractWorker(uint32_t order_lenght,std::error_code& err);
-	virtual ~AbstractWorker();
+	virtual ~AbstractWorker() = default;
 	void start();
 	void push_command(std::shared_ptr<BaseCommand> cmd) noexcept;
 	void push_commands(std::vector<std::shared_ptr<BaseCommand>>&& cmds) noexcept;
@@ -138,10 +138,10 @@ protected:
 				std::error_code& err) noexcept;
 	void notify_ready_command(std::shared_ptr<BaseCommand> cmd) noexcept;
 	bool stop_requested() noexcept{
-		return stop_.stop_requested();
+		return thread().get_stop_token().stop_requested();
 	}
 	bool stop_possible() noexcept{
-		return stop_.stop_possible();
+		return thread().get_stop_token().stop_possible();
 	}
 	void handle_worker_commands() noexcept{
 		WorkerCommand cmd;
@@ -156,13 +156,12 @@ protected:
 			stop(false,0);
 	}
 private:
-	mutable std::jthread thread_;
-	mutable std::mutex m_;
     std::unordered_map<ConnectionId,
         ConnectionState> connections_;
 	std::queue<std::shared_ptr<BaseCommand>> cmds_;
 	std::queue<WorkerCommand> w_cmds_;
 	Multiplexor multiplexor_;
-	std::stop_token stop_;
+	mutable std::mutex m_;
+	mutable std::jthread thread_;
 };
 }

@@ -96,9 +96,9 @@ namespace network{
                 return std::make_unique<T>(hconn,err);
             }
         };
+        
         std::unique_ptr<Socket> socket_;
         std::unique_ptr<Multiplexor> event_handler_;
-        std::unique_ptr<std::jthread> thread_;
         std::vector<std::shared_ptr<Socket::BaseOption>> acceptor_options_;
         std::vector<std::shared_ptr<Socket::BaseOption>> sock_accepted_options_;
         Socket::Type sock_type_{Socket::Type::Stream};
@@ -107,6 +107,8 @@ namespace network{
         AbstractServer* owner_;
         uint32_t number_listened_{0};
         std::unique_ptr<AbstractProcessFabrique> process_fabrique_{};
+        std::mutex m_;
+        std::unique_ptr<std::jthread> thread_;
         
         void accept_error_handling(
                 std::error_code& err) noexcept;
@@ -152,9 +154,11 @@ namespace network{
         template<typename T>
         requires (std::is_base_of_v<AbstractConnectionProcess,T>)
         void set_processes_at_connections() noexcept{
+            std::lock_guard lock(m_);
             process_fabrique_ = std::make_unique<MakeProcess<T>>();
         }
         void set_listened_backlog(uint32_t backlog) noexcept{
+            std::lock_guard lock(m_);
             number_listened_ = backlog;
         }
         void launch() noexcept;

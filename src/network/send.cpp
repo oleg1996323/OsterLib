@@ -21,7 +21,7 @@ namespace network{
             switch(static_cast<std::errc>(err.value())){
                 case std::errc::resource_unavailable_try_again:
                 case std::errc::operation_in_progress:
-                std::cout<<"Error at send_vectorized: "<<err.message()<<std::endl;
+                //std::cout<<"Error at send_vectorized: "<<err.message()<<std::endl;
                 buffer.consume(res);
                 if(!stand)
                     buffer.compact();                    
@@ -66,7 +66,7 @@ namespace network{
                 case std::errc::resource_unavailable_try_again:
                 case std::errc::operation_in_progress:
                 case std::errc::no_buffer_space:
-                std::cout<<"Error at send_vectorized: "<<err.message()<<std::endl;
+                //std::cout<<"Error at send_vectorized: "<<err.message()<<std::endl;
                 if(!stand)
                     buffer.commit_read(res);
                 return 0;
