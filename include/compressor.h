@@ -67,11 +67,11 @@ namespace cpp::zip_ns{
             if(zip_!=NULL){
                 zip_source* zs = zip_source_file_create(file_path.c_str(),0,0,&err_);
                 if(!zs){
-                    std::cout<<zip_error_strerror(&err_)<<std::endl;
+                    //std::cout<<zip_error_strerror(&err_)<<std::endl;
                     return false;
                 }
                 if(zip_file_add(zip_,fs::relative(file_path,rel_path).c_str(), zs,ZIP_FL_ENC_UTF_8)<0){
-                    std::cout<<zip_error_strerror(&err_)<<std::endl;
+                    //std::cout<<zip_error_strerror(&err_)<<std::endl;
                     zip_source_free(zs);
                     return false;
                 }

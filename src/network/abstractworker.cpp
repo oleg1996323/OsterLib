@@ -11,6 +11,7 @@ namespace network{
             uint16_t timeout_sec){
 		std::lock_guard lock(mutex());
         std::error_code err;
+		std::lock_guard lock(mutex());
         for(auto& [conn,conn_state]:connections()){
             if(conn_state.proc_.get()!=nullptr)
                 conn_state.proc_->request_stop(

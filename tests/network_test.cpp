@@ -44,13 +44,14 @@ class ClientPingProcess:public AbstractRequestableConnectionProcess{
         if(count_sent.load(std::memory_order::relaxed)<6){
             //std::cout<<"Client: send ping"<<std::endl;
             bool all_sent = try_send(err);
-            if(err!=std::error_code())
-                std::cout<<err.message()<<std::endl;
-            else {
+            if(err) return;
+            // if(err!=std::error_code())
+            //     //std::cout<<err.message()<<std::endl;
+            // else {
                 if(all_sent)
                     count_sent.fetch_add(1,std::memory_order::relaxed);
                 err.clear();
-            }
+            // }
         }
     }
     virtual void on_task_done(std::error_code& err) noexcept override{
@@ -58,8 +59,8 @@ class ClientPingProcess:public AbstractRequestableConnectionProcess{
     virtual void on_stop_requested(std::error_code& err) noexcept override{
         reset_requests(err);
         //std::cout<<"Client: stop requests"<<std::endl;
-        if(err!=std::error_code())
-            std::cout<<err.message()<<std::endl;
+        //if(err!=std::error_code())
+            //std::cout<<err.message()<<std::endl;
     }
 
     ClientPingProcess(ConnectionHandle hconn,std::error_code& err):
@@ -92,13 +93,13 @@ class ServerPingProcess:public AbstractConnectionProcess{
             err_val!=std::errc::resource_unavailable_try_again)
         {
             // if (err == std::errc::connection_reset)
-            //     std::cout << "(server) connection closed by peer" << std::endl;
+            //     //std::cout << "(server) connection closed by peer" << std::endl;
             return;
         }
         if(ping.data_!=1 || ping.start_!=8){
             err = std::make_error_code(std::errc::bad_message);
-            // std::cout<<"(server) Not 1 for ping"<<std::endl;
-            // std::cout<<"start="<<ping.start_<<";data="<<ping.data_<<std::endl;
+            // //std::cout<<"(server) Not 1 for ping"<<std::endl;
+            // //std::cout<<"start="<<ping.start_<<";data="<<ping.data_<<std::endl;
         }
         else{
             //std::cout<<"(server) Ping received"<<std::endl;
@@ -158,7 +159,7 @@ class Client:public AbstractClient{
 };
 
 // void broken_pipe(int sig){
-//     std::cout<<"pipe broken"<<std::endl;
+//     //std::cout<<"pipe broken"<<std::endl;
 // }
 
 TEST(Client_server,ping){

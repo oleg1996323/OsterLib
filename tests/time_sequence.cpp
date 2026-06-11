@@ -50,11 +50,11 @@ TEST(TimeSequence,ComputeNumberOfIntervalsTest){
     year_month_day ymd_to(sys_days(floor<days>(from)));
     auto to = time_point_cast<seconds>(sys_days(ymd_to+
                 years(dtd.years_)*10+months(dtd.months_)*10)+days(dtd.days_)*10);
-    std::cout<<to<<std::endl;
+    //std::cout<<to<<std::endl;
     to+=from-floor<days>(from);
-    std::cout<<to<<std::endl;
+    //std::cout<<to<<std::endl;
     to+=hours(dtd.hours_)*10+minutes(dtd.minutes_)*10+seconds(dtd.seconds_)*10;
-    std::cout<<to<<std::endl;
+    //std::cout<<to<<std::endl;
     ASSERT_EQ(TimeSequence::compute_number_of_intervals(from,
                                                 to
                                                 ,dtd,err),10);
@@ -94,10 +94,10 @@ TEST(TimeSequence,ComputeRawNumberOfIntervalsTest){
                 hours(dtd.hours_)*10-hours(5)+
                 minutes(dtd.minutes_)*10-minutes(5)+
                 seconds(dtd.seconds_)*10-seconds(5));
-    std::cout<<"to:"<<to<<std::endl;
-    std::cout<<DateTimeDiff::days_between_dates(year_month_day(floor<days>(from)),
-                    year_month_day(floor<days>(to)))<<std::endl;
-    std::cout<<DateTimeDiff::number_leap_days(year_month_day(floor<days>(from)),year_month_day(floor<days>(to)))<<std::endl;
+    //std::cout<<"to:"<<to<<std::endl;
+    //std::cout<<DateTimeDiff::days_between_dates(year_month_day(floor<days>(from)),
+                    //year_month_day(floor<days>(to)))<<std::endl;
+    //std::cout<<DateTimeDiff::number_leap_days(year_month_day(floor<days>(from)),year_month_day(floor<days>(to)))<<std::endl;
     ASSERT_EQ(TimeSequence::full_number_of_intervals(from,
                                                 to
                                                 ,dtd,err),9);
@@ -273,7 +273,7 @@ TEST(TimeSequence, ExtendableTest){
     std::vector<utc_tp> seq_rng = [](){
         std::vector<utc_tp> res;
         for(int i=1;i<10;++i){
-            /* std::cout<<"emplaced "<< */res.emplace_back(sys_days(1991y/1/i))/* <<std::endl */;
+            /* //std::cout<<"emplaced "<< */res.emplace_back(sys_days(1991y/1/i))/* <<std::endl */;
         }
         return res;}();
     std::error_code err = std::error_code();

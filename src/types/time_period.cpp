@@ -196,7 +196,7 @@ TimePeriod boost::lexical_cast(const std::string& input){
                     throw std::invalid_argument("Invalid time offset token input "s+std::string(token));
                 }
                 else if(tmp.value()==0){
-                    std::cout<<"Ignored value: "s<<token<<std::endl;
+                    //std::cout<<"Ignored value: "s<<token<<std::endl;
                     continue;
                 }
             }
@@ -210,19 +210,19 @@ TimePeriod boost::lexical_cast(const std::string& input){
                 else if(iend_with(token,std::string_view("d")))
                     result.days_ = days(tmp.value());
                 else{
-                    std::cout<<"Unknown time offset token"<<std::endl;
+                    //std::cout<<"Unknown time offset token"<<std::endl;
                     throw std::invalid_argument(input);
                 }
             }
             else{
-                std::cout<<"Missed time offset token"<<std::endl;
+                //std::cout<<"Missed time offset token"<<std::endl;
                 throw std::invalid_argument(input);
             }
         }
         return result;
     }
     else{
-        std::cout<<"Empty string at time offset definition"<<std::endl;
+        //std::cout<<"Empty string at time offset definition"<<std::endl;
         throw std::invalid_argument(input);
     }
 }

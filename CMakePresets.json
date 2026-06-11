@@ -16,8 +16,8 @@
             "cmakeExecutable": "cmake",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE":"Debug",
-                "CMAKE_CXX_COMPILER":"$env{HOME}/gcc-install/bin/g++",
-                "CMAKE_C_COMPILER":"$env{HOME}/gcc-install/bin/gcc",
+                "CMAKE_CXX_COMPILER":"$env{HOME}/gcc/gcc-install/bin/g++",
+                "CMAKE_C_COMPILER":"$env{HOME}/gcc/gcc-install/bin/gcc",
                 "CMAKE_INSTALL_PREFIX":"$env{HOME}/OsterLib-install",
                 "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
             },
@@ -52,8 +52,8 @@
             "$comment": "Configuration for basic building and intalling by Unix Makefiles in Unix systems",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE":"Release",
-                "CMAKE_CXX_COMPILER":"$env{HOME}/gcc-install/bin/g++",
-                "CMAKE_C_COMPILER":"$env{HOME}/gcc-install/bin/gcc",
+                "CMAKE_CXX_COMPILER":"$env{HOME}/gcc/gcc-install/bin/g++",
+                "CMAKE_C_COMPILER":"$env{HOME}/gcc/gcc-install/bin/gcc",
                 "CMAKE_INSTALL_PREFIX":"$env{HOME}/OsterLib-install",
                 "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
             }

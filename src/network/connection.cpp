@@ -135,7 +135,6 @@ std::unique_ptr<Socket> ConnectionAcceptor::make_socket(
         else
         {
             err = std::make_error_code(static_cast<std::errc>(errno));
-            //std::cout<<"Acceptor "<<err.message()<<std::endl;
             return {};
         }
     }
@@ -216,6 +215,7 @@ void ConnectionAcceptor::accept(std::stop_token stop,std::error_code& err) noexc
                     Address addr(storage,err);
                     Socket socket(raw_sock);
                     socket.set_no_block(true,err);
+                    socket.set_options(err,std::span(this->sock_accepted_options_));
                     if(err!=std::error_code()){
                         //std::cout<<"set non-block socket error"<<std::endl;
                         continue;
