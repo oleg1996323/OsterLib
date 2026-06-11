@@ -75,8 +75,6 @@ namespace network{
                 accepter_.reset();
         }
         void configure(const server::Settings& settings,
-                std::vector<std::shared_ptr<Socket::BaseOption>>&& acceptor_options,
-                std::vector<std::shared_ptr<Socket::BaseOption>>&& sock_accepted_options,
                 std::error_code& err) noexcept{
             settings_ = settings;
             if(!is_launched()){
@@ -95,8 +93,8 @@ namespace network{
                         Socket::Type::Stream,
                         settings_.protocol_,
                         settings_.number_events_,
-                        std::move(acceptor_options),
-                        std::move(sock_accepted_options),
+                        std::move(settings_.options_.options_sequence()),
+                        std::move(settings_.options_.options_sequence()),
                         err);
             }
             else{

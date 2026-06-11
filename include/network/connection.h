@@ -120,8 +120,7 @@ namespace network{
         virtual void after_accept(){}
         void accept(std::stop_token token,std::error_code& err) noexcept;
         std::unique_ptr<Socket> make_socket(
-            std::error_code& err,
-            const std::vector<std::shared_ptr<Socket::BaseOption>>& options={}) noexcept;
+            std::error_code& err) noexcept;
         void graceful_close(std::error_code& err) noexcept;
         public:
         ConnectionAcceptor(
@@ -163,9 +162,6 @@ namespace network{
         }
         void launch() noexcept;
         bool stop(std::error_code& err) noexcept;
-        bool set_option(
-                const std::shared_ptr<Socket::BaseOption>& option,
-                std::error_code& err) noexcept;
         bool set_options(std::error_code& err,std::span<
                     std::shared_ptr<Socket::BaseOption>> options) noexcept;
         bool stopped() const noexcept;

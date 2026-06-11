@@ -12,6 +12,8 @@
 namespace network{
 class AbstractProcess;
 class AbstractWorker{
+	void __thread_launch__(std::stop_token st) noexcept;
+
 	public:
 	enum class WorkerCommand{
 		None,
@@ -23,7 +25,7 @@ class AbstractWorker{
 		std::unique_ptr<Connection> conn_;
 		std::unique_ptr<AbstractConnectionProcess> proc_;
 		std::unique_ptr<ConnectionIO> connIO_;
-		std::shared_ptr<Socket> socket_;
+		std::unique_ptr<Socket> socket_;
 		Event events_handled_;
 	};
     AbstractWorker(uint32_t order_lenght,std::error_code& err);
@@ -57,7 +59,7 @@ class AbstractWorker{
 	void stop_all(uint16_t timeout_sec,bool wait,std::error_code& err) noexcept;
 	void shutdown_all(std::error_code& err) noexcept;
 	void remove_all(std::error_code& err) noexcept;
-	virtual void run(std::stop_token st,std::error_code& err) = 0;
+	virtual void run(EventHandle ev,std::stop_token st,std::error_code& err) = 0;
 	void command_worker(WorkerCommand cmd) noexcept{
 		{
 			std::lock_guard lk(mutex());
@@ -100,7 +102,7 @@ protected:
             uint16_t timeout_sec,
 			std::error_code& err) noexcept = 0;
 	std::unique_ptr<ConnectionIO> make_connectionIO(
-				std::shared_ptr<Socket> sock_ptr,
+				Socket& sock_ptr,
 				ConnectionHandle hconn,
 				size_t recv_buf_sz,
 				const Event& events,
@@ -110,9 +112,9 @@ protected:
 	void wake_event() noexcept;
 	std::span<network::EventHandle> wait(std::error_code& err,
         	int32_t timeout) noexcept;
-	const std::shared_ptr<Socket> socket_by_id(ConnectionId id) const noexcept;
+	const Socket* socket_by_id(ConnectionId id) const noexcept;
 	const ConnectionState* connection_state_by_id(ConnectionId id) const noexcept;
-	std::shared_ptr<Socket> socket_by_id(ConnectionId id) noexcept;
+	Socket* socket_by_id(ConnectionId id) noexcept;
 	ConnectionState* connection_state_by_id(ConnectionId id) noexcept;
 	const std::unordered_map<ConnectionId,
         ConnectionState>& connections() const noexcept;
@@ -137,12 +139,6 @@ protected:
 				Event events,
 				std::error_code& err) noexcept;
 	void notify_ready_command(std::shared_ptr<BaseCommand> cmd) noexcept;
-	bool stop_requested() noexcept{
-		return thread().get_stop_token().stop_requested();
-	}
-	bool stop_possible() noexcept{
-		return thread().get_stop_token().stop_possible();
-	}
 	void handle_worker_commands() noexcept{
 		WorkerCommand cmd;
 		{

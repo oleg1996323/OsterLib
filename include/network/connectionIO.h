@@ -28,7 +28,7 @@ class ConnectionIO{
     friend size_t send(std::error_code& err,const Socket& socket,SEND_FLAGS flags,
         const std::ranges::random_access_range auto& buffers) noexcept;
 
-    std::weak_ptr<Socket> socket_;
+    Socket& socket_;
     ConnectionHandle hconn_;
     VectorizedBuffer send_buffer_;
     RingBuffer<char> recv_buffer_;
@@ -74,8 +74,7 @@ class ConnectionIO{
         }
     }
     void __send_internal__(std::error_code& err) noexcept{
-        auto sock = socket_.lock();
-        if(!sock || !sock->valid()){
+        if(!socket_.valid()){
             err = std::make_error_code(std::errc::bad_file_descriptor);
             return;
         }
@@ -86,7 +85,7 @@ class ConnectionIO{
             return;
         }
         auto send_res = ::network::send_vectorized(
-            err, *sock, send_buffer_);
+            err, socket_, send_buffer_);
         if (err != std::error_code()) {
             //std::cout<<err.message()<<std::endl;
             switch (static_cast<std::errc>(err.value())) {
@@ -112,8 +111,7 @@ class ConnectionIO{
         }
     }
     std::int64_t __recv_internal__(std::error_code& err) noexcept{
-        auto sock = socket_.lock();
-        if(!sock || !sock->valid()){
+        if(!socket_.valid()){
             err = std::make_error_code(std::errc::bad_file_descriptor);
             clear_recv_buffer();
             return -1;
@@ -125,7 +123,7 @@ class ConnectionIO{
             return 0;
         }
         if(auto recv_res = ::network::receive_to_ring_buffer(err,
-            *sock,recv_buffer_);
+            socket_,recv_buffer_);
             err!=std::error_code())
         {
             switch(static_cast<std::errc>(err.value())){
@@ -145,7 +143,7 @@ class ConnectionIO{
     }
     public:
     ConnectionIO(
-            std::shared_ptr<Socket> socket,
+            Socket& socket,
             const ConnectionHandle& hconn,
             const Event* events,
             size_t recv_buf_sz,
@@ -157,7 +155,7 @@ class ConnectionIO{
     {
         assert(events);
         assert(hconn_.is_valid_handler());
-        if(!socket || !socket->valid())
+        if(socket_.valid())
             err = std::make_error_code(std::errc::bad_file_descriptor);
         else err.clear();
     }

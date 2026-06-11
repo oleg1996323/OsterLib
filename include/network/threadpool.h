@@ -44,7 +44,7 @@ protected:
             bool wait_for_end_connections,
             uint16_t timeout_sec,
             std::error_code& err) noexcept override;
-    virtual void run(std::stop_token st,std::error_code& err) override;
+    virtual void run(EventHandle ev,std::stop_token st,std::error_code& err) override;
     virtual void after_connection(
             ConnectionState* connstat,
             std::error_code& err) noexcept{}

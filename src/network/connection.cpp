@@ -79,7 +79,7 @@ void ConnectionAcceptor::launch() noexcept{
     {
         //std::cout<<"acceptor launched"<<std::endl;
         std::error_code err;
-        socket_=std::move(make_socket(err,acceptor_options_));
+        socket_=std::move(make_socket(err));
         if(!socket_)
         {
             err = std::make_error_code(
@@ -106,8 +106,7 @@ void ConnectionAcceptor::launch() noexcept{
 }
 
 std::unique_ptr<Socket> ConnectionAcceptor::make_socket(
-        std::error_code& err,
-        const std::vector<std::shared_ptr<Socket::BaseOption>>& options) noexcept
+        std::error_code& err) noexcept
 {
     Address addr_;
     {
@@ -128,14 +127,8 @@ std::unique_ptr<Socket> ConnectionAcceptor::make_socket(
         sock.bind(addr_,err);
         if(err!=std::error_code())
             return {};
-        if(sock.set_options(err,std::span(options)))
+        if(sock.set_options(err,std::span(acceptor_options_)))
         {
-            auto opt = std::make_shared<Socket::Option<int>>(0,Socket::ReuseAddress);
-            assert(sock.get_option(err,opt));
-            assert(opt->value_==1);
-            opt = std::make_shared<Socket::Option<int>>(0,Socket::ReusePort);
-            assert(sock.get_option(err,opt));
-            assert(opt->value_==1);
             err.clear();
             return std::make_unique<Socket>(std::move(sock));
         }
@@ -158,18 +151,6 @@ bool ConnectionAcceptor::stop(std::error_code& err) noexcept
         return stopped;
     }
     else return false;
-}
-
-bool ConnectionAcceptor::set_option(
-        const std::shared_ptr<Socket::BaseOption>& option,
-        std::error_code& err) noexcept
-{
-    if(!socket_){
-        err = std::make_error_code(std::errc::no_such_device);
-        return false;
-    }
-    std::lock_guard lock(m_);
-    return socket_->set_option(std::move(option),err);
 }
 bool ConnectionAcceptor::set_options(std::error_code& err,std::span<
             std::shared_ptr<Socket::BaseOption>> options) noexcept
@@ -239,18 +220,24 @@ void ConnectionAcceptor::accept(std::stop_token stop,std::error_code& err) noexc
                         //std::cout<<"set non-block socket error"<<std::endl;
                         continue;
                     }
-                    std::unique_ptr<AbstractConnectionProcess> process;
+                    
                     
                     auto hconn = owner_->attach_connection(
                         addr,
                         std::move(socket),
                         err);
-                    if(process_fabrique_){
-                        process = process_fabrique_->make_process(hconn,err);
+
+                    std::unique_ptr<AbstractConnectionProcess> process;
+                    {
+                        std::lock_guard lock(m_);
+                        if(process_fabrique_)
+                            process = process_fabrique_->make_process(hconn,err);
+                            
+                    }
+                    if(process)
                         hconn.execute_command(
                         std::make_shared<Command<CommandType::AttachProcess>>(
                             hconn,std::move(process)),err);
-                    }
                     if(hconn.is_valid_handler())
                     {
                         after_accept();

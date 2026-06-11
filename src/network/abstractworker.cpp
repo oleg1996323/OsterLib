@@ -9,6 +9,7 @@ namespace network{
 	}
 	void AbstractWorker::stop(bool wait_for_end_connections,
             uint16_t timeout_sec){
+		std::lock_guard lock(mutex());
         std::error_code err;
         for(auto& [conn,conn_state]:connections()){
             if(conn_state.proc_.get()!=nullptr)
@@ -20,11 +21,28 @@ namespace network{
 		wake_event();
     }
 	void AbstractWorker::start(){
-		std::lock_guard lk(mutex());
-        thread() = std::jthread([this](std::stop_token st) { 
-            std::error_code err;
-            run(st,err); });
+		std::lock_guard lock(mutex());
+        thread() = std::jthread(std::bind_front(&AbstractWorker::__thread_launch__,this));
     }
+	void AbstractWorker::__thread_launch__(std::stop_token st) noexcept{
+		std::error_code err;
+		while (!st.stop_requested()) {
+		auto events = wait(err,3000);
+		handle_worker_commands();
+		if(st.stop_requested())
+			break;
+		this->handle_pending(err);
+		for (const auto& ev : events) {
+			//if((ev.events()&Event::In)!=0)
+				//std::cout<<"("<<name_<<") "<<"read event"<<std::endl;
+			//if((ev.events()&Event::HangUp)!=0)
+				//std::cout<<"("<<name_<<") "<<"hangup event"<<std::endl;
+			//if((ev.events()&Event::Error)!=0)
+				//std::cout<<"("<<name_<<") "<<"error event"<<std::endl;
+			//if((ev.events()&Event::Out)!=0)
+				//std::cout<<"("<<name_<<") "<<"write event"<<std::endl;
+		run(ev,st,err); }}
+	}
     bool AbstractWorker::set_options(
 			std::error_code& err,
 			const ConnectionHandle& hconn,
@@ -202,21 +220,15 @@ namespace network{
 		});
 	}
 	std::unique_ptr<ConnectionIO> AbstractWorker::make_connectionIO(
-				std::shared_ptr<Socket> sock_ptr,
+				Socket& sock_ptr,
 				ConnectionHandle hconn,
 				size_t recv_buf_sz,
 				const Event& events,
 				std::error_code& err) noexcept
 	{
-		if(sock_ptr){
-			err.clear();
-			//@todo make configurable buffer size
-			return std::make_unique<ConnectionIO>(sock_ptr,hconn,&events,recv_buf_sz,err);
-		}
-		else{
-			err = std::make_error_code(std::errc::invalid_argument);
-			return {};
-		}
+		err.clear();
+		//@todo make configurable buffer size
+		return std::make_unique<ConnectionIO>(sock_ptr,hconn,&events,recv_buf_sz,err);
 	}
 	std::jthread& AbstractWorker::thread() const noexcept{
 		return thread_;
@@ -231,12 +243,12 @@ namespace network{
         	int32_t timeout) noexcept{
 		return multiplexor_.wait(err,timeout);
 	}
-	std::shared_ptr<Socket> AbstractWorker::socket_by_id(ConnectionId id) noexcept{
+	Socket* AbstractWorker::socket_by_id(ConnectionId id) noexcept{
 		return const_cast<AbstractWorker*>(this)->socket_by_id(id);
 	}
-	const std::shared_ptr<Socket> AbstractWorker::socket_by_id(ConnectionId id) const noexcept{
+	const Socket* AbstractWorker::socket_by_id(ConnectionId id) const noexcept{
 		if(auto found = connections().find(id);found!=connections().end())
-			return found->second.socket_;
+			return found->second.socket_.get();
 		else return nullptr;
 	}
 	const AbstractWorker::ConnectionState* AbstractWorker::connection_state_by_id(ConnectionId id) const noexcept{

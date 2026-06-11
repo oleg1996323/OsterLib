@@ -5,7 +5,9 @@ namespace network{
     AbstractWorker(order_length,err),
     name_(worker_name){}
     Worker::~Worker(){
-        stop(false,0);
+        command_worker(WorkerCommand::Stop);
+        if(thread().joinable())
+            thread().join();
         //std::cout<<"("<<name_<<")"<<"delete Worker "<<name_<<std::endl;
     }
     bool Worker::connectInternal(
@@ -15,17 +17,18 @@ namespace network{
             Socket&& socket,
             std::error_code& err) noexcept
     {
-        if(!stop_requested() &&
+        if(!thread().get_stop_token().stop_requested() &&
             hconn.is_valid_handler())
         {
             {
+                auto socket_loc = std::make_unique<Socket>(
+                            std::move(socket));
                 ConnectionState conn_stat = ConnectionState{
                         .conn_ = std::move(conn),
                         .proc_={},
-                        .socket_ = std::make_shared<Socket>(
-                            std::move(socket))};
+                        .socket_ = std::move(socket_loc)};
                 conn_stat.connIO_ = make_connectionIO(
-                        conn_stat.socket_,hconn,1024*8,conn_stat.events_handled_,err);
+                        *conn_stat.socket_,hconn,1024*8,conn_stat.events_handled_,err);
                 conn_stat.events_handled_=Event::Out|Event::Error|Event::HangUp;
                 if(conn_stat.socket_->set_no_block(true,err)==false){
                     //std::cout<<"("<<name_<<"):"<<"Connection add failed: \n";
@@ -113,18 +116,19 @@ namespace network{
                     //std::cout<<"("<<name_<<")"<<"(Connection attach/add_tracking_event): "<<err.message()<<std::endl;
                     return false;
                 }
-            auto socket_loc = std::make_shared<Socket>(std::move(socket));
+            auto socket_loc = std::make_unique<Socket>(std::move(socket));
             if(err!=std::error_code()){
                 //std::cout<<"("<<name_<<")"<<"(Connection attach/make_connectionIO): "<<err.message()<<std::endl;
                 return false;
             }
+            auto& sock_ref = *socket_loc;
             auto inserted = connections().insert(
                 std::make_pair(
                     hconn.id(),
                     ConnectionState{
                         .conn_=std::move(conn),
                         .proc_={},
-                        .socket_=socket_loc,
+                        .socket_=std::move(socket_loc),
                         .events_handled_=events
                     }));
             
@@ -137,7 +141,7 @@ namespace network{
             }
             else{
                 auto connIO=make_connectionIO(
-                    socket_loc,
+                    sock_ref,
                     hconn,
                     settings.options_.buffer_size_in_.first,
                     inserted.first->second.events_handled_,
@@ -218,7 +222,7 @@ namespace network{
     bool Worker::addConnectionProcessInternal(const ConnectionHandle& hconn,
             std::unique_ptr<AbstractConnectionProcess> proc,
             std::error_code& err) noexcept{
-        if(!stop_requested())
+        if(!thread().get_stop_token().stop_requested())
         {
             ConnectionState* conn_stat=nullptr;
             {
@@ -293,98 +297,81 @@ namespace network{
             return true;
         }
     }
-    void Worker::run(std::stop_token st,std::error_code& err){
-        while (!stop_requested()) {
-            auto events = wait(err,3000);
-            handle_worker_commands();
-            if(st.stop_requested())
-                break;
-            this->handle_pending(err);
-            for (const auto& ev : events) {
-                // if((ev.events()&Event::In)!=0)
-                //     //std::cout<<"("<<name_<<") "<<"read event"<<std::endl;
-                // if((ev.events()&Event::HangUp)!=0)
-                //     //std::cout<<"("<<name_<<") "<<"hangup event"<<std::endl;
-                // if((ev.events()&Event::Error)!=0)
-                //     //std::cout<<"("<<name_<<") "<<"error event"<<std::endl;
-                // if((ev.events()&Event::Out)!=0)
-                //     //std::cout<<"("<<name_<<") "<<"write event"<<std::endl;
-                Event e = ev.events();
+    void Worker::run(EventHandle ev,std::stop_token st,std::error_code& err){
+        Event e = ev.events();
+        {
+            ConnectionState* conn_stat=nullptr;
+            conn_stat = connection_state_by_id(ev.get_as_32());
+            
+            if(!conn_stat){
+                err = std::make_error_code(std::errc::no_such_device);
+                return;
+            }
+            if(!handle_events(connection_handle(ev.get_as_32()),*conn_stat,e,err))
+                return;
+            //delete
+            if(name_=="server 0"){
+                if(!conn_stat->proc_)
+                    assert(conn_stat->events_handled_&(Event::EdgeTrigger|Event::In));
+                else assert(conn_stat->events_handled_&Event::In ||
+                    conn_stat->events_handled_&(Event::Out|Event::In));
+            }
+            if(conn_stat->conn_->state()==
+                Connection::State::Connecting &&
+                ev.events() & Event::Out)
+            {
+                if (auto sock_error = conn_stat->socket_->error(err);
+                    sock_error==std::error_code()) 
                 {
-                    ConnectionState* conn_stat=nullptr;
-                    conn_stat = connection_state_by_id(ev.get_as_32());
-                    
-                    if(!conn_stat){
-                        err = std::make_error_code(std::errc::no_such_device);
-                        continue;
+                    set_connection_state(conn_stat->conn_.get(),
+                    Connection::State::Active);
+                    EventHandle ev_tmp = ev;
+                    ev_tmp.set_events(
+                        Event::In|Event::EdgeTrigger|Event::HangUp|Event::Error);
+                    if(!modify_tracking_event(conn_stat->socket_->native(),
+                                    ev_tmp,
+                                    err)){
+                        //std::cout<<"("<<name_<<")"<<"Connection add failed: \n";
+                        //std::cout<<"("<<name_<<")"<<err.message()<<std::endl;
+                        push_command(std::make_shared<Command<
+                            CommandType::RemoveConnection>>(
+                                connection_handle(ev.get_as_32())));
                     }
-                    if(!handle_events(connection_handle(ev.get_as_32()),*conn_stat,e,err))
-                        continue;
-                    //delete
-                    if(name_=="server 0"){
-                        if(!conn_stat->proc_)
-                            assert(conn_stat->events_handled_&(Event::EdgeTrigger|Event::In));
-                        else assert(conn_stat->events_handled_&Event::In ||
-                            conn_stat->events_handled_&(Event::Out|Event::In));
+                    else{
+                        conn_stat->events_handled_ = 
+                            Event::In|Event::EdgeTrigger|Event::HangUp|Event::Error;
+                        //std::cout<<"("<<name_<<")"<<"Connection established: \n";
+                        //print_ip_port(std::cout,conn_stat->conn_->address());
                     }
-                    if(conn_stat->conn_->state()==
-                        Connection::State::Connecting &&
-                        ev.events() & Event::Out)
-                    {
-                        if (auto sock_error = conn_stat->socket_->error(err);
-                            sock_error==std::error_code()) 
-                        {
-                            set_connection_state(conn_stat->conn_.get(),
-                            Connection::State::Active);
-                            EventHandle ev_tmp = ev;
-                            ev_tmp.set_events(
-                                Event::In|Event::EdgeTrigger|Event::HangUp|Event::Error);
-                            if(!modify_tracking_event(conn_stat->socket_->native(),
-                                            ev_tmp,
-                                            err)){
-                                //std::cout<<"("<<name_<<")"<<"Connection add failed: \n";
-                                //std::cout<<"("<<name_<<")"<<err.message()<<std::endl;
-                                push_command(std::make_shared<Command<
-                                    CommandType::RemoveConnection>>(
-                                        connection_handle(ev.get_as_32())));
-                            }
-                            else{
-                                conn_stat->events_handled_ = 
-                                    Event::In|Event::EdgeTrigger|Event::HangUp|Event::Error;
-                                //std::cout<<"("<<name_<<")"<<"Connection established: \n";
-                                //print_ip_port(std::cout,conn_stat->conn_->address());
-                            }
-                        } else {
-                            std::vector<std::shared_ptr<BaseCommand>> cmds;
-                            cmds.emplace_back(std::make_shared<Command<
-                                CommandType::RemoveConnection>>(
-                                    connection_handle(ev.get_as_32())));
-                            push_commands(std::move(cmds));
-                            //std::cout<<"("<<name_<<")"<<"Connection add failed: \n";
-                            //std::cout<<"("<<name_<<")"<<err.message()<<std::endl;
-                            continue;
-                        }
-                    }
-                    if (conn_stat->proc_)
-                    {
-                        std::error_code err;
-                        conn_stat->proc_->handle_event(e,err);
-                        if(err!=std::error_code())
-                        switch(static_cast<std::errc>(err.value())){
-                            case std::errc::operation_in_progress:
-                            case std::errc::no_buffer_space:
-                            case std::errc::resource_unavailable_try_again:
-                                err.clear();
-                                break;
-                            default:
-                                conn_stat->socket_->close();
-                                conn_stat->proc_.reset();
-                                conn_stat->connIO_.reset();
-                                push_command(std::make_shared<Command<
-                                CommandType::RemoveConnection>>(
-                                    connection_handle(ev.get_as_32())));
-                        }
-                    }
+                } else {
+                    std::vector<std::shared_ptr<BaseCommand>> cmds;
+                    cmds.emplace_back(std::make_shared<Command<
+                        CommandType::RemoveConnection>>(
+                            connection_handle(ev.get_as_32())));
+                    push_commands(std::move(cmds));
+                    //std::cout<<"("<<name_<<")"<<"Connection add failed: \n";
+                    //std::cout<<"("<<name_<<")"<<err.message()<<std::endl;
+                    return;
+                }
+            }
+            if (conn_stat->proc_)
+            {
+                std::error_code err;
+                conn_stat->proc_->handle_event(e,err);
+                if(err!=std::error_code())
+                switch(static_cast<std::errc>(err.value())){
+                    case std::errc::operation_in_progress:
+                    case std::errc::no_buffer_space:
+                    case std::errc::resource_unavailable_try_again:
+                        err.clear();
+                        break;
+                    default:
+                        conn_stat->socket_->close();
+                        conn_stat->proc_.reset();
+                        conn_stat->connIO_.reset();
+                        push_command(std::make_shared<Command<
+                        CommandType::RemoveConnection>>(
+                            connection_handle(ev.get_as_32())));
                 }
             }
         }

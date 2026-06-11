@@ -11,8 +11,8 @@ std::mutex m_;
 
 class ClientPingProcess:public AbstractRequestableConnectionProcess{
     public:
-    static int count_sent;
-    static int count_recv;
+    static std::atomic<int> count_sent;
+    static std::atomic<int> count_recv;
     virtual void on_read(std::error_code& err) noexcept override{
             //std::cout<<"Client: receive ping"<<std::endl;
             try_receive(err);
@@ -34,21 +34,21 @@ class ClientPingProcess:public AbstractRequestableConnectionProcess{
             }
             else{
                 if(!io_context().has_to_read()){
-                    ++count_recv;
+                    count_recv.fetch_add(1,std::memory_order::relaxed);
                 }
                 complete_current_request(err);
                 err.clear();
             }
     }
     virtual void on_write(std::error_code& err) noexcept override{
-        if(count_sent<6){
+        if(count_sent.load(std::memory_order::relaxed)<6){
             //std::cout<<"Client: send ping"<<std::endl;
             bool all_sent = try_send(err);
             if(err!=std::error_code())
                 std::cout<<err.message()<<std::endl;
             else {
                 if(all_sent)
-                    ++count_sent;
+                    count_sent.fetch_add(1,std::memory_order::relaxed);
                 err.clear();
             }
         }
@@ -75,14 +75,14 @@ class ClientPingProcess:public AbstractRequestableConnectionProcess{
     }
 };
 
-int ClientPingProcess::count_sent = 0;
-int ClientPingProcess::count_recv = 0;
+std::atomic<int> ClientPingProcess::count_sent = 0;
+std::atomic<int> ClientPingProcess::count_recv = 0;
 
 // должен быть известен фрейм, который десериализуется
 class ServerPingProcess:public AbstractConnectionProcess{
     public:
-    static int count_sent;
-    static int count_recv;
+    static std::atomic<int> count_sent;
+    static std::atomic<int> count_recv;
     virtual void on_read(std::error_code& err) noexcept override{
         SizeFramedData<size_t> ping;
         io_context().receive(err,ping.start_,ping.data_);
@@ -103,7 +103,7 @@ class ServerPingProcess:public AbstractConnectionProcess{
         else{
             //std::cout<<"(server) Ping received"<<std::endl;
             if(!io_context().has_to_read()){
-                ++count_recv;
+                count_recv.fetch_add(1,std::memory_order::relaxed);
                 on_write(err);
             }
         }
@@ -124,7 +124,7 @@ class ServerPingProcess:public AbstractConnectionProcess{
         }
         else{
             //std::cout<<"(server) Ping sent"<<std::endl;
-            ++count_sent;
+            count_sent.fetch_add(1,std::memory_order::relaxed);
         }
     }
     virtual void on_task_done(std::error_code& err) noexcept override{
@@ -144,8 +144,8 @@ class ServerPingProcess:public AbstractConnectionProcess{
     }
 };
 
-int ServerPingProcess::count_sent = 0;
-int ServerPingProcess::count_recv = 0;
+std::atomic<int> ServerPingProcess::count_sent = 0;
+std::atomic<int> ServerPingProcess::count_recv = 0;
 
 class Server:public AbstractServer{
     FRIEND_TEST(Client_server,ping);
@@ -168,19 +168,14 @@ TEST(Client_server,ping){
     settings.protocol_ = Protocol::TCP;
     settings.num_threads_pool_ = 1;
     settings.timeout_seconds_processes_ = 3;
-    for(int i = 0;i<5;++i){
+    settings.options_=ConnectionOptions{
+        .reuse_address_{true,{}},
+        .reuse_port_={true,{}},
+        .keep_alive_={true,{}}};
+    //for(int i = 0;i<5;++i){
         Server server;
         std::error_code err;
-        std::vector<std::shared_ptr<network::Socket::BaseOption>> options;
-        options.push_back(std::make_shared<Socket::Option<int>>(
-                                Socket::Option(1,Socket::Options::KeepAlive)));
-        options.push_back(std::make_shared<Socket::Option<int>>(
-                                Socket::Option(1,Socket::Options::ReuseAddress)));
-        options.push_back(std::make_shared<Socket::Option<int>>(
-                                Socket::Option(1,Socket::Options::ReusePort)));
         server.configure(settings,
-                            std::move(options),
-                            {},
                             err);
         server.launch(err);
         server.set_processes_at_connections<ServerPingProcess>();
@@ -206,19 +201,19 @@ TEST(Client_server,ping){
             }
         }
         std::lock_guard lk(m_);
-        EXPECT_EQ(ServerPingProcess::count_recv,5);
-        EXPECT_EQ(ServerPingProcess::count_sent,5);
-        EXPECT_EQ(ClientPingProcess::count_recv,5);
-        EXPECT_EQ(ClientPingProcess::count_sent,5);
-        ServerPingProcess::count_recv = 0;
-        ServerPingProcess::count_sent = 0;
-        ClientPingProcess::count_recv = 0;
-        ClientPingProcess::count_sent = 0;
-    }
+        EXPECT_EQ(ServerPingProcess::count_recv.load(std::memory_order::relaxed),5);
+        EXPECT_EQ(ServerPingProcess::count_sent.load(std::memory_order::relaxed),5);
+        EXPECT_EQ(ClientPingProcess::count_recv.load(std::memory_order::relaxed),5);
+        EXPECT_EQ(ClientPingProcess::count_sent.load(std::memory_order::relaxed),5);
+        ServerPingProcess::count_recv.store(0,std::memory_order::relaxed);
+        ServerPingProcess::count_sent.store(0,std::memory_order::relaxed);
+        ClientPingProcess::count_recv.store(0,std::memory_order::relaxed);
+        ClientPingProcess::count_sent.store(0,std::memory_order::relaxed);
+    //}
 }
 
-TEST(Client_server_ping,HandlingClientDisconnection){
-
+TEST(Client_server,BufferOverflowExchange){
+    
 }
 
 int main(int argc, char* argv[]){

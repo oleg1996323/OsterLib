@@ -3,6 +3,7 @@
 #include <span>
 #include <iterator>
 #include <cstddef>
+#include <ranges>
 #ifdef __unix__
 #include <sys/uio.h>
 #endif
@@ -140,6 +141,32 @@ public:
 
     const_iterator begin() const { return const_iterator(const_cast<RingBuffer*>(this), 0); }
     const_iterator end() const   { return const_iterator(const_cast<RingBuffer*>(this), size()); }
+
+    //insert the maximum insertable data from other container
+    //return the next container's iterator of last insert data
+    template<template<typename T> typename CONTAINER>
+    typename CONTAINER<T>::const_iterator insert(const CONTAINER<T>& container) noexcept{
+        auto vec = write_vectored();
+        using type = std::decay_t<CONTAINER<T>>;
+        typename type::const_iterator result = container.begin();
+        if(vec.first.iov_len>0){
+            result = result+std::distance(
+                result,
+                typename type::const_iterator(
+                    std::copy(  result,
+                    result+vec.first.iov_len,
+                    (T*)vec.first.iov_base)));
+        }
+        if(vec.second.iov_len>0){
+            result = result+std::distance(
+                result,
+                typename type::const_iterator(
+                    std::copy(  result,
+                    result+vec.second.iov_len,
+                    (T*)vec.second.iov_base)));
+        }
+        return result;
+    }
 
     // Удаление одного символа (возвращает false, если буфер пуст)
     bool pop_front() {

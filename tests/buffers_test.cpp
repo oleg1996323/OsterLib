@@ -58,6 +58,22 @@ TEST(Buffer,RingBufferCheckErrors_test){
     ASSERT_EQ(buffer.size(),0);
 }
 
+TEST(Buffer,RingBufferOverflow_test){
+    network::RingBuffer<char> buffer(10);
+    std::error_code err;
+    std::vector<char> to_write;
+    for(int i=0;i<20;++i)
+        to_write.push_back((char)i);
+    auto vec = buffer.write_vectored();
+    std::copy(  to_write.data(),
+                to_write.data()+vec.first.iov_len,
+                (char*)vec.first.iov_base);
+    ASSERT_EQ(buffer.data_at(9),char(9));
+    buffer.pop_front();
+    ASSERT_EQ(buffer.data_at(8),char(9));
+    buffer.insert(to_write);
+}
+
 TEST(Buffer,VectorizedBufferSimple_test){
     network::VectorizedBuffer buffer;
     ASSERT_FALSE(buffer.has_to_write());
