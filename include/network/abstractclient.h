@@ -35,7 +35,7 @@ namespace network{
             connections_(std::make_unique<Worker>("client",events_in_order,err))
         {
                 if(err!=std::error_code()){
-                    //std::cout<<err.message()<<std::endl;
+                    std::cout<<err.message()<<std::endl;
                     connections_.reset();
                 }
                 else connections_->start();
@@ -103,9 +103,9 @@ namespace network{
             DATA_FRAME_SEND,
             END_FRAME>> request(
                 ConnectionHandle hconn,
-                START_FRAME&& start,
-                DATA_FRAME_SEND&& data,
-                END_FRAME&& end) noexcept
+                START_FRAME start,
+                DATA_FRAME_SEND data,
+                END_FRAME end) noexcept
         {
             auto result = std::make_shared<
                     RequestCommandSpec<

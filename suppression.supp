@@ -1,0 +1,19 @@
+{
+   ignore_stdout_race
+   Helgrind:DataRace
+   fun:width
+   fun:_ZSt16__ostream_insertIcSt11char_traitsIcEERSt13basic_ostreamIT_T0_ES6_PKS3_l
+   fun:_ZStlsISt11char_traitsIcEERSt13basic_ostreamIcT_ES5_PKc
+   fun:std::ostream::operator<<
+   fun:std::basic_ostream<char, std::char_traits<char> >& std::endl<char, std::char_traits<char> >(std::basic_ostream<char, std::char_traits<char> >&)
+   fun:std::flush
+}
+
+{
+   ignore_stdio_internals
+   Helgrind:DataRace
+   fun:mempcpy
+   fun:_IO_new_file_xsputn
+   fun:_IO_file_xsputn
+   fun:fwrite
+}

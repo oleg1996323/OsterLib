@@ -54,13 +54,19 @@ void ConnectionAcceptor::listen(std::error_code& err) noexcept{
 void ConnectionAcceptor::graceful_close(std::error_code& err) noexcept
 {
     std::lock_guard lock(m_);
-    if(socket_){
+    if (thread_) {
+        thread_->request_stop();
+        event_handler_->interrupt();
+        if (thread_->joinable()) thread_->join();
+        thread_.reset();
+    }
+    if (socket_) {
         socket_->shutdown_all(err);
-        event_handler_->remove(socket_->native(),err);
+        event_handler_->remove(socket_->native(), err);
+        //prstd::cout<<"Acceptor ";
+        //prstd::cout.flush();
         socket_.reset();
     }
-    if(thread_)
-        thread_->request_stop();
 }
 
 void ConnectionAcceptor::accept_error_handling(
@@ -77,18 +83,18 @@ void ConnectionAcceptor::launch() noexcept{
     thread_ = std::make_unique<std::jthread>([this]
         (std::stop_token st)
     {
-        //std::cout<<"acceptor launched"<<std::endl;
+        //prstd::cout<<"acceptor launched"<<std::endl;
         std::error_code err;
         socket_=std::move(make_socket(err));
         if(!socket_)
         {
             err = std::make_error_code(
                 std::errc::bad_file_descriptor);
-            //std::cout<<"Acceptor: "<<err.message()<<std::endl;
+            //prstd::cout<<"Acceptor: "<<err.message()<<std::endl;
             return;
         }
         else if(err!=std::error_code()){
-            //std::cout<<"Acceptor: "<<err.message()<<std::endl;
+            //prstd::cout<<"Acceptor: "<<err.message()<<std::endl;
             return;
         }
         else if(!event_handler_->add(
@@ -96,7 +102,7 @@ void ConnectionAcceptor::launch() noexcept{
                 Event::In | Event::EdgeTrigger,
                 err))
         {
-            //std::cout<<"Acceptor: "<<err.message()<<std::endl;
+            //prstd::cout<<"Acceptor: "<<err.message()<<std::endl;
             graceful_close(err);
             return;
         }
@@ -120,36 +126,37 @@ std::unique_ptr<Socket> ConnectionAcceptor::make_socket(
         sock.native()==-1)
     {
         err = std::make_error_code(static_cast<std::errc>(errno));
-        //std::cout<<"Acceptor "<<err.message()<<std::endl;
+        //prstd::cout<<"Acceptor "<<err.message()<<std::endl;
         return {};
     }
     else {
-        sock.bind(addr_,err);
-        if(err!=std::error_code())
-            return {};
         if(sock.set_options(err,std::span(acceptor_options_)))
         {
-            err.clear();
-            return std::make_unique<Socket>(std::move(sock));
+            sock.bind(addr_,err);
+            if(err!=std::error_code()){
+                //prstd::cout<<"Acceptor (bind) "<<err.message()<<std::endl;
+                return {};
+            }
+            else err.clear();
         }
-        else
-        {
-            err = std::make_error_code(static_cast<std::errc>(errno));
-            return {};
+        else {err = std::make_error_code(static_cast<std::errc>(errno));
+                return {};
         }
+        return std::make_unique<Socket>(std::move(sock));
     }
 }
 
 bool ConnectionAcceptor::stop(std::error_code& err) noexcept
 {
-    if(thread_){
+    if (thread_) {
         std::lock_guard lock(m_);
-        bool stopped = thread_->request_stop();
+        thread_->request_stop();
         event_handler_->interrupt();
+        if (thread_->joinable()) thread_->join();
         thread_.reset();
-        return stopped;
+        return true;
     }
-    else return false;
+    return false;
 }
 bool ConnectionAcceptor::set_options(std::error_code& err,std::span<
             std::shared_ptr<Socket::BaseOption>> options) noexcept
@@ -196,6 +203,8 @@ void ConnectionAcceptor::accept(std::stop_token stop,std::error_code& err) noexc
 {
     while(!stop.stop_requested()){
         for(auto event: event_handler_->wait(err,-1)){
+            if(stop.stop_requested())
+                return;
             if(event.get_as_fd()==socket_->native()){
                 sockaddr_storage storage;
                 socklen_t sz = sizeof(sockaddr_in6);
@@ -204,7 +213,7 @@ void ConnectionAcceptor::accept(std::stop_token stop,std::error_code& err) noexc
                         reinterpret_cast<sockaddr*>(&storage),&sz);
                         raw_sock==-1)
                 {
-                    //std::cout<<"Connection refused: ";
+                    //prstd::cout<<"Connection refused: ";
                     Address addr(storage,err);
                     //print_ip_port(std::cout,addr);
                     accept_error_handling(err);
@@ -217,7 +226,7 @@ void ConnectionAcceptor::accept(std::stop_token stop,std::error_code& err) noexc
                     socket.set_no_block(true,err);
                     socket.set_options(err,std::span(this->sock_accepted_options_));
                     if(err!=std::error_code()){
-                        //std::cout<<"set non-block socket error"<<std::endl;
+                        //prstd::cout<<"set non-block socket error"<<std::endl;
                         continue;
                     }
                     
@@ -241,12 +250,12 @@ void ConnectionAcceptor::accept(std::stop_token stop,std::error_code& err) noexc
                     if(hconn.is_valid_handler())
                     {
                         after_accept();
-                        //std::cout<<"Connection accepted: "<<std::endl;
+                        //prstd::cout<<"Connection accepted: "<<std::endl;
                         //print_ip_port(std::cout,addr);
                         continue;
                     }
                     else{
-                        //std::cout<<"Connection refused: "<<std::endl;
+                        //prstd::cout<<"Connection refused: "<<std::endl;
                         //print_ip_port(std::cout,addr);
                         continue;
                     }

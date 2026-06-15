@@ -144,28 +144,28 @@ public:
 
     //insert the maximum insertable data from other container
     //return the next container's iterator of last insert data
-    template<template<typename T> typename CONTAINER>
-    typename CONTAINER<T>::const_iterator insert(const CONTAINER<T>& container) noexcept{
+    template<std::ranges::random_access_range CONTAINER>
+    typename CONTAINER::const_iterator insert(const CONTAINER& container) noexcept{
+        static_assert(std::is_same_v<T,std::ranges::range_value_t<CONTAINER>>);
         auto vec = write_vectored();
-        using type = std::decay_t<CONTAINER<T>>;
-        typename type::const_iterator result = container.begin();
-        if(vec.first.iov_len>0){
-            result = result+std::distance(
-                result,
-                typename type::const_iterator(
-                    std::copy(  result,
-                    result+vec.first.iov_len,
-                    (T*)vec.first.iov_base)));
+        size_t offset_1=std::min(vec.first.iov_len,container.size());
+        if(offset_1>0){
+                typename CONTAINER::const_iterator(
+                    std::copy(  
+                        container.begin(),
+                        container.begin()+offset_1,
+                        (T*)vec.first.iov_base));
         }
-        if(vec.second.iov_len>0){
-            result = result+std::distance(
-                result,
-                typename type::const_iterator(
-                    std::copy(  result,
-                    result+vec.second.iov_len,
-                    (T*)vec.second.iov_base)));
+        size_t offset_2=std::min(vec.second.iov_len,container.size()-offset_1);
+        if(offset_2>0){
+            typename CONTAINER::const_iterator(
+                    std::copy(  
+                        container.begin()+offset_1,
+                        container.begin()+offset_1+offset_2,
+                        (T*)vec.second.iov_base));
         }
-        return result;
+        commit_write(offset_1+offset_2);
+        return container.begin()+(offset_1+offset_2);
     }
 
     // Удаление одного символа (возвращает false, если буфер пуст)
@@ -269,13 +269,13 @@ public:
         if (empty()) {
             return result;
         }
-        if (head_ < tail_) 
+        if (head_ < tail_){
             result.first = result.first.subspan(head_,tail_ - head_);
-        else if (head_ > tail_ || full_) {
+            result.second = result.second.subspan(0,0);
+        }
+        else{
             result.first = result.first.subspan(head_);
             result.second = result.second.subspan(0,tail_);
-        } else {
-            // head_ == tail_ и не full? уже empty, но мы уже проверили empty()
         }
         return result;
     }
@@ -291,14 +291,12 @@ public:
             // непрерывный участок от head_ до tail_ - 1
             result.first.iov_base = const_cast<T*>(buffer_.data()) + head_;
             result.first.iov_len = tail_ - head_;
-        } else if (head_ > tail_ || full_) {
+        } else{
             // два сегмента: от head_ до конца и от начала до tail_ - 1
             result.first.iov_base = const_cast<T*>(buffer_.data()) + head_;
             result.first.iov_len = cap - head_;
             result.second.iov_base = const_cast<T*>(buffer_.data());
             result.second.iov_len = tail_;
-        } else {
-            // head_ == tail_ и не full? уже empty, но мы уже проверили empty()
         }
         return result;
     }

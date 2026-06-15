@@ -590,6 +590,51 @@ class AbstractConnectionProcess:public Process{
     virtual void on_write(std::error_code& err) noexcept = 0;
     virtual void on_task_done(std::error_code& err) noexcept = 0;
     virtual void on_stop_requested(std::error_code& err) noexcept = 0;
+    virtual void at_fatal_error(std::error_code& err) noexcept{
+        err.clear();
+        io_context().clear_buffers();
+    }
+    bool handle_sending_error(std::error_code& err) noexcept{
+        if(err){
+            switch(static_cast<std::errc>(err.value())){
+                case std::errc::operation_in_progress:
+                case std::errc::resource_unavailable_try_again:
+                    err.clear();
+                    return true;
+                    break;
+                case std::errc::no_buffer_space:
+                    io_context().enable_writable(false,err);
+                    err.clear();
+                    return true;
+                    break;
+                default:
+                    at_fatal_error(err);
+                    return false;
+            }
+        }
+        else return true;
+    }
+
+    bool handle_receive_error(std::error_code& err) noexcept{
+        if(err){
+            switch(static_cast<std::errc>(err.value())){
+                case std::errc::operation_in_progress:
+                case std::errc::resource_unavailable_try_again:
+                    err.clear();
+                    return true;
+                    break;
+                case std::errc::no_buffer_space:
+                    io_context().enable_writable(false,err);
+                    err.clear();
+                    return true;
+                    break;
+                default:
+                    at_fatal_error(err);
+                    return false;
+            }
+        }
+        else return true;
+    }
     
     AbstractConnectionProcess(
             ConnectionHandle hconn,
@@ -610,10 +655,21 @@ class AbstractConnectionProcess:public Process{
 #include <queue>
 #include <memory>
 #include "worker/command_types.h"
+#include "frame/dataframe.h"
+#include "frame/frames.h"
+
+class AbstractFrame;
+
+
 namespace network{
 template<CommandType,typename...>
 class Command;
 class AbstractRequestableConnectionProcess:public AbstractConnectionProcess{
+    network::AbstractFrame& __internal_get_receiving_data__(
+        std::shared_ptr<Command<CommandType::RequestData>> req) noexcept;
+    network::AbstractFrame& __internal_get_sending_data__(
+        std::shared_ptr<Command<CommandType::RequestData>> req) noexcept;
+    
     void mark_error_request(
             std::shared_ptr<Command<CommandType::RequestData>> cmd,
             std::error_code err) noexcept;
@@ -629,10 +685,76 @@ class AbstractRequestableConnectionProcess:public AbstractConnectionProcess{
     AbstractRequestableConnectionProcess(
             ConnectionHandle hconn,
             std::error_code& err) noexcept;
-    
+    template<typename DATA,typename START,typename END>
+    bool received_data(DataFrame<START,DATA,END>& data) noexcept{
+        if(active_request_){
+            data = static_cast<Frame<START,DATA,END>&>(
+                    __internal_get_receiving_data__(active_request_));
+            return true;
+        }
+        else return false;
+    }
+    template<typename DATA,typename START,typename END>
+    bool sending_data(DataFrame<START,DATA,END>& data) noexcept{
+        if(active_request_){
+            data = static_cast<Frame<START,DATA,END>&>(
+                    __internal_get_sending_data__(active_request_));
+            return true;
+        }
+        else return false;
+    }
+    virtual void at_fatal_error(std::error_code& err) noexcept{
+        complete_current_request(std::make_error_code(std::errc::bad_message));
+        err.clear();
+        io_context().clear_buffers();
+    }
+    bool active_request(std::error_code& err){
+        if(!active_request_ && !make_active_request()){
+            //prstd::cout<<"Requests not found"<<std::endl;
+            io_context().enable_writable(false,err);
+            return false;
+        }
+        else return true;
+    }
+    bool handle_receive_error(
+            std::error_code& err) noexcept
+    {
+        if(err)
+        switch(static_cast<std::errc>(err.value())){
+            case std::errc::operation_in_progress:
+            case std::errc::resource_unavailable_try_again:
+            case std::errc::no_buffer_space:
+                err.clear();
+                return true;
+            default:
+                at_fatal_error(err);
+                return false;
+        }
+        return true;
+    }
+    bool handle_sending_error(
+            std::error_code& err) noexcept
+    {
+        if(err){
+            switch(static_cast<std::errc>(err.value())){
+                case std::errc::operation_in_progress:
+                case std::errc::resource_unavailable_try_again:
+                    err.clear();
+                    return true;
+                    break;
+                case std::errc::no_buffer_space:
+                    io_context().enable_writable(false,err);
+                    err.clear();
+                    return true;
+                    break;
+                default:
+                    at_fatal_error(err);
+                    return false;
+            }
+        }
+        else return true;
+    }
     virtual bool requestable() const noexcept override final;
-    void try_receive(std::error_code& err) noexcept;
-    bool try_send(std::error_code& err) noexcept;
     void reset_requests(std::error_code& err) noexcept;
     virtual void on_read(std::error_code& err) noexcept override = 0;
     virtual void on_write(std::error_code& err) noexcept override = 0;

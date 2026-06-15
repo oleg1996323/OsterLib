@@ -131,7 +131,7 @@ class Socket{
         {
             err = std::make_error_code(static_cast<std::errc>(errno));
             errno = 0;
-            //std::cout<<"Error at getting socket error"<<err.message()<<std::endl;
+            //prstd::cout<<"Error at getting socket error"<<err.message()<<std::endl;
             return err;
         }
         else{
@@ -194,7 +194,7 @@ bool Socket::Option<T>::set_option(Socket& socket,std::error_code& err) noexcept
             (const char*)&value_,sizeof(T))!=0)
         {
             err = std::make_error_code(static_cast<std::errc>(errno));
-            //std::cout<<"SockOpt: "<<err.message()<<std::endl;
+            //prstd::cout<<"SockOpt: "<<err.message()<<std::endl;
             errno = 0;
             return false;
         }
@@ -215,7 +215,7 @@ bool Socket::Option<T>::assign(Socket& socket,std::error_code& err) noexcept{
             (char*)&value_,&sz)!=0)
         {
             err = std::make_error_code(static_cast<std::errc>(errno));
-            //std::cout<<"SockOpt: "<<err.message()<<std::endl;
+            //prstd::cout<<"SockOpt: "<<err.message()<<std::endl;
             errno = 0;
             return false;
         }

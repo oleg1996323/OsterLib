@@ -210,12 +210,72 @@ namespace network{
 			ConnectionHandle hconn,
 			AbstractWorker* w
 			) noexcept;
+		std::shared_ptr<AbstractFrame> to_send_;
+		std::shared_ptr<AbstractFrame> to_receive_;
+		size_t bytes_sent_ = 0;
+		size_t bytes_recv_ = 0;
 		public:
-		AbstractFrame* weak_to_send_;
-		AbstractFrame* weak_to_receive_;
 		ConnectionHandle hconn_;
 		Command(ConnectionHandle hconn);
 		virtual ~Command() = default;
+		template<typename START_t,typename DATA_t, typename END_t>
+        std::shared_ptr<Frame<START_t,DATA_t,END_t>> received(Frame<START_t,DATA_t,END_t>* in) noexcept{
+			if (auto dyn_cast = std::dynamic_pointer_cast<Frame<START_t,DATA_t,END_t>>(to_receive_))
+				return dyn_cast;
+			else return {};
+		}
+		size_t reset_sent(bool reset) noexcept{
+			if(reset){
+				auto result = bytes_sent_;
+				return result;
+			}
+			else return bytes_sent_;
+		}
+		size_t reset_received(bool reset) noexcept{
+			if(reset){
+				auto result = bytes_recv_;
+				return result;
+			}
+			else return bytes_recv_;
+		}
+		size_t bytes_sent(size_t sent) noexcept{
+			bytes_sent_+=sent;
+			return bytes_sent_;
+		}
+		size_t bytes_received(size_t received) noexcept{
+			bytes_recv_+=received;
+			return bytes_recv_;
+		}
+		bool all_sent(bool reset) noexcept{
+			if(bytes_sent_>=serialization::serial_size(*to_send_)){
+				if(reset)
+					bytes_sent_=0;
+				return true;
+			}
+			else return false;
+		}
+		bool all_received(bool reset) noexcept{
+			if(bytes_recv_>=serialization::min_serial_size(*to_send_) &&
+				bytes_recv_==serialization::serial_size(*to_send_))
+			{
+				if(reset)
+					bytes_recv_ = 0;
+				return true;
+			}
+			else return false;
+		}
+		template<typename START_t,typename DATA_t, typename END_t>
+        std::shared_ptr<Frame<START_t,DATA_t,END_t>> sent(Frame<START_t,DATA_t,END_t>* in) noexcept{
+			if (auto dyn_cast = std::dynamic_pointer_cast<Frame<START_t,DATA_t,END_t>>(to_send_))
+				return dyn_cast;
+			else return {};
+		}
+		std::shared_ptr<AbstractFrame> received() noexcept{
+			return to_receive_;
+		}
+		std::shared_ptr<AbstractFrame> sent() noexcept{
+			return to_send_;
+		}
 	};
 
 	template<typename RESULT_EXPECTED,
@@ -224,14 +284,6 @@ namespace network{
 		typename END_FRAME>
 	struct RequestCommandSpec:public Command<CommandType::RequestData>
 	{
-		std::shared_ptr<SenderFrame<
-				START_FRAME,
-				DATA_FRAME_SEND,
-				END_FRAME>> to_send_;
-		std::shared_ptr<ReceiverFrame<
-				START_FRAME,
-				RESULT_EXPECTED,
-				END_FRAME>> to_receive_;
 		friend class AbstractRequestableConnectionProcess;
 		public:
 		RequestCommandSpec(
@@ -239,31 +291,44 @@ namespace network{
 			START_FRAME&& start,
 			DATA_FRAME_SEND&& to_send,
 			END_FRAME&& end):
-				Command(hconn),
-					to_send_(
-					std::make_shared<SenderFrame<
-						START_FRAME,
-						DATA_FRAME_SEND,
-						END_FRAME>>(
-							std::forward<START_FRAME>(start),
-							std::forward<DATA_FRAME_SEND>(to_send),
-							std::forward<END_FRAME>(end))),
-					to_receive_(
-					std::make_shared<ReceiverFrame<
-						START_FRAME,
-						RESULT_EXPECTED,
-						END_FRAME>>())
+				Command(hconn)
 					{
-						weak_to_send_ = to_send_.get();
-						weak_to_receive_ = to_receive_.get();
+						to_send_ = 
+						std::make_shared<Frame<
+							START_FRAME,
+							DATA_FRAME_SEND,
+							END_FRAME>>(
+								std::forward<START_FRAME>(start),
+								std::forward<DATA_FRAME_SEND>(to_send),
+								std::forward<END_FRAME>(end));
+						to_receive_ = std::make_shared<Frame<
+								START_FRAME,
+								RESULT_EXPECTED,
+								END_FRAME>>(std::forward<START_FRAME>(start),
+								std::forward<RESULT_EXPECTED>(to_send),
+								std::forward<END_FRAME>(end));
 					}
 		virtual ~RequestCommandSpec() = default;
-		std::shared_ptr<ReceiverFrame<
+		std::shared_ptr<Frame<
 				START_FRAME,
 				RESULT_EXPECTED,
-				END_FRAME>> get_result_frame() noexcept{
+				END_FRAME>> received() noexcept{
 			if(BaseCommand::ready())
-				return to_receive_;
+				return std::dynamic_pointer_cast<Frame<
+				START_FRAME,
+				RESULT_EXPECTED,
+				END_FRAME>>(to_receive_);
+			else return {};
+		}
+		std::shared_ptr<Frame<
+				START_FRAME,
+				DATA_FRAME_SEND,
+				END_FRAME>> sent() noexcept{
+			if(BaseCommand::ready())
+				return std::dynamic_pointer_cast<Frame<
+				START_FRAME,
+				DATA_FRAME_SEND,
+				END_FRAME>>(to_send_);
 			else return {};
 		}
 		virtual void execute_internal(
@@ -278,6 +343,24 @@ namespace network{
 				set_error(err);
 				set_ready();
 			}
+		}
+		template<typename START_t,typename DATA_t, typename END_t>
+        std::shared_ptr<Frame<START_t,DATA_t,END_t>> received(Frame<START_t,DATA_t,END_t>* in) noexcept{
+			if constexpr(
+				std::is_same_v<START_t,START_FRAME> &&
+				std::is_same_v<DATA_t,DATA_FRAME_SEND> && 
+				std::is_same_v<END_t,END_FRAME>)
+				return Command::received(in);
+			else return {};
+		}
+		template<typename START_t,typename DATA_t, typename END_t>
+        std::shared_ptr<Frame<START_t,DATA_t,END_t>> sent(Frame<START_t,DATA_t,END_t>* out) noexcept{
+			if constexpr(
+				std::is_same_v<START_t,START_FRAME> &&
+				std::is_same_v<DATA_t,DATA_FRAME_SEND> && 
+				std::is_same_v<END_t,END_FRAME>)
+				return Command::received(out);
+			else return {};
 		}
 	};
 }

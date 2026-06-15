@@ -65,13 +65,13 @@ TEST(Buffer,RingBufferOverflow_test){
     for(int i=0;i<20;++i)
         to_write.push_back((char)i);
     auto vec = buffer.write_vectored();
-    std::copy(  to_write.data(),
-                to_write.data()+vec.first.iov_len,
-                (char*)vec.first.iov_base);
+    auto iter = buffer.insert(to_write);
     ASSERT_EQ(buffer.data_at(9),char(9));
     buffer.pop_front();
     ASSERT_EQ(buffer.data_at(8),char(9));
-    buffer.insert(to_write);
+    buffer.insert(std::span(iter,to_write.end()));
+    ASSERT_EQ(buffer.data_at(9),char(10));
+    ASSERT_EQ(buffer.data_at(0),char(1));
 }
 
 TEST(Buffer,VectorizedBufferSimple_test){

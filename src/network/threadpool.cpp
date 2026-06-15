@@ -8,7 +8,7 @@ namespace network{
         command_worker(WorkerCommand::Stop);
         if(thread().joinable())
             thread().join();
-        //std::cout<<"("<<name_<<")"<<"delete Worker "<<name_<<std::endl;
+        //prstd::cout<<"("<<name_<<")"<<"delete Worker "<<name_<<std::endl;
     }
     bool Worker::connectInternal(
             const ConnectionHandle& hconn,
@@ -29,16 +29,19 @@ namespace network{
                         .socket_ = std::move(socket_loc)};
                 conn_stat.connIO_ = make_connectionIO(
                         *conn_stat.socket_,hconn,1024*8,conn_stat.events_handled_,err);
-                conn_stat.events_handled_=Event::Out|Event::Error|Event::HangUp;
+                conn_stat.events_handled_=  Event::In|
+                                                Event::EdgeTrigger|
+                                                Event::HangUp|
+                                                Event::Error;
                 if(conn_stat.socket_->set_no_block(true,err)==false){
-                    //std::cout<<"("<<name_<<"):"<<"Connection add failed: \n";
+                    //prstd::cout<<"("<<name_<<"):"<<"Connection add failed: \n";
                     auto err = std::make_error_code(
                         static_cast<std::errc>(errno));
                     return false;
                 }
                 EventHandle ev(hconn.id(),conn_stat.events_handled_);
                 if(!add_tracking_event(conn_stat.socket_->native(),ev,err)){
-                    //std::cout<<"("<<name_<<"):"<<"(add tracking) Connection add failed: \n";
+                    //prstd::cout<<"("<<name_<<"):"<<"(add tracking) Connection add failed: \n";
                     auto err = std::make_error_code(
                         static_cast<std::errc>(errno));
                     return false;
@@ -48,17 +51,7 @@ namespace network{
                         conn_stat.conn_->address().get_sockaddr(),
                         conn_stat.conn_->address().length());
                 if(conn_res == 0){
-                    conn_stat.events_handled_=  Event::In|
-                                                Event::EdgeTrigger|
-                                                Event::HangUp|
-                                                Event::Error;
                     ev.set_events(conn_stat.events_handled_);
-                    if(!modify_tracking_event(conn_stat.socket_->native(),ev,err)){
-                        //std::cout<<"("<<name_<<"):"<<"(modify tracking) Connection add failed: \n";
-                        auto err = std::make_error_code(
-                            static_cast<std::errc>(errno));
-                        return false;
-                    }
                     auto& conn_tmp = *conn_stat.conn_;
                     auto inserted = connections().insert(std::make_pair(hconn.id(),
                         std::move(conn_stat)));
@@ -68,10 +61,18 @@ namespace network{
                     }
                     set_connection_state(inserted.first->second.conn_.get(),
                         Connection::State::Active);
-                    //std::cout<<"("<<name_<<"):"<<" Connection add success (connected. Active): \n";
+                    //prstd::cout<<"("<<name_<<"):"<<" Connection add success (connected. Active): \n";
                     after_connection(&inserted.first->second,err);
                 }
                 else if (errno == EINPROGRESS){
+                    conn_stat.events_handled_ = Event::Out | Event::Error | Event::HangUp;
+                    EventHandle ev(hconn.id(), conn_stat.events_handled_);
+                    if(!modify_tracking_event(conn_stat.socket_->native(),ev,err)){
+                        //prstd::cout<<"("<<name_<<"):"<<"(modify tracking) Connection add failed: \n";
+                        auto err = std::make_error_code(
+                            static_cast<std::errc>(errno));
+                        return false;
+                    }
                     auto inserted = connections().insert(std::make_pair(hconn.id(),
                         std::move(conn_stat)));
                     if(!inserted.second){
@@ -80,11 +81,11 @@ namespace network{
                     }
                     set_connection_state(inserted.first->second.conn_.get(),
                         Connection::State::Connecting);
-                    //std::cout<<"("<<name_<<"):"<<"Connection add success (connecting. Connecting): \n";
+                    //prstd::cout<<"("<<name_<<"):"<<"Connection add success (connecting. Connecting): \n";
                     after_connection(&inserted.first->second,err);
                 }
                 else{
-                    //std::cout<<"("<<name_<<"):"<<"Connection add failed: \n";
+                    //prstd::cout<<"("<<name_<<"):"<<"Connection add failed: \n";
                     auto err = std::make_error_code(
                         static_cast<std::errc>(errno));
                     after_connection(&conn_stat,err);
@@ -113,12 +114,12 @@ namespace network{
                                 ev,
                                 err);
                 if(err!=std::error_code()){
-                    //std::cout<<"("<<name_<<")"<<"(Connection attach/add_tracking_event): "<<err.message()<<std::endl;
+                    //prstd::cout<<"("<<name_<<")"<<"(Connection attach/add_tracking_event): "<<err.message()<<std::endl;
                     return false;
                 }
             auto socket_loc = std::make_unique<Socket>(std::move(socket));
             if(err!=std::error_code()){
-                //std::cout<<"("<<name_<<")"<<"(Connection attach/make_connectionIO): "<<err.message()<<std::endl;
+                //prstd::cout<<"("<<name_<<")"<<"(Connection attach/make_connectionIO): "<<err.message()<<std::endl;
                 return false;
             }
             auto& sock_ref = *socket_loc;
@@ -133,7 +134,7 @@ namespace network{
                     }));
             
             if(!inserted.second){
-                //std::cout<<"("<<name_<<")"<<"Connection attach failed: \n";
+                //prstd::cout<<"("<<name_<<")"<<"Connection attach failed: \n";
                 //print_ip_port(std::cout,inserted.first->second.conn_->address());
                 err = std::make_error_code(std::errc::already_connected);
                 after_attach_connection(&inserted.first->second,err);
@@ -147,8 +148,8 @@ namespace network{
                     inserted.first->second.events_handled_,
                     err);
                 inserted.first->second.connIO_=std::move(connIO);
-                //std::cout<<"("<<name_<<")"<<"Connection attach success: \n";
-                //std::cout<<"("<<name_<<") "<<"Number connections: "<<connections().size()<<std::endl;
+                //prstd::cout<<"("<<name_<<") "<<"Connection attach success: \n";
+                //prstd::cout<<"("<<name_<<") "<<"Number connections: "<<connections().size()<<std::endl;
                 set_connection_state(inserted.first->second.conn_.get(),
                             Connection::State::Active);
                 assert(inserted.first->second.socket_->is_non_block(err));
@@ -159,7 +160,7 @@ namespace network{
             }
         }
         else{
-            //std::cout<<"("<<name_<<")"<<"Connection attach failed: \n";
+            //prstd::cout<<"("<<name_<<")"<<"Connection attach failed: \n";
             //print_ip_port(std::cout,conn->address());
             err = std::make_error_code(std::errc::already_connected);
             after_attach_connection(&found->second,err);
@@ -178,7 +179,7 @@ namespace network{
         {
             found->second.socket_->shutdown_all(err);
             if(err!=std::error_code()){
-                //std::cout<<"("<<name_<<")"<<"Erasing id="<<found->first<<std::endl;
+                //prstd::cout<<"("<<name_<<")"<<"Erasing id="<<found->first<<std::endl;
                 auto conn = std::move(connections().extract(found));
                 lock.unlock();
                 after_remove_connection(&conn.mapped(),err);
@@ -188,7 +189,7 @@ namespace network{
                 auto res = remove_tracking_event(
                     found->second.socket_->native(),err);
                 found->second.socket_->close();
-                //std::cout<<"("<<name_<<")"<<"Erasing id="<<found->first<<std::endl;
+                //prstd::cout<<"("<<name_<<")"<<"Erasing id="<<found->first<<std::endl;
                 auto conn = std::move(connections().extract(found));
                 lock.unlock();
                 after_remove_connection(&conn.mapped(),err);
@@ -229,7 +230,7 @@ namespace network{
                 conn_stat = connection_state_by_id(hconn.id());
                 if(conn_stat==nullptr){
                     err = std::make_error_code(std::errc::not_connected);
-                    //std::cout<<"("<<name_<<")"<<": (Attach process) "<<err.message()<<std::endl;
+                    //prstd::cout<<"("<<name_<<")"<<": (Attach process) "<<err.message()<<std::endl;
                     after_add_connection_process(conn_stat,err);
                     return false;
                 }
@@ -258,7 +259,7 @@ namespace network{
                     else{
                         err =std::make_error_code(
                         std::errc::not_connected);
-                        //std::cout<<"("<<name_<<")"<<": (Attach process) "<<err.message()<<std::endl;
+                        //prstd::cout<<"("<<name_<<")"<<": (Attach process) "<<err.message()<<std::endl;
                         after_add_connection_process(conn_stat,err);
                         return false;
                     }
@@ -287,7 +288,7 @@ namespace network{
             if(!modify_tracking_event(conn_stat->socket_->native(),ev,err))
                 return false;
             if(err!=std::error_code()){
-                //std::cout<<"("<<name_<<")"<<"(Remove process) modify_tracking_event error: "
+                //prstd::cout<<"("<<name_<<")"<<"(Remove process) modify_tracking_event error: "
                 //<<err.message()<<std::endl;
                 after_remove_connection_process(conn_stat,err);
                 return false;
@@ -299,6 +300,14 @@ namespace network{
     }
     void Worker::run(EventHandle ev,std::stop_token st,std::error_code& err){
         Event e = ev.events();
+        //if((ev.events()&Event::In)!=0)
+            //prstd::cout<<"("<<name_<<";connId="<<ev.get_as_32()<<") "<<"read event"<<std::endl;
+        //if((ev.events()&Event::HangUp)!=0)
+            //prstd::cout<<"("<<name_<<";connId="<<ev.get_as_32()<<") "<<"hangup event"<<std::endl;
+        //if((ev.events()&Event::Error)!=0)
+            //prstd::cout<<"("<<name_<<";connId="<<ev.get_as_32()<<") "<<"error event"<<std::endl;
+        //if((ev.events()&Event::Out)!=0)
+            //prstd::cout<<"("<<name_<<";connId="<<ev.get_as_32()<<") "<<"write event"<<std::endl;
         {
             ConnectionState* conn_stat=nullptr;
             conn_stat = connection_state_by_id(ev.get_as_32());
@@ -318,7 +327,7 @@ namespace network{
             }
             if(conn_stat->conn_->state()==
                 Connection::State::Connecting &&
-                ev.events() & Event::Out)
+                (ev.events() & Event::Out)!=0)
             {
                 if (auto sock_error = conn_stat->socket_->error(err);
                     sock_error==std::error_code()) 
@@ -331,8 +340,8 @@ namespace network{
                     if(!modify_tracking_event(conn_stat->socket_->native(),
                                     ev_tmp,
                                     err)){
-                        //std::cout<<"("<<name_<<")"<<"Connection add failed: \n";
-                        //std::cout<<"("<<name_<<")"<<err.message()<<std::endl;
+                        //prstd::cout<<"("<<name_<<")"<<"Connection add failed: \n";
+                        //prstd::cout<<"("<<name_<<")"<<err.message()<<std::endl;
                         push_command(std::make_shared<Command<
                             CommandType::RemoveConnection>>(
                                 connection_handle(ev.get_as_32())));
@@ -340,7 +349,7 @@ namespace network{
                     else{
                         conn_stat->events_handled_ = 
                             Event::In|Event::EdgeTrigger|Event::HangUp|Event::Error;
-                        //std::cout<<"("<<name_<<")"<<"Connection established: \n";
+                        //prstd::cout<<"("<<name_<<")"<<"Connection established: \n";
                         //print_ip_port(std::cout,conn_stat->conn_->address());
                     }
                 } else {
@@ -349,8 +358,8 @@ namespace network{
                         CommandType::RemoveConnection>>(
                             connection_handle(ev.get_as_32())));
                     push_commands(std::move(cmds));
-                    //std::cout<<"("<<name_<<")"<<"Connection add failed: \n";
-                    //std::cout<<"("<<name_<<")"<<err.message()<<std::endl;
+                    //prstd::cout<<"("<<name_<<")"<<"Connection add failed: \n";
+                    //prstd::cout<<"("<<name_<<")"<<err.message()<<std::endl;
                     return;
                 }
             }

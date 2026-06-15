@@ -144,11 +144,8 @@ namespace network{
         ConnectionAcceptor& operator=(
                 const ConnectionAcceptor&) = delete;
         ~ConnectionAcceptor(){
-            if(thread_)
-                thread_->request_stop();
-            if(event_handler_){
-                event_handler_->interrupt();
-            }
+            std::error_code err;
+            graceful_close(err);
         }
         template<typename T>
         requires (std::is_base_of_v<AbstractConnectionProcess,T>)

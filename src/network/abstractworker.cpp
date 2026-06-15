@@ -11,7 +11,6 @@ namespace network{
             uint16_t timeout_sec){
 		std::lock_guard lock(mutex());
         std::error_code err;
-		std::lock_guard lock(mutex());
         for(auto& [conn,conn_state]:connections()){
             if(conn_state.proc_.get()!=nullptr)
                 conn_state.proc_->request_stop(
@@ -34,14 +33,6 @@ namespace network{
 			break;
 		this->handle_pending(err);
 		for (const auto& ev : events) {
-			//if((ev.events()&Event::In)!=0)
-				//std::cout<<"("<<name_<<") "<<"read event"<<std::endl;
-			//if((ev.events()&Event::HangUp)!=0)
-				//std::cout<<"("<<name_<<") "<<"hangup event"<<std::endl;
-			//if((ev.events()&Event::Error)!=0)
-				//std::cout<<"("<<name_<<") "<<"error event"<<std::endl;
-			//if((ev.events()&Event::Out)!=0)
-				//std::cout<<"("<<name_<<") "<<"write event"<<std::endl;
 		run(ev,st,err); }}
 	}
     bool AbstractWorker::set_options(
@@ -76,22 +67,34 @@ namespace network{
 			return false;
 		}
 		Event new_events = found->second.events_handled_;
-		if (enable){
+		if((enable==true) && 
+			(((found->second.events_handled_)&Event::Out)==0)){
 			new_events = new_events|Event::Out;
-			assert((new_events&Event::Out)==Event::Out);
-			//r1std::cout<<"enable writable: id="<<hconn.id()<<std::endl;
+			//std::cout<<"enable writable: id="<<hconn.id()<<std::endl;
+			EventHandle ev(hconn.id(), new_events);
+			bool res = modify_tracking_event(found->second.socket_->native(), ev, err);
+			if (err == std::error_code()) {
+				found->second.events_handled_ = new_events;
+			}
+			return res;
 		}
-		else{
+		else if((enable==false) && 
+			(((found->second.events_handled_)&Event::Out)!=0)){
 			new_events = new_events&~Event::Out;
-			assert((new_events&Event::Out)==0);
-			//r1std::cout<<"disable writable: id="<<hconn.id()<<std::endl;
+			//std::cout<<"disable writable: id="<<hconn.id()<<std::endl;
+			EventHandle ev(hconn.id(), new_events);
+			bool res = modify_tracking_event(found->second.socket_->native(), ev, err);
+			if (err == std::error_code()) {
+				found->second.events_handled_ = new_events;
+			}
+			return res;
 		}
-		EventHandle ev(hconn.id(), new_events);
-		bool res = modify_tracking_event(found->second.socket_->native(), ev, err);
-		if (err == std::error_code()) {
-			found->second.events_handled_ = new_events;
+		else {
+			//if(enable==true)
+				//std::cout<<"not enable writable: id="<<hconn.id()<<std::endl;
+			//else //prstd::cout<<"not disable writable: id="<<hconn.id()<<std::endl;
 		}
-		return res;
+		return false;
 	}
 	bool AbstractWorker::enable_readable(
 			ConnectionHandle hconn,
@@ -103,20 +106,34 @@ namespace network{
 			return false;
 		}
 		Event new_events = found->second.events_handled_;
-		if (enable){
+		if((enable==true) && 
+			(((found->second.events_handled_)&Event::In)==0)){
 			new_events = new_events|Event::In;
-			//r1std::cout<<"enable readable"<<std::endl;
+			//std::cout<<"enable readable: id="<<hconn.id()<<std::endl;
+			EventHandle ev(hconn.id(), new_events);
+			bool res = modify_tracking_event(found->second.socket_->native(), ev, err);
+			if (err == std::error_code()) {
+				found->second.events_handled_ = new_events;
+			}
+			return res;
 		}
-		else{
+		else if((enable==false) && 
+			(((found->second.events_handled_)&Event::In)!=0)){
 			new_events = new_events&~Event::In;
-			//r1std::cout<<"disable readable"<<std::endl;
+			//std::cout<<"disable readable: id="<<hconn.id()<<std::endl;
+			EventHandle ev(hconn.id(), new_events);
+			bool res = modify_tracking_event(found->second.socket_->native(), ev, err);
+			if (err == std::error_code()) {
+				found->second.events_handled_ = new_events;
+			}
+			return res;
 		}
-		EventHandle ev(hconn.id(), new_events);
-		bool res = modify_tracking_event(found->second.socket_->native(), ev, err);
-		if (err == std::error_code()) {
-			found->second.events_handled_ = new_events;
+		else {
+			//if(enable==true)
+				//std::cout<<"not enable readable: id="<<hconn.id()<<std::endl;
+			//else //prstd::cout<<"not disable readable: id="<<hconn.id()<<std::endl;
 		}
-		return res;
+		return false;
 	}
 	bool AbstractWorker::set_option(
 			std::error_code& err,
