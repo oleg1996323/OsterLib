@@ -420,6 +420,35 @@ TEST(Serialization, SerializeUnorderedSet){
     EXPECT_EQ(check_uset,uset_);
 }
 
+TEST(Serialization, SerializeArray){
+    using namespace serialization;
+    std::vector<char> buf;
+    std::array<double,10> arr_;
+    for(int i=0;i<10;++i){
+        auto inserted = double(std::rand())/std::rand();
+        arr_[i]=inserted;
+    }
+    ASSERT_EQ(serialization::min_serial_size(arr_),sizeof(arr_));
+    ASSERT_EQ(serialization::max_serial_size(arr_),sizeof(arr_));
+    ASSERT_EQ(serialize<true>(arr_,buf),serialization::SerializationEC::NONE);
+    EXPECT_EQ(buf.size(),serial_size(arr_));
+    std::vector<double> reversed_1;
+    reversed_1.reserve(arr_.size());
+    for(auto& val:arr_){
+        //if not use to_float the double will contains only the whole part
+        reversed_1.push_back(to_float(std::byteswap(to_integer(val))));
+    }
+    EXPECT_EQ(std::memcmp(reversed_1.data(),buf.data(),sizeof(reversed_1.size())),0);
+    
+    EXPECT_EQ(serial_size(std::array<double,10>()),buf.size());
+
+    std::array<double,10> check_arr{};
+    serialization::StreamSerializer mbv;
+    mbv.push_view(buf);
+    ASSERT_EQ(deserialize<true>(check_arr,mbv),serialization::SerializationEC::NONE);
+    EXPECT_EQ(check_arr,arr_);
+}
+
 TEST(Serialization, SerializeMap){
     using namespace serialization;
     std::vector<char> buf;

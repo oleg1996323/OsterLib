@@ -371,16 +371,15 @@ namespace serialization{
     template<bool NETWORK_ORDER,typename T,size_t SZ>
     struct Serialize<NETWORK_ORDER,std::array<T,SZ>>{
         SerializationEC operator()(const std::array<T,SZ>& val,std::vector<char>& buf) const noexcept{
-            SerializationEC err = serialize<NETWORK_ORDER>(val.size(),buf);
             if constexpr(sizeof(T)==1){
                 size_t old_sz = buf.size();
                 buf.resize(buf.size()+SZ);
-                std::memcpy(buf.begin()+old_sz,val.data(),SZ);
+                std::memcpy(buf.data()+old_sz,val.data(),SZ);
                 return SerializationEC::NONE;
             }
             else if constexpr(sizeof(T)==0)
                 return SerializationEC::NONE;
-
+            SerializationEC err;
             for(const auto& item:val){
                 err = serialize<NETWORK_ORDER>(item,buf);
                 if(err==SerializationEC::NONE)
@@ -404,6 +403,7 @@ namespace serialization{
             size_t remain = SZ;
             if(buf.registered_size()>0)
                 buf.get_value_at(remain,0);
+            else buf.register_value(remain);
             for (size_t i = SZ-remain; i < remain; ++i){
                 SerializationEC code = buf.deserialize<NETWORK_ORDER>(to_deserialize[i]);
                 buf.update_value_at(remain-1,0);

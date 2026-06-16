@@ -50,10 +50,7 @@ class AbstractTaskHandler{
 };
 
 template<TaskMode MODE,typename Result>
-class TypedTaskHandler:std::false_type{};
-
-template<typename Result>
-class TypedTaskHandler<TaskMode::Sync,Result>:public AbstractTaskHandler{
+class TypedTaskHandler:public AbstractTaskHandler{
     public:
     using result_type = Result;
     using result_return_t = std::conditional_t<!std::is_same_v<result_type,void>,
@@ -63,7 +60,7 @@ class TypedTaskHandler<TaskMode::Sync,Result>:public AbstractTaskHandler{
     public:
     
     TypedTaskHandler(std::shared_future<Result>&& result):
-        AbstractTaskHandler(TaskMode::Sync),
+        AbstractTaskHandler(MODE),
         result_(std::move(result)){}
     TypedTaskHandler(TypedTaskHandler&& other) noexcept:
         result_(std::move(other.result_)){}
@@ -87,13 +84,17 @@ class TypedTaskHandler<TaskMode::Sync,Result>:public AbstractTaskHandler{
         return !is_ready(err);
     }
     virtual TaskMode get_task_mode() noexcept override final{
-        return TaskMode::Sync;
+        return MODE;
     }
     virtual bool is_stoppable() noexcept override final{
-        return false;
+        if constexpr(MODE==TaskMode::Thread)
+            return true;
+        else return false;
     }
     virtual bool is_blocking() noexcept override final{
-        return true;
+        if constexpr(MODE==TaskMode::Sync)
+            return true;
+        else return false;
     }
     virtual bool request_stop(
                 bool wait,
@@ -108,8 +109,8 @@ class TypedTaskHandler<TaskMode::Sync,Result>:public AbstractTaskHandler{
         return get_result_timeout(-1,err);
     }
     result_return_t
-            get_result_timeout(int32_t timeout_sec,
-                std::error_code& err) noexcept
+                get_result_timeout(int32_t timeout_sec,
+                        std::error_code& err) noexcept
     {
         if (!result_.valid()) {
             err = std::make_error_code(std::errc::no_such_process);
@@ -262,128 +263,87 @@ class TypedTaskHandler<TaskMode::Thread,Result>:public AbstractTaskHandler{
     }
 };
 
-template<typename F, typename... ARGS>
-class TaskHandler :
-    public std::conditional_t<
-        std::is_invocable_v<std::decay_t<F>, std::stop_token, std::decay_t<ARGS>...>,
-        TypedTaskHandler<TaskMode::Sync,
-                         decltype(std::declval<std::decay_t<F>>()(std::declval<std::stop_token>(), std::declval<std::decay_t<ARGS>>()...))>,
-        TypedTaskHandler<TaskMode::Sync,
-                         decltype(std::declval<std::decay_t<F>>()(std::declval<std::decay_t<ARGS>>()...))>
-    >
+template<typename F,typename... ARGS>
+class TaskHandler:
+    public TypedTaskHandler<TaskMode::Sync,
+                                std::invoke_result_t<F,ARGS...>>
 {
-private:
-    static_assert(
-        std::is_invocable_v<std::decay_t<F>, std::decay_t<ARGS>...> ||
-        std::is_invocable_v<std::decay_t<F>, std::stop_token, std::decay_t<ARGS>...>
-    );
-
-    using Base = std::conditional_t<
-        std::is_invocable_v<std::decay_t<F>, std::decay_t<ARGS>...>,
-        TypedTaskHandler<TaskMode::Sync,
-                         decltype(std::declval<std::decay_t<F>>()(std::declval<std::decay_t<ARGS>>()...))>,
-        TypedTaskHandler<TaskMode::Sync,
-                         decltype(std::declval<std::decay_t<F>>()(std::declval<std::stop_token>(), std::declval<std::decay_t<ARGS>>()...))>
-    >;
-
-public:
+    private:
+    using Base = TypedTaskHandler<TaskMode::Sync,
+                                std::invoke_result_t<F,ARGS...>>;
+    public:
     using result_type = typename Base::result_type;
     using result_return_t = typename Base::result_return_t;
-
-    TaskHandler(F&& function, ARGS&&... args) :
+    TaskHandler(F function,
+                    ARGS&&... args):
         Base(std::async(std::launch::deferred,
-                        std::forward<F>(function),
-                        std::forward<ARGS>(args)...).share())
-    {}
-
+                function,
+                std::forward<ARGS>(args)...).share()){}
     template<typename OBJ>
-    TaskHandler(F&& function, OBJ&& obj, ARGS&&... args) :
+    TaskHandler(F function,
+                    OBJ&& obj,
+                    ARGS&&... args):
         Base(std::async(std::launch::deferred,
-                        std::forward<F>(function),
-                        std::forward<OBJ>(obj),
-                        std::forward<ARGS>(args)...).share())
-    {}
-
-    TaskHandler(const TaskHandler&) = delete;
-    TaskHandler(TaskHandler&&) noexcept = default;
-    TaskHandler& operator=(const TaskHandler&) = delete;
-    TaskHandler& operator=(TaskHandler&&) noexcept = default;
+                &function,
+                obj,
+                std::forward<ARGS>(args)...).share()){}
+    TaskHandler(const TaskHandler& other) = delete;
+    TaskHandler(TaskHandler&& other) noexcept:
+        Base(std::move(other)){}
+    TaskHandler& operator=(const TaskHandler& other) = delete;
+    TaskHandler& operator=(TaskHandler&& other) noexcept{
+        Base::operator=(std::move(other));
+        return *this;
+    }
     virtual ~TaskHandler() = default;
 };
-
-template<bool stop_token_arg, typename F, typename... ARGS>
-struct ThreadedTaskInvokeTypeImpl;
-
-template<typename F, typename... ARGS>
-struct ThreadedTaskInvokeTypeImpl<true, F, ARGS...> {
-    using type = decltype(std::declval<std::decay_t<F>>()(std::declval<std::stop_token>(), std::declval<std::decay_t<ARGS>>()...));
-};
-
-template<typename F, typename... ARGS>
-struct ThreadedTaskInvokeTypeImpl<false, F, ARGS...> {
-    using type = decltype(std::declval<std::decay_t<F>>()(std::declval<std::decay_t<ARGS>>()...));
-};
-
-template<typename F, typename... ARGS>
-using ThreadedTaskInvokeType = 
-    typename ThreadedTaskInvokeTypeImpl<
-        std::is_invocable_v<std::decay_t<F>, std::stop_token, std::decay_t<ARGS>...>,
-        F, ARGS...>::type;
 
 template<typename F,typename... ARGS>
 class ThreadedTaskHandler:
     public TypedTaskHandler<TaskMode::Thread,
-            ThreadedTaskInvokeType<F,ARGS...>>
+            std::invoke_result_t<F,
+                                ARGS...>>
 {
-    static_assert(std::is_invocable_v<std::decay_t<F>, std::stop_token, std::decay_t<ARGS>...> ||
-                std::is_invocable_v<std::decay_t<F>, std::decay_t<ARGS>...>,
-                "Uninvokable function with presented arguments");
-    static constexpr bool stop_token_from_thread =
-        std::is_invocable_v<std::decay_t<F>, std::stop_token, std::decay_t<ARGS>...>;
+    static_assert(std::is_invocable_v<F,ARGS...>,
+            "Uninvokable function with presented arguments");
+    static constexpr bool stop_token_from_thread = 
+        std::is_invocable_v<F,std::stop_token,ARGS...>;
     private:
     using Base = TypedTaskHandler<TaskMode::Thread,
-            ThreadedTaskInvokeType<F,ARGS...>>;
+            std::invoke_result_t<F,
+                                ARGS...>>;
     public:
     using result_type = typename Base::result_type;
     using result_return_t = typename Base::result_return_t;
-    ThreadedTaskHandler(F&& funct, ARGS&&... args)
+    ThreadedTaskHandler(    F&& funct,
+                    ARGS&&... args)
     {
-        std::promise<result_type> promise;
-        Base::result_ = promise.get_future().share();
-
-        Base::thread_ = std::jthread(
-            [function = F(std::forward<F>(funct)),
-            prom = std::move(promise),
-            ... captured_args = std::decay_t<ARGS>(std::forward<ARGS>(args))]
-            (std::stop_token stop) mutable
+            std::promise<result_type> promise;
+            Base::result_ = promise.get_future().share();
+            Base::thread_ = std::move(std::jthread([
+                        prom = std::move(promise),
+                        function = funct](
+                        std::stop_token stop,
+                        ARGS&&... args) mutable
             {
-                if constexpr (stop_token_from_thread)
-                {
-                    if constexpr (std::is_same_v<result_type, void>)
-                    {
-                        std::invoke(function, stop, captured_args...);
+                if constexpr (stop_token_from_thread){
+                    if constexpr (std::is_same_v<result_type,void>){
+                        std::invoke(function,std::forward<ARGS>(args)...);
                         prom.set_value_at_thread_exit();
                     }
-                    else
-                    {
-                        auto result = std::invoke(function, stop, captured_args...);
-                        prom.set_value_at_thread_exit(std::move(result));
-                    }
+                    else prom.set_value_at_thread_exit(
+                        std::invoke(function,std::forward<ARGS>(args)...));
                 }
-                else
-                {
-                    if constexpr (std::is_same_v<result_type, void>)
-                    {
-                        std::invoke(function, captured_args...);
-                        prom.set_value_at_thread_exit();
+                else {
+                    if constexpr (std::is_same_v<result_type,void>){
+                        std::invoke(function,std::forward<ARGS>(args)...);
+                            prom.set_value_at_thread_exit();
                     }
-                    else
-                    {
-                        auto result = std::invoke(function, captured_args...);
-                        prom.set_value_at_thread_exit(std::move(result));
-                    }
+                    else prom.set_value_at_thread_exit(
+                            std::invoke(function,std::forward<ARGS>(args)...));
                 }
-            });
+            },
+            std::forward<ARGS>(args)...));
     }
     ThreadedTaskHandler(const ThreadedTaskHandler& other) = delete;
     ThreadedTaskHandler(ThreadedTaskHandler&& other) noexcept:
@@ -395,83 +355,156 @@ class ThreadedTaskHandler:
     }
 };
 
-template<bool stop_token_arg, typename F, typename OBJ, typename... ARGS>
-struct BindedThreadedTaskInvokeTypeImpl;
-
-template<typename F, typename OBJ, typename... ARGS>
-struct BindedThreadedTaskInvokeTypeImpl<true, F, OBJ, ARGS...> {
-    using type = decltype(std::declval<std::decay_t<F>>()(std::declval<std::decay_t<OBJ>>(),
-                                                          std::declval<std::stop_token>(),
-                                                          std::declval<std::decay_t<ARGS>>()...));
-};
-
-template<typename F, typename OBJ, typename... ARGS>
-struct BindedThreadedTaskInvokeTypeImpl<false, F, OBJ, ARGS...> {
-    using type = decltype(std::declval<std::decay_t<F>>()(std::declval<std::decay_t<OBJ>>(),
-                                                          std::declval<std::decay_t<ARGS>>()...));
-};
-
-template<typename F, typename OBJ, typename... ARGS>
-using BindedThreadedTaskInvokeType = 
-    typename BindedThreadedTaskInvokeTypeImpl<
-        std::is_invocable_v<std::decay_t<F>, std::decay_t<OBJ>, std::stop_token, std::decay_t<ARGS>...>,
-        F, OBJ, ARGS...>::type;
-
-template<typename F, typename OBJ, typename... ARGS>
-class BindedThreadedTaskHandler :
-    public TypedTaskHandler<TaskMode::Thread, BindedThreadedTaskInvokeType<F, OBJ, ARGS...>>
+template<typename F,typename... ARGS>
+class StoppableThreadedTaskHandler:
+    public TypedTaskHandler<TaskMode::Thread,
+            std::invoke_result_t<F,
+                                std::stop_token,
+                                ARGS...>>
 {
-    static_assert(std::is_invocable_v<std::decay_t<F>, std::decay_t<OBJ>, std::stop_token, std::decay_t<ARGS>...>,
-              "Uninvokable function with presented arguments");
-    static constexpr bool stop_token_from_thread =
-    std::is_invocable_v<std::decay_t<F>, std::decay_t<OBJ>, std::stop_token, std::decay_t<ARGS>...>;
-
-private:
-    using Base = TypedTaskHandler<TaskMode::Thread, BindedThreadedTaskInvokeType<F, OBJ, ARGS...>>;
-
-public:
+    static_assert(std::is_invocable_v<F,std::stop_token,ARGS...>,
+            "Uninvokable function with presented arguments");
+    static constexpr bool stop_token_from_thread = 
+        std::is_invocable_v<F,std::stop_token,ARGS...>;
+    private:
+    using Base = TypedTaskHandler<TaskMode::Thread,
+                            std::invoke_result_t<F,
+                                std::stop_token,
+                                ARGS...>>;
+    public:
     using result_type = typename Base::result_type;
     using result_return_t = typename Base::result_return_t;
+    StoppableThreadedTaskHandler(    F&& funct,
+                    ARGS&&... args)
+    {
+            std::promise<result_type> promise;
+            Base::result_ = promise.get_future().share();
+            Base::thread_ = std::move(std::jthread([
+                        prom = std::move(promise),
+                        function = funct](
+                        std::stop_token stop,
+                        ARGS&&... args) mutable
+            {
+                if constexpr (stop_token_from_thread){
+                    if constexpr (std::is_same_v<result_type,void>){
+                        std::invoke(function,std::forward<ARGS>(args)...);
+                        prom.set_value_at_thread_exit();
+                    }
+                    else prom.set_value_at_thread_exit(
+                        std::invoke(function,std::forward<ARGS>(args)...));
+                }
+                else {
+                    if constexpr (std::is_same_v<result_type,void>){
+                        std::invoke(function,std::forward<ARGS>(args)...);
+                            prom.set_value_at_thread_exit();
+                    }
+                    else prom.set_value_at_thread_exit(
+                            std::invoke(function,std::forward<ARGS>(args)...));
+                }
+            },
+            std::forward<ARGS>(args)...));
+    }
+    StoppableThreadedTaskHandler(const StoppableThreadedTaskHandler& other) = delete;
+    StoppableThreadedTaskHandler(StoppableThreadedTaskHandler&& other) noexcept:
+        Base(std::move(other)){}
+    StoppableThreadedTaskHandler& operator=(const StoppableThreadedTaskHandler& other) = delete;
+    StoppableThreadedTaskHandler& operator=(StoppableThreadedTaskHandler&& other) noexcept{
+        Base::operator=(std::move(other));
+        return *this;
+    }
+};
 
-    BindedThreadedTaskHandler(F&& funct, OBJ&& obj, ARGS&&... args)
+template<bool stop_token_arg,
+        typename F,
+        typename OBJ,
+        typename... ARGS>
+struct BindedThreadedTaskInvokeTypeImpl;
+
+template<typename F,
+        typename OBJ,
+        typename... ARGS>
+struct BindedThreadedTaskInvokeTypeImpl<
+        true,
+        F,
+        OBJ,
+        ARGS...>{
+    using type = std::invoke_result_t<F,
+                                OBJ,
+                                std::stop_token,
+                                ARGS...>;
+};
+
+template<typename F,
+        typename OBJ,
+        typename... ARGS>
+struct BindedThreadedTaskInvokeTypeImpl<
+        false,
+        F,
+        OBJ,
+        ARGS...>{
+    using type = std::invoke_result_t<
+                                F,
+                                OBJ,
+                                ARGS...>;
+};
+
+template<
+        typename F,
+        typename OBJ,
+        typename... ARGS>
+using BindedThreadedTaskInvokeType = 
+    typename BindedThreadedTaskInvokeTypeImpl<
+        std::is_invocable_v<F,OBJ,
+        std::stop_token, ARGS...>, F,OBJ, ARGS...>::type;
+
+template<typename F,typename OBJ,typename... ARGS>
+class BindedThreadedTaskHandler:
+    public TypedTaskHandler<TaskMode::Thread,
+            BindedThreadedTaskInvokeType<F,OBJ,ARGS...>>
+{
+    static_assert(std::is_invocable_v<F,OBJ,std::stop_token,ARGS...>,
+            "Uninvokable function with presented arguments");
+    static constexpr bool stop_token_from_thread = 
+        std::is_invocable_v<F,OBJ,std::stop_token,ARGS...>;
+    private:
+    using Base = TypedTaskHandler<TaskMode::Thread,
+            BindedThreadedTaskInvokeType<F,OBJ,ARGS...>>;
+    public:
+    using result_type = typename Base::result_type;
+    using result_return_t = typename Base::result_return_t;
+    BindedThreadedTaskHandler(F&& funct,
+                    OBJ&& obj,
+                    ARGS&&... args)
     {
         std::promise<result_type> promise;
         Base::result_ = promise.get_future().share();
-
-        Base::thread_ = std::jthread(
-        [function = F(std::forward<F>(funct)),
-            obj_internal = std::decay_t<OBJ>(std::forward<OBJ>(obj)),
-            prom = std::move(promise),
-            ... captured_args = std::decay_t<ARGS>(std::forward<ARGS>(args))]
-        (std::stop_token stop) mutable
+        Base::thread_ = std::move(std::jthread([
+                    prom = std::move(promise),
+                    function = funct](
+                    std::stop_token stop,
+                    OBJ&& obj,
+                    ARGS&&... args) mutable
         {
-            if constexpr (stop_token_from_thread)
-            {
-                if constexpr (std::is_same_v<result_type, void>)
-                {
-                    std::invoke(function, obj_internal, stop, captured_args...);
+            if constexpr (stop_token_from_thread) {
+                if constexpr (std::is_same_v<result_type, void>) {
+                    std::invoke(function, obj, stop, std::forward<ARGS>(args)...);
                     prom.set_value_at_thread_exit();
+                } else {
+                    prom.set_value_at_thread_exit(
+                        std::invoke(function, obj, stop, std::forward<ARGS>(args)...));
                 }
-                else
-                {
-                    auto result = std::invoke(function, obj_internal, stop, captured_args...);
-                    prom.set_value_at_thread_exit(std::move(result));
+            } else {
+                if constexpr (std::is_same_v<result_type, void>) {
+                    std::invoke(function, obj, std::forward<ARGS>(args)...);
+                    prom.set_value_at_thread_exit();
+                } else {
+                    prom.set_value_at_thread_exit(
+                        std::invoke(function, obj, std::forward<ARGS>(args)...));
                 }
             }
-            else
-            {
-                if constexpr (std::is_same_v<result_type, void>)
-                {
-                    std::invoke(function, obj_internal, captured_args...);
-                    prom.set_value_at_thread_exit();
-                }
-                else
-                {
-                    auto result = std::invoke(function, obj_internal, captured_args...);
-                    prom.set_value_at_thread_exit(std::move(result));
-                }
-            }
-        });
+        },
+        std::forward<OBJ>(obj),
+        std::forward<ARGS>(args)...));
     }
     BindedThreadedTaskHandler(const BindedThreadedTaskHandler& other) = delete;
     BindedThreadedTaskHandler(BindedThreadedTaskHandler&& other) noexcept:
@@ -485,7 +518,7 @@ public:
 
 class Process{
     protected:
-    AbstractTaskHandler* task_;
+    std::unique_ptr<AbstractTaskHandler> task_;
     public:
     bool is_ready(std::error_code& err) const{
         return has_task()?task_->is_ready(err):true;
@@ -494,7 +527,7 @@ class Process{
         return has_task()?task_->is_busy(err):false;
     }
     bool has_task() const{
-        return task_!=nullptr?true:false;
+        return task_.get()!=nullptr?true:false;
     }
     Process() = default;
     Process(const Process&) = delete;
@@ -502,46 +535,65 @@ class Process{
     Process& operator=(const Process&) = delete;
     Process& operator=(Process&& other) noexcept = delete;
     virtual ~Process(){
-        delete task_;
+        task_.reset();
     }
-    template<TaskMode mode, typename F, typename... ARGS>
-    void emplace_task(std::error_code& err, F&& function, ARGS&&... args) {
-        if constexpr (mode == TaskMode::Sync) {
-            task_ = new TaskHandler<F, ARGS...>(
-                std::forward<F>(function),
-                std::forward<ARGS>(args)...);
-        } else if constexpr (mode == TaskMode::Thread) {
-            task_ = new ThreadedTaskHandler<F, ARGS...>(
-                std::forward<F>(function),
-                std::forward<ARGS>(args)...);
-        } else {
-            static_assert(mode == TaskMode::Sync || mode == TaskMode::Thread,
-                        "Invalid TaskMode");
+    template<typename F,typename... ARGS>
+    void emplace_task(  std::error_code& err,
+                        TaskMode mode,
+                        F function,
+                        ARGS&&...args){
+        static_assert(std::is_invocable_v<F,
+                                        ARGS...> ||
+                    std::is_invocable_v<F,std::stop_token,ARGS...>);
+        switch (mode)
+        {
+        case TaskMode::Sync:
+            task_ = std::move(std::make_unique<TaskHandler<F,ARGS...>>(
+                    function,
+                    std::forward<ARGS>(args)...));
+            break;
+        case TaskMode::Thread:
+            task_ = std::move(std::make_unique<ThreadedTaskHandler<F,ARGS...>>(
+                    function,
+                    std::forward<ARGS>(args)...));
+            break;
+        default:
+            assert(("Unexpected task mode",false));
+            break;
         }
     }
-    template<TaskMode mode, typename F, typename OBJ, typename... ARGS>
-    void emplace_binded_task(std::error_code& err, F&& function, OBJ&& obj, ARGS&&... args) {
-        if constexpr (mode == TaskMode::Sync) {
-            task_ = new TaskHandler<F, ARGS...>(
-                std::forward<F>(function),
-                std::forward<OBJ>(obj),
-                std::forward<ARGS>(args)...);
-        } else if constexpr (mode == TaskMode::Thread) {
-            task_ = new BindedThreadedTaskHandler<F, std::decay_t<OBJ>, ARGS...>(
-                std::forward<F>(function),
-                std::forward<OBJ>(obj),
-                std::forward<ARGS>(args)...);
-        } else {
-            static_assert(mode == TaskMode::Sync || mode == TaskMode::Thread,
-                        "Invalid TaskMode");
+    template<typename F,typename OBJ,typename... ARGS>
+    void emplace_binded_task(  std::error_code& err,
+                        TaskMode mode,
+                        F function,
+                        OBJ&& obj,
+                        ARGS&&...args){
+        
+        switch (mode)
+        {
+        case TaskMode::Sync:
+            task_ = std::move(std::make_unique<TaskHandler<F,ARGS...>>(
+                    function,
+                    std::forward<OBJ>(obj),
+                    std::forward<ARGS>(args)...));
+            break;
+        case TaskMode::Thread:
+            task_ = std::move(std::make_unique<BindedThreadedTaskHandler<F,OBJ,ARGS...>>(
+                    function,
+                    std::forward<OBJ>(obj),
+                    std::forward<ARGS>(args)...));
+            break;
+        default:
+            assert(("Unexpected task mode",false));
+            break;
         }
     }
     template<typename RESULT>
     bool holds() const{
         if( dynamic_cast<TypedTaskHandler<TaskMode::Sync,RESULT>*>(
-                task_)!=nullptr ||
+                task_.get())!=nullptr ||
             dynamic_cast<TypedTaskHandler<TaskMode::Thread,RESULT>*>(
-                task_)!=nullptr)
+                task_.get())!=nullptr)
             return true;
         else return false;
     }
@@ -549,7 +601,7 @@ class Process{
                 bool wait,
                 uint16_t timeout_sec,
                 std::error_code& err) noexcept{
-        if(auto ptr = task_;
+        if(auto ptr = task_.get();
             ptr!=nullptr)
             return ptr->request_stop(wait,timeout_sec,err);
         else{

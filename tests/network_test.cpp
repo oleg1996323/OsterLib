@@ -520,6 +520,28 @@ TEST(Client_server,BufferOverflowCase){
         EXPECT_EQ(cmd->received()->data_frame(),client_numbers);
 }
 
+class A{
+    public:
+    void method(int val1,int val2){
+
+    }
+};
+
+int foo(std::stop_token,double, std::string){
+    return 1;
+}
+
+TEST(Process,LaunchProcess){
+    Process proc;
+    std::error_code err;
+    A a;
+    //proc.emplace_binded_task(err,TaskMode::Thread,&A::method,a,1,1);
+    proc.emplace_task<TaskMode::Thread>(err,foo,1,"string");
+    static_assert(std::is_invocable_v<decltype(foo),std::stop_token,int,const char[9]>);
+    using foo_t = decltype(foo);
+    // std::invoke_result_t<decltype(foo),std::stop_token,int,const char (&)[9]>;
+}
+
 int main(int argc, char* argv[]){
     signal(SIGPIPE,SIG_IGN);
     testing::InitGoogleTest(&argc,argv);
