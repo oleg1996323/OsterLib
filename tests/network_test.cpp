@@ -523,11 +523,15 @@ TEST(Client_server,BufferOverflowCase){
 class A{
     public:
     void method(int val1,int val2){
-
+        std::this_thread::sleep_for(std::chrono::seconds(1));
     }
 };
 
-int foo(std::stop_token,double, std::string){
+static std::atomic_bool caught_stop = false;
+int foo(std::stop_token stop,double d, std::string str){
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+    if(stop.stop_requested())
+        caught_stop.store(true,std::memory_order::release);
     return 1;
 }
 
@@ -535,11 +539,28 @@ TEST(Process,LaunchProcess){
     Process proc;
     std::error_code err;
     A a;
-    //proc.emplace_binded_task(err,TaskMode::Thread,&A::method,a,1,1);
+    proc.emplace_binded_task<TaskMode::Thread>(err,&A::method,a,1,1);
     proc.emplace_task<TaskMode::Thread>(err,foo,1,"string");
     static_assert(std::is_invocable_v<decltype(foo),std::stop_token,int,const char[9]>);
     using foo_t = decltype(foo);
     // std::invoke_result_t<decltype(foo),std::stop_token,int,const char (&)[9]>;
+    err.clear();
+    EXPECT_FALSE(proc.is_ready(err));
+    EXPECT_FALSE(err);
+    EXPECT_TRUE(proc.is_busy(err));
+    EXPECT_FALSE(err);
+    EXPECT_TRUE(proc.has_task());
+    proc.request_stop(true,1,err);
+    EXPECT_FALSE(err);
+    std::cout<<err.message()<<std::endl;
+    std::this_thread::sleep_for(std::chrono::seconds(2));
+    EXPECT_FALSE(proc.has_task());
+    EXPECT_FALSE(proc.is_busy(err));
+    std::cout<<err.message()<<std::endl;
+    EXPECT_FALSE(err);
+    EXPECT_TRUE(proc.is_ready(err));
+    EXPECT_FALSE(err);
+    
 }
 
 int main(int argc, char* argv[]){

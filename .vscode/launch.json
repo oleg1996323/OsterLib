@@ -4,7 +4,7 @@
         "name": "(gdb) Launch",
         "type": "cppdbg",
         "request": "launch",
-        "program": "/home/oster/OsterLib/build/tests/serialization_test",
+        "program": "/home/oster/OsterLib/build/tests/network_test",
         "args": [],
         "stopAtEntry": false,
         "cwd": "${cwd}",
