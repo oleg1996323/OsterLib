@@ -11,6 +11,7 @@
 #include "concepts.h"
 #include <pthread.h>
 #include <cassert>
+#include "definitions.h"
 
 namespace network{
 
@@ -38,11 +39,10 @@ class AbstractTaskHandler{
         return mode_;
     }
     virtual bool request_stop(
-                bool wait,
-                uint16_t timeout_sec,
+                Timeout timeout_sec,
                 std::error_code& err) noexcept = 0;
     virtual bool request_stop(std::error_code& err) noexcept{
-        return request_stop(false,0,err);
+        return request_stop(0,err);
     }
     virtual TaskMode get_task_mode() noexcept = 0;
     virtual bool is_stoppable() noexcept = 0;
@@ -92,8 +92,7 @@ class TypedTaskHandler<TaskMode::Sync,Result>:public AbstractTaskHandler{
         return false;
     }
     virtual bool request_stop(
-                bool wait,
-                uint16_t timeout_sec,
+                Timeout timeout_sec,
                 std::error_code& err) noexcept override final
     {
         err = std::make_error_code(std::errc::operation_not_supported);
@@ -104,7 +103,7 @@ class TypedTaskHandler<TaskMode::Sync,Result>:public AbstractTaskHandler{
         return get_result_timeout(-1,err);
     }
     result_return_t
-            get_result_timeout(int32_t timeout_sec,
+            get_result_timeout(Timeout timeout_sec,
                 std::error_code& err) noexcept
     {
         if (!result_.valid()) {
@@ -194,22 +193,27 @@ class TypedTaskHandler<TaskMode::Thread,Result>:public AbstractTaskHandler{
         return thread_.joinable();
     }
     virtual bool request_stop(
-                bool wait,
-                uint16_t timeout_sec,
+                Timeout timeout_sec,
                 std::error_code& err) noexcept override final
     {
         if(thread_.joinable()){
-            if(wait && 
-                result_.valid() &&
-                result_.wait_for(
-                    std::chrono::seconds(timeout_sec))==
-                    std::future_status::ready)
+            if(timeout_sec>0 && 
+                result_.valid())
             {
-                err.clear();
-                return true;
+                if(result_.wait_for(
+                    std::chrono::seconds(timeout_sec))==
+                    std::future_status::ready){
+                    err.clear();
+                    return true;
+                }
+                else{
+                    thread_.request_stop();
+                    err = std::make_error_code(std::errc::timed_out);
+                    return false;
+                }
             }
             else{
-                err = std::make_error_code(std::errc::timed_out);
+                err.clear();
                 return thread_.request_stop();
             }
         }
@@ -544,13 +548,12 @@ class Process{
         else return false;
     }
     bool request_stop(
-                bool wait,
-                uint16_t timeout_sec,
+                Timeout timeout_sec,
                 std::error_code& err) noexcept{
         err.clear();
         if(auto ptr = task_.get();
             ptr!=nullptr)
-            return ptr->request_stop(wait,timeout_sec,err);
+            return ptr->request_stop(timeout_sec,err);
         else{
             err = std::make_error_code(
                 std::errc::no_such_process);
@@ -665,11 +668,6 @@ class AbstractRequestableConnectionProcess:public AbstractConnectionProcess{
     network::AbstractFrame& __internal_get_sending_data__(
         std::shared_ptr<Command<CommandType::RequestData>> req) noexcept;
     
-    void mark_error_request(
-            std::shared_ptr<Command<CommandType::RequestData>> cmd,
-            std::error_code err) noexcept;
-    void mark_notify_request(
-            std::shared_ptr<Command<CommandType::RequestData>> cmd) noexcept;
     protected:
     void complete_current_request(
             std::error_code err) noexcept;

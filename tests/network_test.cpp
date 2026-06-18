@@ -217,7 +217,7 @@ TEST(Client_server,ping){
                 auto cmd = client.request<size_t>(hconn,
                         serialization::serial_size(size_t(1)),
                         static_cast<size_t>(client_ping_val.load()),std::monostate());
-                cmd->wait_ready();
+                cmd->wait_ready(10);
                 //std::cout<<"command "<<i<<" error: "<<cmd->error()->message()<<std::endl;
             }
         }
@@ -372,7 +372,7 @@ TEST(Client_server,BufferHelloExchange){
                     std::monostate(),
                     std::string("Hello server"),
                     std::monostate());
-            cmd->wait_ready();
+            cmd->wait_ready(10);
         EXPECT_EQ(ServerProcess::received,"Hello server");
         EXPECT_EQ(cmd->received()->data_frame(),"Hello client");
 }
@@ -512,7 +512,7 @@ TEST(Client_server,BufferOverflowCase){
                     std::monostate(),
                     numbers,
                     std::monostate());
-            cmd->wait_ready();
+            cmd->wait_ready(10);
         std::vector<int> client_numbers;
         for(int i=100;i<200;++i)
             client_numbers.push_back(i);
@@ -528,10 +528,14 @@ class A{
 };
 
 static std::atomic_bool caught_stop = false;
+static std::atomic_bool not_caught_stop = true;
 int foo(std::stop_token stop,double d, std::string str){
-    std::this_thread::sleep_for(std::chrono::seconds(1));
-    if(stop.stop_requested())
+    std::this_thread::sleep_for(std::chrono::seconds(2));
+    if(stop.stop_requested()){
         caught_stop.store(true,std::memory_order::release);
+        not_caught_stop.store(false,std::memory_order::release);
+        return 1;
+    }
     return 1;
 }
 
@@ -550,10 +554,14 @@ TEST(Process,LaunchProcess){
     EXPECT_TRUE(proc.is_busy(err));
     EXPECT_FALSE(err);
     EXPECT_TRUE(proc.has_task());
-    proc.request_stop(true,1,err);
+    EXPECT_FALSE(caught_stop.load(std::memory_order::relaxed));
+    EXPECT_TRUE(not_caught_stop.load(std::memory_order::relaxed));
+    proc.request_stop(0,err);
     EXPECT_FALSE(err);
     std::cout<<err.message()<<std::endl;
     std::this_thread::sleep_for(std::chrono::seconds(2));
+    EXPECT_TRUE(caught_stop.load(std::memory_order::relaxed));
+    EXPECT_FALSE(not_caught_stop.load(std::memory_order::relaxed));
     EXPECT_FALSE(proc.has_task());
     EXPECT_FALSE(proc.is_busy(err));
     std::cout<<err.message()<<std::endl;

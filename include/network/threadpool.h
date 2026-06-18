@@ -29,8 +29,7 @@ protected:
 			) noexcept override;
     virtual bool removeConnectionInternal(
 			const ConnectionHandle& hconn,
-            bool wait_for_end_connections,
-            uint16_t timeout_sec,
+            Timeout timeout_sec,
 			std::error_code& err) noexcept override;
     virtual bool modifyConnectionInternal(
 			const ConnectionHandle& hconn,
@@ -41,8 +40,7 @@ protected:
             std::error_code& err) noexcept override;
     virtual bool removeConnectionProcessInternal(
             const ConnectionHandle& hconn,
-            bool wait_for_end_connections,
-            uint16_t timeout_sec,
+            Timeout timeout_sec,
             std::error_code& err) noexcept override;
     virtual void run(EventHandle ev,std::stop_token st,std::error_code& err) override;
     virtual void after_connection(
@@ -84,7 +82,7 @@ class ServerWorker:public Worker{
         for(auto& [id,conn_stat]:connections()){
             ConnectionHandle hconn = this->connection_handle(id);
             auto proc = std::make_unique<CONN_PROC>(hconn,err);
-            if(err!=std::error_code())
+            if(err)
                 continue;
             hconn.execute_command(
                 std::make_shared<Command<
@@ -126,24 +124,21 @@ public:
             if(worker)
                 worker->set_processes<CONN_PROC>(err);
         }
-        if(err!=std::error_code())
+        if(err)
             return false;
         return true;
     }
 
     bool removeProcess(
             ConnectionHandle hconn,
-            bool wait,
-            uint16_t timeout_sec,
+            Timeout timeout_sec,
             std::error_code& err) noexcept;
     
     void stopConnections(
-                bool wait_for_end_connections,
-                uint16_t timeout_sec,
+                Timeout timeout_sec,
                 std::error_code& err) noexcept;
     void stop(
-                bool wait_for_end_connections,
-                uint16_t timeout_sec) noexcept;
+                Timeout timeout_sec) noexcept;
 private:
     std::vector<std::unique_ptr<ServerWorker>> workers_;
     std::atomic<size_t> next_worker_{0};

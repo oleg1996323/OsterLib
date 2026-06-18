@@ -42,13 +42,12 @@ namespace network{
         }
         bool remove_connection(
                 ConnectionHandle hconn,
-                bool wait,
-                uint16_t timeout_sec,
+                Timeout timeout_sec,
                 std::error_code& err)
         {
             return hconn.execute_command(
                     std::make_shared<Command<CommandType::RemoveConnection>>(
-                    hconn,timeout_sec,wait),
+                    hconn,timeout_sec),
                     err);
         }
         bool modify_connection(
@@ -81,7 +80,7 @@ namespace network{
                 processes_pool_ = std::move(
                     std::make_unique<ThreadPool>(settings_.num_threads_pool_,
                         err));
-                if(err!=std::error_code()){
+                if(err){
                     processes_pool_.reset();
                     return;
                 }
@@ -103,10 +102,8 @@ namespace network{
                 //throw std::runtime_error("Server is not stopped for further configuration!");
             }
         }
-        void close(bool wait_for_end_connections = false,
-                uint16_t timeout_sec = 60) noexcept;
-        void collapse(bool wait_for_end_connections = false,
-                uint16_t timeout_sec = 60) noexcept;
+        void close(Timeout timeout_sec = 60) noexcept;
+        void collapse(Timeout timeout_sec = 60) noexcept;
         void launch(std::error_code& err) noexcept{
             if(!accepter_){
                 err=std::make_error_code(std::errc::operation_not_permitted);

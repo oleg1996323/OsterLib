@@ -43,7 +43,7 @@ class AbstractWorker{
 			std::error_code& err) noexcept;
 
 	bool contains_connection(const ConnectionHandle& hconn) noexcept;
-	bool stop_process(const ConnectionHandle& hconn,bool wait, uint16_t timeout_sec,std::error_code& err) noexcept;
+	bool stop_process(const ConnectionHandle& hconn,Timeout timeout_sec,std::error_code& err) noexcept;
     bool shutdown_connection(std::error_code& err,
 			const ConnectionHandle& hconn) noexcept;
     bool close_connection(std::error_code& err,
@@ -56,7 +56,7 @@ class AbstractWorker{
 			std::error_code& err,
 			const ConnectionHandle& hconn,
 			std::shared_ptr<Socket::BaseOption> option) noexcept;
-	void stop_all(uint16_t timeout_sec,bool wait,std::error_code& err) noexcept;
+	void stop_all(Timeout timeout_sec,std::error_code& err) noexcept;
 	void shutdown_all(std::error_code& err) noexcept;
 	void remove_all(std::error_code& err) noexcept;
 	virtual void run(EventHandle ev,std::stop_token st,std::error_code& err) = 0;
@@ -69,8 +69,7 @@ class AbstractWorker{
 	}
 	Connection::Properties connection_properties(ConnectionHandle hconn) const noexcept;
 protected:
-	void stop(bool wait_for_end_connections,
-            uint16_t timeout_sec);
+	void stop(Timeout timeout_sec);
 	virtual bool connectInternal(
 			const ConnectionHandle& hconn,
 			std::unique_ptr<Connection> conn,
@@ -85,8 +84,7 @@ protected:
 			) noexcept = 0;
 	virtual bool removeConnectionInternal(
 			const ConnectionHandle& hconn,
-            bool wait_for_end_connections,
-            uint16_t timeout_sec,
+            Timeout timeout_sec,
 			std::error_code& err) noexcept = 0;
 	virtual bool modifyConnectionInternal(
 			const ConnectionHandle& hconn,
@@ -98,8 +96,7 @@ protected:
 			std::error_code& err) noexcept = 0;
     virtual bool removeConnectionProcessInternal(
 			const ConnectionHandle& hconn,
-            bool wait_for_end_connections,
-            uint16_t timeout_sec,
+            Timeout timeout_sec,
 			std::error_code& err) noexcept = 0;
 	std::unique_ptr<ConnectionIO> make_connectionIO(
 				Socket& sock_ptr,
@@ -149,7 +146,7 @@ protected:
 			w_cmds_.pop();
 		}
 		if(cmd==WorkerCommand::Stop)
-			stop(false,0);
+			stop(0);
 	}
 private:
     std::unordered_map<ConnectionId,

@@ -3,6 +3,14 @@
 
 namespace network{
 
+	bool BaseCommand::wait_ready(Timeout timeout_sec) const noexcept{
+		if(timeout_sec>0)
+			return err_.wait_for(std::chrono::seconds(timeout_sec))
+				==std::future_status::ready;
+		else return err_.wait_for(std::chrono::seconds())
+				==std::future_status::ready;
+	}
+
 	Command<CommandType::AddConnection>::Command(ConnectionHandle hconn,
 				std::string host,
 				Port port,
@@ -48,11 +56,9 @@ namespace network{
 			socket_(std::move(sock)){}
 
 	Command<CommandType::RemoveConnection>::Command(ConnectionHandle hconn,
-			uint32_t timeout_sec,
-			bool wait):
+			Timeout timeout_sec):
 			hconn_(hconn),
-			timeout_sec_(timeout_sec),
-			wait_(wait){}
+			timeout_sec_(timeout_sec){}
 
 	Command<CommandType::ModifyConnection>::Command(ConnectionHandle hconn,
 			std::vector<std::shared_ptr<Socket::BaseOption>>&& options):
@@ -65,11 +71,9 @@ namespace network{
 			proc_(std::move(proc)){}
 
 	Command<CommandType::RequestStop>::Command(ConnectionHandle hconn,
-			uint32_t timeout_sec,
-			bool wait):
+			Timeout timeout_sec):
 			hconn_(hconn),
-			timeout_sec_(timeout_sec),
-			wait_(wait){}
+			timeout_sec_(timeout_sec){}
 
 	Command<CommandType::ShutDownConnection>::Command(ConnectionHandle hconn):
 			hconn_(hconn){}
@@ -88,12 +92,12 @@ namespace network{
 			err = std::make_error_code(std::errc::invalid_argument);
 			//r1std::cout<<err.message()<<std::endl;
 			set_error(err);
-			set_ready();
+			return;
 		}
 		Address addr = make_address(host_,port_,err);
 		if(err==std::error_code()){
 			Socket sock = ::network::socket(addr,type_,proto_,err);
-			if(err==std::error_code()){
+			if(!err){
 				auto conn = make_connection(
 						w,
 						host_,
@@ -101,7 +105,7 @@ namespace network{
 						type_,
 						proto_,
 						err);
-				if(conn && err==std::error_code())
+				if(conn && !err)
 				{
 					w->connectInternal(
 						hconn_,
@@ -109,23 +113,21 @@ namespace network{
 						settings_,
 						std::move(sock),
 						err);
-					if(err!=std::error_code())
+					//if(err)
 						//r1std::cout<<"Command AddConnection: "<<err.message()<<std::endl;
 					set_error(err);
-					set_ready();
 				}
 				return;
 			}
 			else{
 				//r1std::cout<<"Command AddConnection: "<<err.message()<<std::endl;
 				set_error(err);
-				set_ready();
+				return;
 			}
 		}
 		else{
 			//r1std::cout<<"Command AddConnection: "<<err.message()<<std::endl;
 			set_error(err);
-			set_ready();
 		}
 	}
 
@@ -139,7 +141,6 @@ namespace network{
 			std::move(socket_),
 			err);
 		set_error(err);
-		set_ready();
 		////r1std::cout<<"Attach Connection command done"<<std::endl;
 		return;
 	}
@@ -147,9 +148,8 @@ namespace network{
 	void Command<
 			CommandType::RemoveConnection>::execute_internal(AbstractWorker* w) noexcept{
 		std::error_code err;
-		w->removeConnectionInternal(hconn_,wait_,timeout_sec_,err);
+		w->removeConnectionInternal(hconn_,timeout_sec_,err);
 		set_error(err);
-		set_ready();
 		////r1std::cout<<"Remove Connection command done"<<std::endl;
 		return;
 	}
@@ -159,7 +159,6 @@ namespace network{
 		std::error_code err;
 		w->modifyConnectionInternal(hconn_,options_,err);
 		set_error(err);
-		set_ready();
 		////r1std::cout<<"Modify Connection command done"<<std::endl;
 		return;
 	}
@@ -169,7 +168,6 @@ namespace network{
 		std::error_code err;
 		w->addConnectionProcessInternal(hconn_,std::move(proc_),err);
 		set_error(err);
-		set_ready();
 		////r1std::cout<<"Attach Process command done"<<std::endl;
 		return;
 	}
@@ -177,9 +175,8 @@ namespace network{
 	void Command<
 			CommandType::RemoveProcess>::execute_internal(AbstractWorker* w) noexcept{
 		std::error_code err;
-		w->removeConnectionProcessInternal(hconn_,wait_,timeout_sec_,err);
+		w->removeConnectionProcessInternal(hconn_,timeout_sec_,err);
 		set_error(err);
-		set_ready();
 		////r1std::cout<<"Remove Process command done"<<std::endl;
 		return;
 	}
@@ -187,9 +184,8 @@ namespace network{
 	void Command<
 			CommandType::RequestStop>::execute_internal(AbstractWorker* w) noexcept{
 		std::error_code err;
-		w->stop_process(hconn_,wait_,timeout_sec_,err);
+		w->stop_process(hconn_,timeout_sec_,err);
 		set_error(err);
-		set_ready();
 		//r1std::cout<<"Request Stop command done"<<std::endl;
 		return;
 	}
@@ -199,7 +195,6 @@ namespace network{
 		std::error_code err;
 		w->shutdown_connection(err,hconn_);
 		set_error(err);
-		set_ready();
 		//r1std::cout<<"Shutdown command done"<<std::endl;
 		return;
 	}

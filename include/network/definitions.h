@@ -9,5 +9,6 @@
 
 namespace network{
     using Port = uint16_t;
-    using FileDescriptor = int;
+    using FileDescriptor = int32_t;
+    using Timeout = int32_t; //second
 }

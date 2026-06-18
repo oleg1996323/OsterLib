@@ -2,8 +2,7 @@
 
 using namespace network;
 
-void AbstractServer::close(bool wait_for_end_connections,
-        uint16_t timeout_sec) noexcept
+void AbstractServer::close(Timeout timeout_sec) noexcept
 {
     if(accepter_){
         std::error_code err;
@@ -12,11 +11,10 @@ void AbstractServer::close(bool wait_for_end_connections,
     }
     this->processes_pool_.reset();
 }
-void AbstractServer::collapse(bool wait_for_end_connections,
-        uint16_t timeout_sec) noexcept
+void AbstractServer::collapse(Timeout timeout_sec) noexcept
 {
     if(processes_pool_){
         std::error_code err;
-        this->processes_pool_->stopConnections(wait_for_end_connections,timeout_sec,err);
+        this->processes_pool_->stopConnections(timeout_sec,err);
     }
 }

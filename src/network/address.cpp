@@ -159,7 +159,7 @@ std::expected<network::Address,std::exception>
         if(port!=0 || !host.empty()){
             std::error_code err;
             network::Address addr=network::make_address(host,port,err);
-            if(err!=std::error_code())
+            if(err)
                 return std::unexpected(std::invalid_argument("invalid address/port"));
             else return addr;
         }
@@ -202,7 +202,7 @@ namespace detail {
                 {
                     std::error_code err;
                     output = network::make_address(host,port,err);
-                    if(err!=std::error_code() || output.valid())
+                    if(err || output.valid())
                         return true;
                     else throw std::runtime_error("invalid host/port input");
                 }

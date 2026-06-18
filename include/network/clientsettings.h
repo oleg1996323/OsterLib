@@ -6,11 +6,12 @@
 #include "commonsocket.h"
 #include "address.h"
 #include "connection_options.h"
+#include "definitions.h"
 
 namespace network::client{
 struct Settings{
     std::optional<Address> binded_addr_;
-    int timeout_seconds_processes_=-1;
+    Timeout timeout_seconds_processes_=30;
     uint32_t num_threads_pool_=std::thread::hardware_concurrency();
     uint32_t number_events_{10};
     ConnectionOptions options_ = {};
@@ -19,7 +20,7 @@ struct Settings{
     Settings() = default;
     Settings(
         Protocol proto,
-        int timeout,
+        Timeout timeout,
         int32_t port,
         ConnectionOptions options,
         uint32_t num_threads_pool=std::thread::hardware_concurrency()):

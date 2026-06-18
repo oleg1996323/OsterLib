@@ -12,13 +12,17 @@
 #include "command_types.h"
 #include "clientsettings.h"
 #include "serversettings.h"
+#include <future>
 
 namespace network
 {	class Connection;
 	class AbstractWorker;
 	class AbstractConnectionProcess;
 	class BaseCommand:public std::enable_shared_from_this<BaseCommand>
-	{
+	{	
+		private:
+		std::promise<std::error_code> prom_;
+		std::shared_future<std::error_code> err_=prom_.get_future().share();
 		friend class AbstractWorker;
 		std::string attribute_;
 		public:
@@ -33,43 +37,28 @@ namespace network
 			execute_internal(worker);
 		}
 		bool ready() const noexcept{
-			return ready_.load(
-				std::memory_order::relaxed);
+			return wait_ready(0);
 		}
-		void wait_ready(){
-			while (!ready_.load(std::memory_order_acquire)) {
-				ready_.wait(false, std::memory_order_relaxed);
-			}
-			return;
-		}
+		bool wait_ready(Timeout timeout_sec) const noexcept;
 		std::optional<bool> successed() const noexcept{
-			if(ready())
-				return err_c_.load(std::memory_order::relaxed)==0;
+			if(ready()){
+				if(err_.get())
+					return false;
+				else return true;
+			}
 			else return std::nullopt;
 		}
 		std::optional<std::error_code> error() const noexcept{
 			if(ready())
-				return std::make_error_code(
-					static_cast<std::errc>(
-					err_c_.load(std::memory_order::relaxed)));
+				return err_.get();
 			else return std::nullopt;
 		}
 		protected:
 		virtual void execute_internal(
 				AbstractWorker* worker) noexcept = 0;
 		void set_error(std::error_code err) noexcept{
-			err_c_.store(err.value(),std::memory_order::release);
+			prom_.set_value(err);
 		}
-		void set_error(int err) noexcept{
-			err_c_.store(err,std::memory_order::release);
-		}
-		void set_ready() noexcept{
-			ready_.store(true,std::memory_order::release);
-			ready_.notify_one();
-		}
-		private:
-		std::atomic<bool> ready_{false};
-		std::atomic<uint32_t> err_c_{0};
 	};
 
 	template <CommandType T, typename... ARGS>
@@ -123,11 +112,9 @@ namespace network
 	struct Command<CommandType::RemoveConnection> :public BaseCommand
 	{
 		ConnectionHandle hconn_;
-		uint32_t timeout_sec_{0};
-		bool wait_{false};
+		Timeout timeout_sec_{0};
 		Command(ConnectionHandle hconn,
-				uint32_t timeout_sec=0,
-				bool wait = false);
+				Timeout timeout_sec=0);
 		virtual ~Command() = default;
 		virtual void execute_internal(
 				AbstractWorker* w) noexcept override;
@@ -161,11 +148,9 @@ namespace network
 	struct Command<CommandType::RemoveProcess> :public BaseCommand
 	{
 		ConnectionHandle hconn_;
-		uint32_t timeout_sec_{0};
-		bool wait_{false};
+		Timeout timeout_sec_{0};
 		Command(ConnectionHandle hconn,
-				uint32_t timeout_sec=0,
-				bool wait = false);
+				Timeout timeout_sec=0);
 		virtual ~Command() = default;
 		virtual void execute_internal(
 				AbstractWorker* w) noexcept override;
@@ -175,11 +160,9 @@ namespace network
 	struct Command<CommandType::RequestStop> :public BaseCommand
 	{
 		ConnectionHandle hconn_;
-		uint32_t timeout_sec_{0};
-		bool wait_{false};
+		Timeout timeout_sec_{0};
 		Command(ConnectionHandle hconn,
-				uint32_t timeout_sec=0,
-				bool wait = false);
+				Timeout timeout_sec=0);
 		virtual ~Command() = default;
 		virtual void execute_internal(
 				AbstractWorker* w) noexcept override;
@@ -337,11 +320,10 @@ namespace network{
 			if(auto err = emplace_request_to_process(
 				hconn_,
 				w);
-				err!=std::error_code())
+				err)
 			{
 				std::cout<<"Command request: "<<err.message()<<std::endl;
 				set_error(err);
-				set_ready();
 			}
 		}
 		template<typename START_t,typename DATA_t, typename END_t>

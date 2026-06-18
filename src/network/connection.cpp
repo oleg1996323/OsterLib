@@ -54,11 +54,11 @@ void ConnectionAcceptor::listen(std::error_code& err) noexcept{
 void ConnectionAcceptor::graceful_close(std::error_code& err) noexcept
 {
     std::lock_guard lock(m_);
-    if (thread_) {
-        thread_->request_stop();
+    if (thread_.joinable()) {
+        thread_.request_stop();
         event_handler_->interrupt();
-        if (thread_->joinable()) thread_->join();
-        thread_.reset();
+        if(thread_.joinable())
+            thread_.join();
     }
     if (socket_) {
         socket_->shutdown_all(err);
@@ -80,7 +80,7 @@ void ConnectionAcceptor::accept_error_handling(
 
 void ConnectionAcceptor::launch() noexcept{
     std::lock_guard lock(m_);
-    thread_ = std::make_unique<std::jthread>([this]
+    thread_ = std::jthread([this]
         (std::stop_token st)
     {
         //prstd::cout<<"acceptor launched"<<std::endl;
@@ -93,7 +93,7 @@ void ConnectionAcceptor::launch() noexcept{
             //prstd::cout<<"Acceptor: "<<err.message()<<std::endl;
             return;
         }
-        else if(err!=std::error_code()){
+        else if(err){
             //prstd::cout<<"Acceptor: "<<err.message()<<std::endl;
             return;
         }
@@ -133,7 +133,7 @@ std::unique_ptr<Socket> ConnectionAcceptor::make_socket(
         if(sock.set_options(err,std::span(acceptor_options_)))
         {
             sock.bind(addr_,err);
-            if(err!=std::error_code()){
+            if(err){
                 //prstd::cout<<"Acceptor (bind) "<<err.message()<<std::endl;
                 return {};
             }
@@ -148,12 +148,12 @@ std::unique_ptr<Socket> ConnectionAcceptor::make_socket(
 
 bool ConnectionAcceptor::stop(std::error_code& err) noexcept
 {
-    if (thread_) {
+    if (thread_.joinable()) {
         std::lock_guard lock(m_);
-        thread_->request_stop();
+        thread_.request_stop();
         event_handler_->interrupt();
-        if (thread_->joinable()) thread_->join();
-        thread_.reset();
+        if (thread_.joinable()) 
+            thread_.join();
         return true;
     }
     return false;
@@ -169,7 +169,7 @@ bool ConnectionAcceptor::set_options(std::error_code& err,std::span<
     return socket_->set_options(err,std::move(options));
 }
 bool ConnectionAcceptor::stopped() const noexcept{
-    return thread_.get()==nullptr;
+    return !thread_.joinable();
 }
 bool ConnectionAcceptor::shutdown_read(std::error_code& err) noexcept
 {
@@ -225,7 +225,7 @@ void ConnectionAcceptor::accept(std::stop_token stop,std::error_code& err) noexc
                     Socket socket(raw_sock);
                     socket.set_no_block(true,err);
                     socket.set_options(err,std::span(this->sock_accepted_options_));
-                    if(err!=std::error_code()){
+                    if(err){
                         //prstd::cout<<"set non-block socket error"<<std::endl;
                         continue;
                     }

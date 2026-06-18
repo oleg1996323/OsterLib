@@ -27,8 +27,8 @@ struct Settings{
     std::string host_;
     std::string service_;
     Protocol protocol_ = Protocol::TCP;
-    int timeout_seconds_processes_=-1;
-    int32_t port_{-1};
+    Timeout timeout_seconds_processes_=30;
+    Port port_{0};
     uint32_t num_threads_pool_=std::thread::hardware_concurrency();
     uint32_t number_events_{10};
     ConnectionOptions options_ = {};

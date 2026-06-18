@@ -34,7 +34,7 @@ namespace network{
         AbstractClient(std::error_code& err,uint16_t events_in_order):
             connections_(std::make_unique<Worker>("client",events_in_order,err))
         {
-                if(err!=std::error_code()){
+                if(err){
                     std::cout<<err.message()<<std::endl;
                     connections_.reset();
                 }
@@ -58,7 +58,7 @@ namespace network{
                 disconnect(ConnectionHandle hconn,std::error_code& err){
                 before_disconnect(hconn,err);
             auto cmd = std::make_shared<
-                Command<CommandType::RemoveConnection>>(hconn,0,false);
+                Command<CommandType::RemoveConnection>>(hconn,0);
             connections_->push_command(cmd);
             return cmd;
         }
@@ -81,7 +81,7 @@ namespace network{
                     proto,
                     settings);
             connections_->push_command(cmd);
-            cmd->wait_ready();
+            cmd->wait_ready(settings.timeout_seconds_processes_);
             if(cmd->successed()){
                 err.clear();
                 return hconn;

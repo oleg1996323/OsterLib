@@ -130,7 +130,7 @@ class ConnectionIO{
         }
         if(auto recv_res = ::network::receive_to_ring_buffer(err,
             socket_,recv_buffer_);
-            err!=std::error_code())
+            err)
         {
             switch(static_cast<std::errc>(err.value())){
                 case std::errc::resource_unavailable_try_again:

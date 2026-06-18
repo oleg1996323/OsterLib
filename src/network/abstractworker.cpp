@@ -4,17 +4,15 @@ namespace network{
 	AbstractWorker::AbstractWorker(uint32_t order_lenght,std::error_code& err):
     		multiplexor_(order_lenght,err)
 	{
-		if(err!=std::error_code())
+		if(err)
 			return;
 	}
-	void AbstractWorker::stop(bool wait_for_end_connections,
-            uint16_t timeout_sec){
+	void AbstractWorker::stop(Timeout timeout_sec){
 		std::lock_guard lock(mutex());
         std::error_code err;
         for(auto& [conn,conn_state]:connections()){
             if(conn_state.proc_.get()!=nullptr)
                 conn_state.proc_->request_stop(
-                    wait_for_end_connections,
                     timeout_sec,err);
         }
         thread().request_stop();
@@ -161,10 +159,10 @@ namespace network{
 	bool AbstractWorker::contains_connection(const ConnectionHandle& hconn) noexcept{
 		return connections_.contains(hconn.id());
 	}
-	bool AbstractWorker::stop_process(const ConnectionHandle& hconn,bool wait, uint16_t timeout_sec,std::error_code& err) noexcept{
+	bool AbstractWorker::stop_process(const ConnectionHandle& hconn,Timeout timeout_sec,std::error_code& err) noexcept{
 		if(auto found = connections_.find(hconn.id());found!=connections_.end()){
 			if(found->second.proc_){
-				found->second.proc_->request_stop(wait,timeout_sec,err);
+				found->second.proc_->request_stop(timeout_sec,err);
 				if(err==std::error_code())
 					return true;
 				else return false;
@@ -210,13 +208,13 @@ namespace network{
 		}
     }
 
-	void AbstractWorker::stop_all(uint16_t timeout_sec,bool wait,std::error_code& err) noexcept{
+	void AbstractWorker::stop_all(Timeout timeout_sec,std::error_code& err) noexcept{
 		std::for_each(connections().begin(),connections().end(),[&](
 			const std::pair<const ConnectionId,ConnectionState>& id_stat){
 			ConnectionHandle hconn(this,id_stat.first);
 			hconn.execute_command(
 				std::move(std::make_shared<Command<CommandType::RequestStop>>(
-					hconn,timeout_sec,wait)),err);			
+					hconn,timeout_sec)),err);			
 		});
 	}
 	void AbstractWorker::shutdown_all(std::error_code& err) noexcept{
@@ -337,8 +335,8 @@ namespace network{
 			state.connIO_.reset();
 			push_command(
 				std::make_shared<Command<CommandType::RemoveConnection>>(
-					hconn,0,false));
-			if(err!=std::error_code()){
+					hconn,0));
+			if(err){
 				std::lock_guard lk(mutex());
 				connections().erase(hconn.id());
 			}

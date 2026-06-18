@@ -113,12 +113,12 @@ namespace network{
                 add_tracking_event(socket.native(),
                                 ev,
                                 err);
-                if(err!=std::error_code()){
+                if(err){
                     //prstd::cout<<"("<<name_<<")"<<"(Connection attach/add_tracking_event): "<<err.message()<<std::endl;
                     return false;
                 }
             auto socket_loc = std::make_unique<Socket>(std::move(socket));
-            if(err!=std::error_code()){
+            if(err){
                 //prstd::cout<<"("<<name_<<")"<<"(Connection attach/make_connectionIO): "<<err.message()<<std::endl;
                 return false;
             }
@@ -169,8 +169,7 @@ namespace network{
     }
     bool Worker::removeConnectionInternal(
             const ConnectionHandle& hconn,
-            bool wait_for_end_connections,
-            uint16_t timeout_sec,
+            Timeout timeout_sec,
             std::error_code& err) noexcept
     {
         std::unique_lock lock(mutex());
@@ -178,7 +177,7 @@ namespace network{
             found!=connections().end())
         {
             found->second.socket_->shutdown_all(err);
-            if(err!=std::error_code()){
+            if(err){
                 //prstd::cout<<"("<<name_<<")"<<"Erasing id="<<found->first<<std::endl;
                 auto conn = std::move(connections().extract(found));
                 lock.unlock();
@@ -270,8 +269,7 @@ namespace network{
     }
     bool Worker::removeConnectionProcessInternal(
             const ConnectionHandle& hconn,
-            bool wait_for_end_connections,
-            uint16_t timeout_sec,
+            Timeout timeout_sec,
             std::error_code& err) noexcept
     {
         ConnectionState* conn_stat=nullptr;
@@ -287,7 +285,7 @@ namespace network{
             EventHandle ev(hconn.id(),conn_stat->events_handled_|Event::EdgeTrigger);
             if(!modify_tracking_event(conn_stat->socket_->native(),ev,err))
                 return false;
-            if(err!=std::error_code()){
+            if(err){
                 //prstd::cout<<"("<<name_<<")"<<"(Remove process) modify_tracking_event error: "
                 //<<err.message()<<std::endl;
                 after_remove_connection_process(conn_stat,err);
@@ -367,7 +365,7 @@ namespace network{
             {
                 std::error_code err;
                 conn_stat->proc_->handle_event(e,err);
-                if(err!=std::error_code())
+                if(err)
                 switch(static_cast<std::errc>(err.value())){
                     case std::errc::operation_in_progress:
                     case std::errc::no_buffer_space:
@@ -396,7 +394,7 @@ namespace network{
             using namespace std::string_literals;
             workers_.emplace_back(std::make_unique<ServerWorker>(
                 "server "s+std::to_string(i),24,err));
-            if(err!=std::error_code()){
+            if(err){
                 workers_.clear();
                 break;
             }
@@ -454,19 +452,16 @@ namespace network{
     }
     
     void ThreadPool::stopConnections(
-                bool wait_for_end_connections,
-                uint16_t timeout_sec,
+                Timeout timeout_sec,
                 std::error_code& err) noexcept
     {
         for (auto& w : workers_) 
             w->stop_all(
                 timeout_sec,
-                wait_for_end_connections,
                 err);
     }
     void ThreadPool::stop(
-                bool wait_for_end_connections,
-                uint16_t timeout_sec) noexcept
+                Timeout timeout_sec) noexcept
     {
         for (auto& w : workers_) 
             w->command_worker(Worker::WorkerCommand::Stop);

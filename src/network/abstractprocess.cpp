@@ -13,10 +13,8 @@ namespace network{
     void AbstractRequestableConnectionProcess::complete_current_request(
             std::error_code err) noexcept
     {
-        if (active_request_) {
+        if (active_request_)
             active_request_->set_error(err);
-            active_request_->set_ready();
-        }
         active_request_.reset();
     }
     void AbstractRequestableConnectionProcess::reset_requests(
@@ -50,24 +48,6 @@ namespace network{
             on_write(err);
         }
         else requests_.push(request);
-    }
-
-    void AbstractRequestableConnectionProcess::mark_error_request(
-        std::shared_ptr<Command<CommandType::RequestData>> cmd,
-        std::error_code err) noexcept
-    {
-        //prstd::cout<<"mark_error_request"<<std::endl;
-        if(err!=std::error_code())
-            //prstd::cout<<err.message()<<std::endl;
-        if(cmd)
-            cmd->set_error(err);
-    }
-    void AbstractRequestableConnectionProcess::mark_notify_request(
-            std::shared_ptr<Command<CommandType::RequestData>> cmd) noexcept
-    {
-        //prstd::cout<<"mark_notify_request"<<std::endl;
-        if(cmd)
-            cmd->set_ready();
     }
 
     network::AbstractFrame& AbstractRequestableConnectionProcess::__internal_get_receiving_data__(

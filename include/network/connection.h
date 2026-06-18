@@ -108,7 +108,7 @@ namespace network{
         uint32_t number_listened_{0};
         std::unique_ptr<AbstractProcessFabrique> process_fabrique_{};
         std::mutex m_;
-        std::unique_ptr<std::jthread> thread_;
+        std::jthread thread_;
         
         void accept_error_handling(
                 std::error_code& err) noexcept;
