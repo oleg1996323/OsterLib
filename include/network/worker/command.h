@@ -287,9 +287,7 @@ namespace network{
 						to_receive_ = std::make_shared<Frame<
 								START_FRAME,
 								RESULT_EXPECTED,
-								END_FRAME>>(std::forward<START_FRAME>(start),
-								std::forward<RESULT_EXPECTED>(to_send),
-								std::forward<END_FRAME>(end));
+								END_FRAME>>();
 					}
 		virtual ~RequestCommandSpec() = default;
 		std::shared_ptr<Frame<

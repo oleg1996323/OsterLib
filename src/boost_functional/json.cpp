@@ -51,10 +51,9 @@ template<>
 boost::json::value to_json(const linger& val){
     boost::json::object result;
     result["active"]=static_cast<bool>(val.l_onoff);
-    result["duration(sec)"]=static_cast<uint64_t>(val.l_linger);
+    result["duration(sec)"]=static_cast<int32_t>(val.l_linger);
     return result;
 }
-
 template<>
 std::expected<linger,std::exception> from_json(const boost::json::value& val){
     if(!val.is_object() && !val.is_null())
@@ -62,11 +61,11 @@ std::expected<linger,std::exception> from_json(const boost::json::value& val){
     auto& c = val.as_object();
     linger result;
     if(c.contains("active")){
-        if(auto tmp = from_json<decltype(result.l_onoff)>(c.at("active"));tmp.has_value())
-            result.l_onoff = c.at("active").as_bool();
+        if(auto tmp = from_json<bool>(c.at("active"));tmp.has_value())
+            result.l_onoff = tmp.value();
     }
     if(c.contains("duration(sec)")){
-        if(auto tmp = from_json<decltype(result.l_linger)>(c.at("duration(sec)"));tmp.has_value())
+        if(auto tmp = from_json<int32_t>(c.at("duration(sec)"));tmp.has_value())
             result.l_linger = tmp.value();
     }
     return result;
@@ -88,7 +87,7 @@ std::expected<timeval,std::exception> from_json(const boost::json::value& val){
     timeval result;
     if(c.contains("duration(sec)")){
         if(auto tmp = from_json<decltype(result.tv_sec)>(c.at("duration(sec)"));tmp.has_value())
-            result.tv_sec = c.at("duration(sec)").as_bool();
+            result.tv_sec = tmp.value();
     }
     if(c.contains("duration(usec)")){
         if(auto tmp = from_json<decltype(result.tv_usec)>(c.at("duration(usec)"));tmp.has_value())

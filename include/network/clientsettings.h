@@ -71,6 +71,14 @@ struct Settings{
         }
         else return false;
     }
+    bool operator==(const Settings& other) const noexcept{
+        return  binded_addr_==other.binded_addr_ &&
+                timeout_seconds_processes_==other.timeout_seconds_processes_&&
+                num_threads_pool_==other.num_threads_pool_&&
+                number_events_ == other.number_events_&&
+                options_ ==other.options_&&
+                protocol_ == other.protocol_;
+    }
 };
 }
 

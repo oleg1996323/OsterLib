@@ -1,5 +1,19 @@
 #include "connection_options.h"
 
+bool network::ConnectionOptions::operator==(const ConnectionOptions& other) const noexcept{
+    return  reuse_address_==other.reuse_address_ &&
+            reuse_port_==other.reuse_port_ &&
+            broadcast_socket_==other.broadcast_socket_&&
+            dont_route_==other.dont_route_&&
+            keep_alive_==other.keep_alive_&&
+            linger_==other.linger_&&
+            timeout_input_==other.timeout_input_&&
+            timeout_send_==other.timeout_send_&&
+            expect_min_bytes_available_==other.expect_min_bytes_available_&&
+            buffer_size_in_==other.buffer_size_in_&&
+            buffer_size_out_==other.buffer_size_out_;
+}
+
 template<>
 boost::json::value to_json(const network::ConnectionOptions& val){
     using namespace boost;
@@ -86,4 +100,25 @@ std::expected<network::ConnectionOptions,std::exception>
             result.buffer_size_out_={res.value(),{}};
     }
     return result;
+}
+
+bool network::operator==(const timeval& lhs,
+                    const timeval& rhs) noexcept
+{
+    return lhs.tv_sec==rhs.tv_sec &&
+            lhs.tv_usec==rhs.tv_usec;
+}
+
+bool network::operator==(const linger& lhs,
+                    const linger& rhs) noexcept
+{
+    return lhs.l_linger==rhs.l_linger &&
+            lhs.l_onoff==rhs.l_onoff;
+}
+
+template<typename VAL,network::Socket::Options OPT>
+bool network::operator==(const std::pair<VAL,OptionType<OPT>>& lhs,
+                    const std::pair<VAL,OptionType<OPT>>& rhs) noexcept
+{
+    return lhs.first==rhs.first;
 }

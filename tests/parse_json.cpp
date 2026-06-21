@@ -92,6 +92,29 @@ TEST(JsonConversion, JsonMapTest){
 TEST(JsonConversion, JsonSetTest){
 
 }
+#include "network/clientsettings.h"
+TEST(JsonConversion, JsonClientSettingsTest){
+    network::client::Settings set;
+    set.protocol_=network::Protocol::ETHERNET;
+    auto val = to_json(set);
+    std::ofstream first("first.json",std::ios::out|std::ios::trunc);
+    first<<val<<std::endl;
+    auto resolved = from_json<network::client::Settings>(val);
+    ASSERT_TRUE(resolved.has_value());
+    auto& resolved_ref = resolved.value();
+    std::ofstream second("second.json",std::ios::out|std::ios::trunc);
+    second<<to_json(resolved_ref)<<std::endl;
+    ASSERT_EQ(resolved.value(),set);
+}
+#include "network/serversettings.h"
+TEST(JsonConversion, JsonServerSettingsTest){
+    network::server::Settings set;
+    set.protocol_=network::Protocol::ETHERNET;
+    auto val = to_json(set);
+    auto resolved = from_json<network::server::Settings>(val);
+    ASSERT_TRUE(resolved.has_value());
+    ASSERT_EQ(resolved.value(),set);
+}
 
 int main(int argc,char* argv[]){
     testing::InitGoogleTest(&argc,argv);

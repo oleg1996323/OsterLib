@@ -9,7 +9,7 @@ boost::json::value to_json(const network::client::Settings& val){
     map["protocol"] = network::protocol::to_text(val.protocol_);
     map["timeout"] = val.timeout_seconds_processes_;
     if(val.binded_addr_.has_value())
-        map["address bind"]=to_json(val.binded_addr_);
+        map["address bind"]=to_json(val.binded_addr_.value());
     map["options"]=to_json(val.options_);
     return map;
 }
@@ -49,7 +49,7 @@ std::expected<network::client::Settings,std::exception> from_json(const boost::j
                 else return std::unexpected(options_res.error());
             }
             if(c.contains("address bind")){
-                if(auto res = from_json<std::optional<network::Address>>(
+                if(auto res = from_json<network::Address>(
                     c.at("address bind"));res.has_value())
                     result.binded_addr_=res.value();
             }

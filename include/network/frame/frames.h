@@ -42,6 +42,7 @@ namespace network{
         friend struct serialization::Min_serial_size;
         DataFrame<START,DATA,END> frame_val_;
         public:
+        Frame()=default;
         Frame(
             START&& start,
             DATA&& data,

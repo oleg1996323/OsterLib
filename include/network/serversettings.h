@@ -96,7 +96,16 @@ struct Settings{
             std::memmove(&options_,&other.options_,sizeof(options_));
         }
         return *this;
-    }  
+    }
+    bool operator==(const Settings& other) const noexcept{
+        return  host_==other.host_&&
+                service_==other.service_&&
+                port_==other.port_&&
+                num_threads_pool_==other.num_threads_pool_&&
+                protocol_==other.protocol_&&
+                timeout_seconds_processes_==other.timeout_seconds_processes_ &&
+                options_==other.options_;
+    }
 };
 }
 

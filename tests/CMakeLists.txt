@@ -15,7 +15,7 @@ add_executable(time_sequence_test time_sequence.cpp)
 target_link_libraries(time_sequence_test GTest::gtest types)
 
 add_executable(parse_json_test parse_json.cpp)
-target_link_libraries(parse_json_test GTest::gtest types)
+target_link_libraries(parse_json_test GTest::gtest types network)
 
 add_executable(lexical_cast_test lexical_cast.cpp)
 target_link_libraries(lexical_cast_test GTest::gtest types)

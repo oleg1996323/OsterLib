@@ -25,7 +25,20 @@ namespace network{
     template<network::Socket::Options OPT>
     struct OptionType{
         static constexpr Socket::Options type = OPT;
+        bool operator==(OptionType) noexcept{
+            return true;
+        }
     };
+
+    bool operator==(const timeval& lhs,
+                        const timeval& rhs) noexcept;
+
+    bool operator==(const linger& lhs,
+                        const linger& rhs) noexcept;
+
+    template<typename VAL,network::Socket::Options OPT>
+    bool operator==(const std::pair<VAL,OptionType<OPT>>& lhs,
+                        const std::pair<VAL,OptionType<OPT>>& rhs) noexcept;
 
     struct ConnectionOptions{
         std::pair<int,
@@ -64,6 +77,7 @@ namespace network{
             result.push_back(make_option(buffer_size_out_));
             return result;
         }
+        bool operator==(const ConnectionOptions& other) const noexcept;
     };
 }
 
