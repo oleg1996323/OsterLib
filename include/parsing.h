@@ -49,7 +49,7 @@ bool iend_with(std::string_view str,const std::ranges::range auto& to_match){
         for(const typename std::decay_t<decltype(to_match)>::value_type& possible:to_match){
             if(str.size()<possible.size())
                 continue;
-            if(auto substr = possible.substr(str.size()-possible.size()-1);
+            if(auto substr = possible.substr(str.size()-possible.size());
                 std::equal(substr.begin(),substr.end(),str.begin(),str.end(),case_insensitive_char_compare))
                 return true;
             else continue;
@@ -57,11 +57,11 @@ bool iend_with(std::string_view str,const std::ranges::range auto& to_match){
     }
     else{
         if(str.size()<to_match.size())
-            false;
-        if(auto substr = to_match.substr(str.size()-to_match.size()-1);
+            return false;
+        if(auto substr = to_match.substr(str.size()-to_match.size());
             std::equal(substr.begin(),substr.end(),str.begin(),str.end(),case_insensitive_char_compare))
             return true;
-        else false;
+        else return false;
     }
     return false;
 }

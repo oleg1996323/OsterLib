@@ -43,13 +43,15 @@ std::expected<DateTimeDiff,std::exception> from_json<DateTimeDiff>(const boost::
 #include "parsing.h"
 
 int32_t find_char(std::string_view input){
+    if(input.empty())
+        return -1;
     int32_t i=0;
     for(i;i<input.size();++i){
         if(input[i]>47 && input[i]<58)
             continue;
         else break;
     }
-    return i-1;
+    return i;
 }
 
 template<>
@@ -60,50 +62,50 @@ DateTimeDiff boost::lexical_cast(const std::string& input){
     for(;;)
     {
         int32_t pos=find_char(current);
-        if(pos==-1 || current.size()<=pos+1)
+        if(pos==-1 || current.size()<=pos)
             std::runtime_error("invalid DateTimeDiff input");
-        uint32_t tmp;
+        int32_t tmp;
         auto fcerr = std::from_chars(
             current.data(),
             current.data()+pos,
             tmp);
-        if(fcerr.ec!=std::errc())
+        if(fcerr.ec!=std::errc() || tmp<0)
             std::runtime_error("invalid DateTimeDiff input");
-        if(iend_with(current.substr(0,pos+1),std::string_view("h")) &&
+        if(iend_with(current.substr(pos,1),std::string_view("h")) &&
         (tmp<=std::numeric_limits<decltype(DateTimeDiff::hours_)>::max() &&
         tmp>=std::numeric_limits<decltype(DateTimeDiff::hours_)>::min())){
             result.hours_ = tmp;
-            current = current.substr(pos+2);
+            current = current.substr(pos+1);
         }
-        else if(iend_with(current.substr(0,pos+1),std::string_view("y")) &&
+        else if(iend_with(current.substr(pos,1),std::string_view("y")) &&
         (tmp<=std::numeric_limits<decltype(DateTimeDiff::years_)>::max() &&
         tmp>=std::numeric_limits<decltype(DateTimeDiff::years_)>::min())){
             result.years_ = tmp;
-            current = current.substr(pos+2);
+            current = current.substr(pos+1);
         }
-        else if(iend_with(current.substr(0,pos+1),std::string_view("m")) &&
+        else if(iend_with(current.substr(pos,1),std::string_view("m")) &&
         (tmp<=std::numeric_limits<decltype(DateTimeDiff::months_)>::max() &&
         tmp>=std::numeric_limits<decltype(DateTimeDiff::months_)>::min())){
             result.months_ = tmp;
-            current = current.substr(pos+2);
+            current = current.substr(pos+1);
         }
-        else if(iend_with(current.substr(0,pos+1),std::string_view("d")) &&
-        (tmp<=std::numeric_limits<decltype(DateTimeDiff::days_)>::max() &&
-        tmp>=std::numeric_limits<decltype(DateTimeDiff::days_)>::min())){
+        else if(iend_with(current.substr(pos,1),std::string_view("d")) &&
+        (tmp<=std::numeric_limits<decltype(DateTimeDiff::days_)>::max()) &&
+        (tmp>=std::numeric_limits<decltype(DateTimeDiff::days_)>::min())){
             result.days_ = tmp;
-            current = current.substr(pos+2);
+            current = current.substr(pos+1);
         }
-        else if(iend_with(current.substr(0,pos+3),std::string_view("min")) &&
-        (tmp<=std::numeric_limits<decltype(DateTimeDiff::minutes_)>::max() &&
-        tmp>=std::numeric_limits<decltype(DateTimeDiff::minutes_)>::min())){
+        else if(iend_with(current.substr(pos,3),std::string_view("min")) &&
+        (tmp<=std::numeric_limits<decltype(DateTimeDiff::minutes_)>::max()) &&
+        (tmp>=std::numeric_limits<decltype(DateTimeDiff::minutes_)>::min())){
             result.days_ = tmp;
-            current = current.substr(pos+4);
+            current = current.substr(pos+3);
         }
-        else if(iend_with(current.substr(0,pos+1),std::string_view("s")) &&
+        else if(iend_with(current.substr(pos,1),std::string_view("s")) &&
         (tmp<=std::numeric_limits<decltype(DateTimeDiff::seconds_)>::max() &&
         tmp>=std::numeric_limits<decltype(DateTimeDiff::seconds_)>::min())){
             result.days_ = tmp;
-            current = current.substr(pos+2);
+            current = current.substr(pos+1);
         }
         else{
             using namespace std::string_literals;

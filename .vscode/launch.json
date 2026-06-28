@@ -4,7 +4,7 @@
         "name": "(gdb) Launch",
         "type": "cppdbg",
         "request": "launch",
-        "program": "/home/oster/OsterLib/build/tests/parse_json_test",
+        "program": "/home/oster/OsterLib/build/tests/lexical_cast_test",
         "args": [],
         "stopAtEntry": false,
         "cwd": "${cwd}",
