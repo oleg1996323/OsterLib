@@ -44,11 +44,11 @@ class ConnectionIO{
                 serializer_);ser_res!=serialization::SerializationEC::NONE){
             switch(ser_res){
                 case serialization::SerializationEC::BUFFER_SIZE_LESSER:
+                    recv_buffer_.commit_read(serialization::serial_size(value));
                     break;
                 default:
-                recv_buffer_.commit_read(serialization::serial_size(value));
+                clear_recv_buffer();
                 break;
-                //prstd::cout<<"deserialize error"<<std::endl;
             }
             return ser_res;
         }
@@ -69,12 +69,10 @@ class ConnectionIO{
         switch(err){
             case serialization::SerializationEC::NONE:
             case serialization::SerializationEC::BUFFER_SIZE_LESSER:
-                serializer_.flush();
                 recv_buffer_.commit_read(serialization::serial_size(values...));
                 return err;
             default:
-            clear_recv_buffer(); //flush errorness sequence
-            //prstd::cout<<"deserialize error"<<std::endl;
+            clear_recv_buffer();
             return err;
         }
     }
