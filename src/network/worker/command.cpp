@@ -225,4 +225,22 @@ namespace network{
 			}
 		}
 	}
+	Command<CommandType::TaskDone>::Command(ConnectionHandle hconn):
+		hconn_(hconn){}
+	void Command<CommandType::TaskDone>::execute_internal(
+		AbstractWorker* w) noexcept
+	{
+		std::error_code err;
+		if(auto conn_stat = w->connection_state_by_id(hconn_.id());
+			conn_stat!=nullptr &&
+			conn_stat->proc_!=nullptr &&
+			conn_stat->proc_->has_task()){
+			if(conn_stat->proc_->is_ready(err) && !err){
+				conn_stat->proc_->on_task_done(err);
+				set_error(err);
+			}
+			else set_error(std::make_error_code(std::errc::operation_in_progress));			
+		}
+		else set_error(std::make_error_code(std::errc::no_such_process));
+	}
 }

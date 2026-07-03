@@ -261,6 +261,15 @@ namespace network{
 		}
 	};
 
+	template<>
+	struct Command<CommandType::TaskDone>:public BaseCommand
+	{
+		ConnectionHandle hconn_;
+		Command(ConnectionHandle hconn);
+		virtual void execute_internal(
+				AbstractWorker* w) noexcept override;
+	};
+
 	template<typename RESULT_EXPECTED,
 		typename START_FRAME,
 		typename DATA_FRAME_SEND,

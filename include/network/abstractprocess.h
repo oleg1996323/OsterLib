@@ -12,6 +12,7 @@
 #include <pthread.h>
 #include <cassert>
 #include "definitions.h"
+#include <memory>
 
 namespace network{
 
@@ -22,21 +23,36 @@ enum class TaskMode{
 
 class AbstractTaskHandler{
     protected:
+    std::function<void()> callback_=[](){};
     TaskMode mode_;
-    AbstractTaskHandler(TaskMode mode):
-        mode_(mode){}
+    AbstractTaskHandler(TaskMode mode,std::function<void()> callback=[](){}):
+        callback_(std::move(callback)),mode_(mode){}
     AbstractTaskHandler(const AbstractTaskHandler& other) = delete;
-    AbstractTaskHandler(AbstractTaskHandler& other) noexcept{
-        operator=(std::move(other));
+    AbstractTaskHandler(AbstractTaskHandler&& other) noexcept{
+       mode_=other.mode_;
+       callback_=std::move(other.callback_);
     }
     AbstractTaskHandler& operator=(const AbstractTaskHandler& other) = delete;
-    AbstractTaskHandler& operator=(AbstractTaskHandler&& other) noexcept = default;
+    AbstractTaskHandler& operator=(AbstractTaskHandler&& other) noexcept {
+        if(this!=&other){
+            mode_=other.mode_;
+            callback_=std::move(other.callback_);
+        }
+        return *this;
+    }
     public:
     virtual ~AbstractTaskHandler() = default;
     virtual bool is_ready(std::error_code& err) const noexcept = 0;
     virtual bool is_busy(std::error_code& err) const noexcept = 0;
     TaskMode mode() const noexcept{
         return mode_;
+    }
+    const std::function<void()>& callback() const noexcept{
+        return callback_;
+    }
+    template<typename FUNCTION>
+    void callback(FUNCTION&& func) noexcept{
+        callback_ = std::forward<FUNCTION>(func);
     }
     virtual bool request_stop(
                 Timeout timeout_sec,
@@ -61,8 +77,10 @@ class TypedTaskHandler<TaskMode::Sync,Result>:public AbstractTaskHandler{
     mutable std::shared_future<result_type> result_;
     public:
     
-    TypedTaskHandler(std::shared_future<Result>&& result):
-        AbstractTaskHandler(TaskMode::Sync),
+    TypedTaskHandler(
+            std::shared_future<Result>&& result,
+            std::function<void()> callback):
+        AbstractTaskHandler(TaskMode::Sync,std::move(callback)),
         result_(std::move(result)){}
     TypedTaskHandler(TypedTaskHandler&& other) noexcept:
         result_(std::move(other.result_)){}
@@ -161,13 +179,15 @@ class TypedTaskHandler<TaskMode::Thread,Result>:public AbstractTaskHandler{
     std::jthread thread_;
     public:
     
-    TypedTaskHandler():
-        AbstractTaskHandler(TaskMode::Thread){}
+    TypedTaskHandler(std::function<void()> callback = [](){}):
+        AbstractTaskHandler(TaskMode::Thread,std::move(callback)){}
     TypedTaskHandler(TypedTaskHandler&& other) noexcept:
-        result_(std::move(other.result_)){}
+        result_(std::move(other.result_)),
+        thread_(std::move(other.thread_)){}
     TypedTaskHandler operator=(TypedTaskHandler&& other) noexcept{
         if(this!=&other){
             result_ = std::move(other.result_);
+            thread_ = std::move(other.thread_);
         }
         return *this;
     }
@@ -222,7 +242,6 @@ class TypedTaskHandler<TaskMode::Thread,Result>:public AbstractTaskHandler{
             return false;
         }
     }
-
     virtual result_return_t get_result(std::error_code& err) noexcept{
         return get_result_timeout(-1,err);
     }
@@ -293,12 +312,31 @@ public:
     using result_type = typename Base::result_type;
     using result_return_t = typename Base::result_return_t;
 
-    TaskHandler(F&& function, ARGS&&... args) :
+    TaskHandler(
+            std::function<void()> callback,
+            F&& function,
+            ARGS&&... args):
+        Base(std::async(std::launch::deferred,
+                        std::forward<F>(function),
+                        std::forward<ARGS>(args)...).share(),
+                std::move(callback))
+    {}
+    TaskHandler(F&& function, ARGS&&... args):
         Base(std::async(std::launch::deferred,
                         std::forward<F>(function),
                         std::forward<ARGS>(args)...).share())
     {}
-
+    template<typename OBJ>
+    TaskHandler(std::function<void()> callback,
+            F&& function,
+            OBJ&& obj,
+            ARGS&&... args):
+        Base(std::async(std::launch::deferred,
+                        std::forward<F>(function),
+                        std::forward<OBJ>(obj),
+                        std::forward<ARGS>(args)...).share(),
+                std::move(callback))
+    {}
     template<typename OBJ>
     TaskHandler(F&& function, OBJ&& obj, ARGS&&... args) :
         Base(std::async(std::launch::deferred,
@@ -349,44 +387,60 @@ class ThreadedTaskHandler:
     public:
     using result_type = typename Base::result_type;
     using result_return_t = typename Base::result_return_t;
-    ThreadedTaskHandler(F&& funct, ARGS&&... args)
-    {
+    void set_thread(F&& funct, ARGS&&... args){
         std::promise<result_type> promise;
         Base::result_ = promise.get_future().share();
 
         Base::thread_ = std::jthread(
-            [function = F(std::forward<F>(funct)),
-            prom = std::move(promise),
-            ... captured_args = ARGS(std::forward<ARGS>(args))]
-            (std::stop_token stop) mutable
+        [this,function = F(std::forward<F>(funct)),
+        prom = std::move(promise),
+        ... captured_args = ARGS(std::forward<ARGS>(args))]
+        (std::stop_token stop) mutable
+        {
+            if constexpr (stop_token_from_thread)
             {
-                if constexpr (stop_token_from_thread)
+                if constexpr (std::is_same_v<result_type, void>)
                 {
-                    if constexpr (std::is_same_v<result_type, void>)
-                    {
-                        std::invoke(function, stop, captured_args...);
-                        prom.set_value();
-                    }
-                    else
-                    {
-                        auto result = std::invoke(function, stop, captured_args...);
-                        prom.set_value(std::move(result));
-                    }
+                    std::invoke(function, stop, captured_args...);
+                    prom.set_value();
+                    AbstractTaskHandler::callback()();
                 }
                 else
                 {
-                    if constexpr (std::is_same_v<result_type, void>)
-                    {
-                        std::invoke(function, captured_args...);
-                        prom.set_value();
-                    }
-                    else
-                    {
-                        auto result = std::invoke(function, captured_args...);
-                        prom.set_value(std::move(result));
-                    }
+                    auto result = std::invoke(function, stop, captured_args...);
+                    prom.set_value(std::move(result));
+                    AbstractTaskHandler::callback()();
                 }
-            });
+            }
+            else
+            {
+                if constexpr (std::is_same_v<result_type, void>)
+                {
+                    std::invoke(function, captured_args...);
+                    prom.set_value();
+                    AbstractTaskHandler::callback()();
+                }
+                else
+                {
+                    auto result = std::invoke(function, captured_args...);
+                    prom.set_value(std::move(result));
+                    AbstractTaskHandler::callback()();
+                }
+            }
+        });
+    }
+    ThreadedTaskHandler(std::function<void()> callback,F&& funct, ARGS&&... args):
+    Base(std::move(callback))
+    {
+        set_thread(
+            std::forward<F>(funct),
+            std::forward<ARGS>(args)...);
+    }
+    ThreadedTaskHandler(F&& funct, ARGS&&... args)
+    {
+        set_thread(
+            std::forward<F>(funct),
+            std::forward<ARGS>(args)...);
     }
     ThreadedTaskHandler(const ThreadedTaskHandler& other) = delete;
     ThreadedTaskHandler(ThreadedTaskHandler&& other) noexcept:
@@ -433,14 +487,13 @@ private:
 public:
     using result_type = typename Base::result_type;
     using result_return_t = typename Base::result_return_t;
-
-    BindedThreadedTaskHandler(F&& funct, OBJ&& obj, ARGS&&... args)
-    {
+    
+    void set_thread(F&& funct, OBJ&& obj, ARGS&&... args){
         std::promise<result_type> promise;
         Base::result_ = promise.get_future().share();
 
         Base::thread_ = std::jthread(
-        [function = F(std::forward<F>(funct)),
+        [this,function = F(std::forward<F>(funct)),
             obj_internal = OBJ(std::forward<OBJ>(obj)),
             prom = std::move(promise),
             ... captured_args = ARGS(std::forward<ARGS>(args))]
@@ -452,11 +505,13 @@ public:
                 {
                     std::invoke(function, obj_internal, stop, captured_args...);
                     prom.set_value();
+                    AbstractTaskHandler::callback()();
                 }
                 else
                 {
                     auto result = std::invoke(function, obj_internal, stop, captured_args...);
                     prom.set_value(std::move(result));
+                    AbstractTaskHandler::callback()();
                 }
             }
             else
@@ -465,14 +520,35 @@ public:
                 {
                     std::invoke(function, obj_internal, captured_args...);
                     prom.set_value();
+                    AbstractTaskHandler::callback()();
                 }
                 else
                 {
                     auto result = std::invoke(function, obj_internal, captured_args...);
                     prom.set_value(std::move(result));
+                    AbstractTaskHandler::callback()();
                 }
             }
         });
+    }
+    BindedThreadedTaskHandler(
+        std::function<void()> callback,
+        F&& funct, OBJ&& obj,
+        ARGS&&... args):
+    Base(std::move(callback))
+    {
+        set_thread(
+            std::forward<F>(funct),
+            std::forward<OBJ>(obj),
+            std::forward<ARGS>(args)...);
+    }
+
+    BindedThreadedTaskHandler(F&& funct, OBJ&& obj, ARGS&&... args)
+    {
+        set_thread(
+            std::forward<F>(funct),
+            std::forward<OBJ>(obj),
+            std::forward<ARGS>(args)...);
     }
     BindedThreadedTaskHandler(const BindedThreadedTaskHandler& other) = delete;
     BindedThreadedTaskHandler(BindedThreadedTaskHandler&& other) noexcept:
@@ -507,6 +583,23 @@ class Process{
         task_.reset();
     }
     template<TaskMode mode, typename F, typename... ARGS>
+    void emplace_task(std::function<void()> callback,std::error_code& err, F&& function, ARGS&&... args) {
+        if constexpr (mode == TaskMode::Sync) {
+            task_ = std::make_unique<TaskHandler<F, ARGS...>>(
+                std::move(callback),
+                std::forward<F>(function),
+                std::forward<ARGS>(args)...);
+        } else if constexpr (mode == TaskMode::Thread) {
+            task_ = std::make_unique<ThreadedTaskHandler<F, ARGS...>>(
+                std::move(callback),
+                std::forward<F>(function),
+                std::forward<ARGS>(args)...);
+        } else {
+            static_assert(mode == TaskMode::Sync || mode == TaskMode::Thread,
+                        "Invalid TaskMode");
+        }
+    }
+    template<TaskMode mode, typename F, typename... ARGS>
     void emplace_task(std::error_code& err, F&& function, ARGS&&... args) {
         if constexpr (mode == TaskMode::Sync) {
             task_ = std::make_unique<TaskHandler<F, ARGS...>>(
@@ -515,6 +608,25 @@ class Process{
         } else if constexpr (mode == TaskMode::Thread) {
             task_ = std::make_unique<ThreadedTaskHandler<F, ARGS...>>(
                 std::forward<F>(function),
+                std::forward<ARGS>(args)...);
+        } else {
+            static_assert(mode == TaskMode::Sync || mode == TaskMode::Thread,
+                        "Invalid TaskMode");
+        }
+    }
+    template<TaskMode mode, typename F, typename OBJ, typename... ARGS>
+    void emplace_binded_task(std::function<void()> callback,std::error_code& err, F&& function, OBJ&& obj, ARGS&&... args) {
+        if constexpr (mode == TaskMode::Sync) {
+            task_ = std::make_unique<TaskHandler<F, ARGS...>>(
+                std::move(callback),
+                std::forward<F>(function),
+                std::forward<OBJ>(obj),
+                std::forward<ARGS>(args)...);
+        } else if constexpr (mode == TaskMode::Thread) {
+            task_ = std::make_unique<BindedThreadedTaskHandler<F, OBJ, ARGS...>>(
+                std::move(callback),
+                std::forward<F>(function),
+                std::forward<OBJ>(obj),
                 std::forward<ARGS>(args)...);
         } else {
             static_assert(mode == TaskMode::Sync || mode == TaskMode::Thread,

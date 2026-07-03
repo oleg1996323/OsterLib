@@ -11,6 +11,7 @@ namespace network{
         ShutDownConnection,
         AttachConnection,
         RequestStop,
-        RequestData
+        RequestData,
+        TaskDone
     };
 }
