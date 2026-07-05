@@ -8,10 +8,6 @@ namespace network{
          */            
         In = EPOLLIN,
         /**
-         * @brief The associated file is available for write() operations.
-         */
-        Out = EPOLLOUT,
-        /**
          * @brief There is an exceptional condition on the file descriptor.
          * @details There is some exceptional condition on the file descriptor.
             @Possibilities include:
@@ -21,6 +17,15 @@ namespace network{
             -A cgroup.events file has been modified (see cgroups(7)).
             */
         HighProrityIn = EPOLLPRI,
+        /**
+         * @brief The associated file is available for write() operations.
+         */
+        Out = EPOLLOUT,
+        Error = EPOLLERR,
+        /**
+         * @brief 
+         */
+        HangUp = EPOLLHUP,
         /**
          * @brief Requests edge-triggered notification for the associated
              file descriptor.  The default behavior for epoll is level-
@@ -33,7 +38,7 @@ namespace network{
          * Further event-notifying of the fd needs the rearming by modify() method.
          */
         OneShot = EPOLLONESHOT,
-        Error = EPOLLERR,
+        
         #ifdef EPOLLWAKEUP
         /**
          * @brief Ensure that the system does not enter "suspend" or "hibernate" while this event is
@@ -48,11 +53,9 @@ namespace network{
          */
         Exclusive = EPOLLEXCLUSIVE,
         #endif
-        /**
-         * @brief 
-         */
-        HangUp = EPOLLHUP,
-        CanReadButHangUp = EPOLLRDHUP
+        CanReadButHangUp = EPOLLRDHUP,
+        EvStopRequested = 1u << 26,
+        EvTaskDone = 1u << 27
     };
 }
 

@@ -10,6 +10,7 @@ bool ConnectionHandle::shutdown(std::error_code& err) noexcept{
     if(owner_)
         return owner_->shutdown_connection(err,*this);
     else{
+        std::cout<<"ConnectionHandle::shutdown"<<std::endl;
         err = std::make_error_code(std::errc::no_such_device);
         return false;
     }
@@ -18,6 +19,7 @@ bool ConnectionHandle::close(std::error_code& err) noexcept{
     if(owner_)
         return owner_->close_connection(err,*this);
     else{
+        std::cout<<"ConnectionHandle::close"<<std::endl;
         err = std::make_error_code(std::errc::no_such_device);
         return false;
     }
@@ -31,6 +33,7 @@ bool ConnectionHandle::execute_command(
         return true;
     }
     else{
+        std::cout<<"ConnectionHandle::execute_command"<<std::endl;
         err = std::make_error_code(std::errc::no_such_device);
         return false;
     }
@@ -42,6 +45,7 @@ bool ConnectionHandle::execute_commands(std::vector<std::shared_ptr<BaseCommand>
         return true;
     }
     else{
+        std::cout<<"ConnectionHandle::execute_commands"<<std::endl;
         err = std::make_error_code(std::errc::no_such_device);
         return false;
     }
@@ -64,6 +68,7 @@ bool ConnectionHandle::add_process(
         return true;
     }
     else{
+        std::cout<<"ConnectionHandle::add_process"<<std::endl;
         err = std::make_error_code(std::errc::no_such_device);
         return false;
     }

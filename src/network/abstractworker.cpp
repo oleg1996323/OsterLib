@@ -51,6 +51,7 @@ namespace network{
 			return true;
 		}
 		else{
+			std::cout<<"Connection not found (AbstractWorker::set_options)"<<std::endl;
 			err = std::make_error_code(std::errc::no_such_device);	
 			return false;
 		}
@@ -61,6 +62,7 @@ namespace network{
 			std::error_code& err) noexcept{
 		auto found = connections().find(hconn.id());
 		if (found == connections().end()) {
+			std::cout<<"AbstractWorker::enable_writing"<<std::endl;
 			err = std::make_error_code(std::errc::no_such_device);
 			return false;
 		}
@@ -100,6 +102,7 @@ namespace network{
 			std::error_code& err) noexcept{
 		auto found = connections().find(hconn.id());
 		if (found == connections().end()) {
+			std::cout<<"AbstractWorker::enable_readable"<<std::endl;
 			err = std::make_error_code(std::errc::no_such_device);
 			return false;
 		}
@@ -151,6 +154,7 @@ namespace network{
 			return true;
 		}
 		else{
+			std::cout<<"AbstractWorker::set_option"<<std::endl;
 			err = std::make_error_code(std::errc::no_such_device);	
 			return false;
 		}
@@ -173,6 +177,7 @@ namespace network{
 			}
 		}
 		else{
+			std::cout<<"AbstractWorker::contains_connection"<<std::endl;
 			err = std::make_error_code(std::errc::no_such_device);
 			return false;
 		}
@@ -186,6 +191,7 @@ namespace network{
 			return found->second.socket_->shutdown_all(err);
 		}
 		else{
+			std::cout<<"AbstractWorker::shutdown_connection"<<std::endl;
 			err = std::make_error_code(std::errc::no_such_device);
 			return false;
 		}
@@ -198,11 +204,12 @@ namespace network{
 						std::memory_order_acq_rel);
 			multiplexor_.remove(found->second.socket_->native(),err);
 			found->second.socket_->close();
-			//r1std::cout<<"Erasing id="<<found->first<<std::endl;
+			std::cout<<"Erasing id="<<found->first<<std::endl;
 			connections_.erase(found);
 			return true;
         }
 		else{
+			std::cout<<"AbstractWorker::close_connection"<<std::endl;
 			err = std::make_error_code(std::errc::no_such_device);
 			return false;
 		}
@@ -328,7 +335,7 @@ namespace network{
 				std::error_code& err) noexcept
     {
 		if(events&Event::Error || events&Event::HangUp){
-			//r1std::cout<<"Handling error: id="<<hconn.id()<<std::endl;
+			std::cout<<"Handling error: id="<<hconn.id()<<std::endl;
 			state.conn_->state_ = Connection::State::Closed;
 			state.socket_->close();
 			state.proc_.reset();

@@ -216,6 +216,11 @@ class ConnectionIO{
     size_t in_send_buffer() const noexcept{
         return recv_buffer_.size();
     }
+    int64_t send_rest(std::error_code& err) noexcept{
+        if(send_buffer_.has_to_write())
+            return __send_internal__(err);
+        else return 0;
+    }
     template<typename T>
     serialization::SerializationEC serialize(T&& value) noexcept{
         return send_buffer_.serialize(std::forward<T>(value));

@@ -39,6 +39,7 @@ std::unique_ptr<Connection> make_connection(
 
 void ConnectionAcceptor::listen(std::error_code& err) noexcept{
     if(!socket_){
+        std::cout<<"ConnectionAcceptor::listen"<<std::endl;
         err = std::make_error_code(std::errc::no_such_device);
         return;
     }
@@ -162,6 +163,7 @@ bool ConnectionAcceptor::set_options(std::error_code& err,std::span<
             std::shared_ptr<Socket::BaseOption>> options) noexcept
 {
     if(!socket_){
+        std::cout<<"ConnectionAcceptor::set_options"<<std::endl;
         err = std::make_error_code(std::errc::no_such_device);
         return false;
     }
@@ -174,6 +176,7 @@ bool ConnectionAcceptor::stopped() const noexcept{
 bool ConnectionAcceptor::shutdown_read(std::error_code& err) noexcept
 {
     if(!socket_){
+        std::cout<<"ConnectionAcceptor::shutdown_read"<<std::endl;
         err = std::make_error_code(std::errc::no_such_device);
         return false;
     }
@@ -183,6 +186,7 @@ bool ConnectionAcceptor::shutdown_read(std::error_code& err) noexcept
 bool ConnectionAcceptor::shutdown_write(std::error_code& err) noexcept
 {
     if(!socket_){
+        std::cout<<"ConnectionAcceptor::shutdown_write"<<std::endl;
         err = std::make_error_code(std::errc::no_such_device);
         return false;
     }
@@ -192,6 +196,7 @@ bool ConnectionAcceptor::shutdown_write(std::error_code& err) noexcept
 bool ConnectionAcceptor::shutdown_all(std::error_code& err) noexcept
 {
     if(!socket_){
+        std::cout<<"ConnectionAcceptor::shutdown_all"<<std::endl;
         err = std::make_error_code(std::errc::no_such_device);
         return false;
     }

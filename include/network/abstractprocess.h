@@ -700,6 +700,7 @@ class AbstractConnectionProcess:public Process{
     virtual void on_write(std::error_code& err) noexcept = 0;
     virtual void on_task_done(std::error_code& err) noexcept = 0;
     virtual void on_stop_requested(std::error_code& err) noexcept = 0;
+    virtual void on_init_connection(std::error_code& err) noexcept{}
     virtual void at_fatal_error(std::error_code& err) noexcept{
         err.clear();
         io_context().clear_buffers();
@@ -756,7 +757,13 @@ class AbstractConnectionProcess:public Process{
     virtual ~AbstractConnectionProcess() = default;
     virtual void handle_event(
                 Event event,
-                std::error_code& err) noexcept = 0;
+                std::error_code& err) noexcept
+    {
+        if(event&Event::In) on_read(err);
+        if(event&Event::Out) on_write(err);
+        if(event&Event::EvTaskDone) on_task_done(err);
+        if(event&Event::EvStopRequested) on_stop_requested(err);
+    }
     virtual bool requestable() const noexcept override{
         return false;
     }
@@ -865,6 +872,13 @@ class AbstractRequestableConnectionProcess:public AbstractConnectionProcess{
     virtual void on_write(std::error_code& err) noexcept override = 0;
     virtual void on_task_done(std::error_code& err) noexcept override = 0;
     virtual void on_stop_requested(std::error_code& err) noexcept override = 0;
+    virtual void on_push_request(std::error_code& err) noexcept{
+        err.clear();
+        if(requests_.empty()){
+            make_active_request();
+            on_write(err);
+        }
+    }
     bool make_active_request() noexcept;
     void push_request(std::shared_ptr<Command<CommandType::RequestData>> request,
             std::error_code& err) noexcept;
