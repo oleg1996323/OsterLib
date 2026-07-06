@@ -116,10 +116,7 @@ std::unique_ptr<Socket> ConnectionAcceptor::make_socket(
         std::error_code& err) noexcept
 {
     Address addr_;
-    {
-        std::lock_guard lock(m_);
-        addr_ = conn_.address();
-    }
+    addr_ = conn_.address();
     if(Socket sock = socket(addr_,
         sock_type_,
         used_protocol_,

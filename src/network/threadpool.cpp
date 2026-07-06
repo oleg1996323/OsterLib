@@ -32,7 +32,6 @@ namespace network{
                 conn_stat.connIO_ = make_connectionIO(
                         *conn_stat.socket_,hconn,1024*8,conn_stat.events_handled_,err);
                 conn_stat.events_handled_=  Event::In|
-                                                Event::EdgeTrigger|
                                                 Event::HangUp|
                                                 Event::Error;
                 if(conn_stat.socket_->set_no_block(true,err)==false){
@@ -110,7 +109,7 @@ namespace network{
         if(auto found = connections().find(hconn.id());
             found==connections().end())
         {
-            Event events = Event::In|Event::EdgeTrigger|Event::Error|Event::HangUp;
+            Event events = Event::Error|Event::HangUp;
             EventHandle ev(hconn.id(),events);
                 add_tracking_event(socket.native(),
                                 ev,
@@ -174,7 +173,6 @@ namespace network{
             Timeout timeout_sec,
             std::error_code& err) noexcept
     {
-        std::unique_lock lock(mutex());
         if(auto found = connections().find(hconn.id());
             found!=connections().end())
         {
@@ -182,7 +180,6 @@ namespace network{
             if(err){
                 std::cout<<"("<<name_<<")"<<"Erasing id="<<found->first<<std::endl;
                 auto conn = std::move(connections().extract(found));
-                lock.unlock();
                 after_remove_connection(&conn.mapped(),err);
                 return false;
             }
@@ -192,7 +189,6 @@ namespace network{
                 found->second.socket_->close();
                 std::cout<<"("<<name_<<")"<<"Erasing id="<<found->first<<std::endl;
                 auto conn = std::move(connections().extract(found));
-                lock.unlock();
                 after_remove_connection(&conn.mapped(),err);
                 return res;
             }
@@ -247,7 +243,7 @@ namespace network{
                         conn_stat->proc_->set_connectionIO(
                             conn_stat->connIO_.get());
                         conn_stat->events_handled_ = 
-                            conn_stat->events_handled_&~(Event::EdgeTrigger|Event::Out);
+                            (conn_stat->events_handled_&~(Event::Out))|Event::In;
                         EventHandle ev(hconn.id(),conn_stat->events_handled_);
                         if(!modify_tracking_event(conn_stat->socket_->native(),
                             ev,
@@ -296,7 +292,7 @@ namespace network{
         }
         else{
             conn_stat->proc_.reset();
-            EventHandle ev(hconn.id(),conn_stat->events_handled_|Event::EdgeTrigger);
+            EventHandle ev(hconn.id(),conn_stat->events_handled_^Event::In);
             if(!modify_tracking_event(conn_stat->socket_->native(),ev,err))
                 return false;
             if(err){
@@ -305,7 +301,7 @@ namespace network{
                 after_remove_connection_process(conn_stat,err);
                 return false;
             }
-            conn_stat->events_handled_=Event::In|Event::EdgeTrigger;
+            conn_stat->events_handled_=ev.events();
             after_remove_connection_process(conn_stat,err);
             return true;
         }
@@ -333,10 +329,11 @@ namespace network{
                 return;
             //delete
             if(name_=="server 0"){
-                if(!conn_stat->proc_)
-                    assert(conn_stat->events_handled_&(Event::EdgeTrigger|Event::In));
-                else assert(conn_stat->events_handled_&Event::In ||
-                    conn_stat->events_handled_&(Event::Out|Event::In));
+                if(conn_stat->proc_)
+                    assert((conn_stat->events_handled_&Event::EdgeTrigger)==0 && 
+                        (conn_stat->events_handled_&Event::In)!=0);
+                else assert((conn_stat->events_handled_&Event::In)==0 ||
+                    (conn_stat->events_handled_&Event::Out)==0);
             }
             if(conn_stat->conn_->state()==
                 Connection::State::Connecting &&
@@ -348,8 +345,7 @@ namespace network{
                     set_connection_state(conn_stat->conn_.get(),
                     Connection::State::Active);
                     EventHandle ev_tmp = ev;
-                    ev_tmp.set_events(
-                        Event::In|Event::EdgeTrigger|Event::HangUp|Event::Error);
+                    ev_tmp.set_events(Event::HangUp|Event::Error);
                     if(!modify_tracking_event(conn_stat->socket_->native(),
                                     ev_tmp,
                                     err)){
@@ -361,7 +357,7 @@ namespace network{
                     }
                     else{
                         conn_stat->events_handled_ = 
-                            Event::In|Event::EdgeTrigger|Event::HangUp|Event::Error;
+                            ev_tmp.events();
                         std::cout<<"("<<name_<<")"<<"Connection established: \n";
                         print_ip_port(std::cout,conn_stat->conn_->address());
                         if(conn_stat->proc_){

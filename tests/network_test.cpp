@@ -24,26 +24,37 @@ class ClientPingProcess:public AbstractRequestableConnectionProcess{
         if(!active_request())
             return;
         auto recv = io_context().receive(err,*active_request_->received());
-        auto& result = *active_request_->received(result_ptr);
-        if(err) handle_receive_error(err);
+        if(err){
+            if(!handle_receive_error(err)){
+                complete_current_request(std::make_error_code(std::errc::bad_message));
+                on_write(err);
+            }
+            return;
+        }
         else{
+            auto& result = *active_request_->received(result_ptr);
             std::cout<<"Client received: start="<<
                 result.start_frame()<<" data="<<result.data_frame()<<std::endl;
             std::cout<<"Client expect receive: start="<<8<<
                 " data="<<server_ping_val.load()<<std::endl;
-            if(active_request()){
-                if(server_ping_val.load()==static_cast<int>(result.data_frame()))
-                {
-                    server_ping_val.fetch_add(2,std::memory_order::relaxed);
-                    client_ping_val.fetch_add(2,std::memory_order::relaxed);
-                    count_recv.fetch_add(1,std::memory_order::relaxed);
-                    complete_current_request(err);
-                    err.clear();
-                }
-            }
-            else{
+            //if(active_request()){
+            if(server_ping_val.load()==static_cast<int>(result.data_frame()))
+            {
+                server_ping_val.fetch_add(2,std::memory_order::relaxed);
+                client_ping_val.fetch_add(2,std::memory_order::relaxed);
+                count_recv.fetch_add(1,std::memory_order::relaxed);
+                complete_current_request(err);
+                err.clear();
                 on_write(err);
             }
+            else{
+                complete_current_request(std::make_error_code(std::errc::bad_message));
+            }
+            err.clear();
+            on_write(err);
+            // }
+            // else
+            //     next_request();
         }
     }
     virtual void on_write(std::error_code& err) noexcept override{
@@ -64,20 +75,6 @@ class ClientPingProcess:public AbstractRequestableConnectionProcess{
             else count_sent.fetch_add(1,std::memory_order::relaxed);
         }
         else return;
-            
-        // auto sending_frame = this->active_request_->sent(ping);
-        // sending_frame->data_frame()=client_ping_val.load(std::memory_order::relaxed);
-        // std::cout<<"Client send: start="<<sending_frame->start_frame()<<
-        //     " data="<<sending_frame->data_frame()<<std::endl;
-        // auto sent = io_context().send(err,*active_request_->sent());
-        // //if(err) return;
-        // if(err) handle_sending_error(err);
-        // else {
-        //     active_request_->bytes_sent(sent);
-        //     if(active_request_->all_sent(true));
-        //         count_sent.fetch_add(1,std::memory_order::relaxed);
-        //     err.clear();
-        // }
     }
     virtual void on_task_done(std::error_code& err) noexcept override{
     }
@@ -96,7 +93,7 @@ class ClientPingProcess:public AbstractRequestableConnectionProcess{
                 std::error_code& err) noexcept
     {
         if(event&Event::In) on_read(err);
-        //if(event&Event::Out)on_write(err);
+        if(event&Event::Out)on_write(err);
         
     }
 };
@@ -118,8 +115,7 @@ class ServerPingProcess:public AbstractConnectionProcess{
             err!=std::error_code() &&
             err_val!=std::errc::resource_unavailable_try_again)
         {
-            // if (err == std::errc::connection_reset)
-            //     //std::cout << "(server) connection closed by peer" << std::endl;
+            std::cout << "server error:"<<err<<":"<<err.message() << std::endl;
             return;
         }
         //std::cout<<"(server) Ping received"<<std::endl;
@@ -127,35 +123,31 @@ class ServerPingProcess:public AbstractConnectionProcess{
                 ping.start_<<" data="<<ping.data_<<std::endl;
             std::cout<<"Server expect receive: start="<<8<<
                 " data="<<client_ping_val.load()<<std::endl;
-        if(!io_context().has_to_read() && 
-            client_ping_val.load()==static_cast<int>(ping.data_) && 
+        if(client_ping_val.load()==static_cast<int>(ping.data_) && 
             ping.start_==8){
             count_recv.fetch_add(1,std::memory_order::relaxed);
-            on_write(err);
+            ping.start_=serialization::serial_size(ping.data_);
+            ping.data_=server_ping_val.load();
+            std::cout<<"Server send: start="<<ping.start_<<" data="<<server_ping_val.load()<<std::endl;
+            io_context().send(err,ping.start_,static_cast<size_t>(server_ping_val.load()));
+            if(err || handle_sending_error(err))
+                count_sent.fetch_add(1,std::memory_order::relaxed);
         }
         else{
-            on_write(err);
+            ping.start_=serialization::serial_size(ping.data_);
+            ping.data_=server_ping_val.load();
+            std::cout<<"Server send: start="<<ping.start_<<" data="<<server_ping_val.load()<<std::endl;
+            io_context().send(err,ping.start_,static_cast<size_t>(server_ping_val.load()));
+            if(err || handle_sending_error(err))
+                count_sent.fetch_add(1,std::memory_order::relaxed);
         }
         return;
     }
     virtual void on_write(std::error_code& err) noexcept override{
-        SizeFramedData<size_t> ping;
-        ping.start_=serialization::serial_size(ping.data_);
-            ping.data_=server_ping_val.load();
-        std::cout<<"Server send: start="<<ping.start_<<" data="<<server_ping_val.load()<<std::endl;
-        io_context().send(err,ping.start_,static_cast<size_t>(server_ping_val.load()));
-        if(err!=std::error_code() &&
-            static_cast<std::errc>(err.value())!=
-            std::errc::operation_in_progress)
-        {
-            //std::cout<<err.message()<<std::endl;
-            //std::cout<<"(server) Error at sending"<<std::endl;
-            io_context().clear_send_buffer();
+        auto sent = io_context().send_rest(err);
+        if(sent<0){
+            handle_sending_error(err);
             return;
-        }
-        else{
-            //std::cout<<"(server) Ping sent"<<std::endl;
-            count_sent.fetch_add(1,std::memory_order::relaxed);
         }
     }
     virtual void on_task_done(std::error_code& err) noexcept override{

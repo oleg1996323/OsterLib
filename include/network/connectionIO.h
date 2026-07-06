@@ -44,7 +44,7 @@ class ConnectionIO{
                 serializer_);ser_res!=serialization::SerializationEC::NONE){
             switch(ser_res){
                 case serialization::SerializationEC::BUFFER_SIZE_LESSER:
-                    recv_buffer_.commit_read(serialization::serial_size(value));
+                    recv_buffer_.commit_read(serializer_.flush());
                     break;
                 default:
                 clear_recv_buffer();
@@ -69,7 +69,7 @@ class ConnectionIO{
         switch(err){
             case serialization::SerializationEC::NONE:
             case serialization::SerializationEC::BUFFER_SIZE_LESSER:
-                recv_buffer_.commit_read(serialization::serial_size(values...));
+                recv_buffer_.commit_read(serializer_.flush());
                 return err;
             default:
             clear_recv_buffer();
