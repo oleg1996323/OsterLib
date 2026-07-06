@@ -221,6 +221,10 @@ namespace network{
 						found->second.proc_.get())->push_request(
 							std::dynamic_pointer_cast<std::decay_t<decltype(*this)>>(shared_from_this()),
 							err);
+					if(err)
+						return err;
+							static_cast<AbstractRequestableConnectionProcess&>(
+								*found->second.proc_).on_push_request(err);
 					return err;
 				}
 				else return std::make_error_code(std::errc::operation_not_supported);

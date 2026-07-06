@@ -27,10 +27,10 @@ namespace network{
         err.clear();
         active_request_.reset();
     }
-    bool AbstractRequestableConnectionProcess::make_active_request() noexcept
+    bool AbstractRequestableConnectionProcess::next_request() noexcept
     {
-        std::cout<<"make_active_request"<<std::endl;
-        if(active_request_ && active_request_->ready())
+        std::cout<<"next_request"<<std::endl;
+        if(active_request())
             return false;
         while(!requests_.empty()){
             active_request_ = requests_.front();
@@ -48,11 +48,17 @@ namespace network{
         requests_.push(request);
         on_push_request(err);
     }
-
+    bool AbstractRequestableConnectionProcess::active_request() const noexcept{
+        return active_request_ && !active_request_->ready();
+    }
     network::AbstractFrame& AbstractRequestableConnectionProcess::__internal_get_receiving_data__(
         std::shared_ptr<Command<CommandType::RequestData>> req) noexcept
     {
         return *req->received();
+    }
+    void AbstractRequestableConnectionProcess::on_push_request(std::error_code& err) noexcept{
+        err.clear();
+        on_write(err);
     }
     network::AbstractFrame& AbstractRequestableConnectionProcess::__internal_get_sending_data__(
         std::shared_ptr<Command<CommandType::RequestData>> req) noexcept

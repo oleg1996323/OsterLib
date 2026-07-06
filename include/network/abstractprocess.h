@@ -820,14 +820,7 @@ class AbstractRequestableConnectionProcess:public AbstractConnectionProcess{
         err.clear();
         io_context().clear_buffers();
     }
-    bool active_request(std::error_code& err){
-        if(!active_request_ && !make_active_request()){
-            //prstd::cout<<"Requests not found"<<std::endl;
-            io_context().enable_writable(false,err);
-            return false;
-        }
-        else return true;
-    }
+    bool active_request() const noexcept;
     bool handle_receive_error(
             std::error_code& err) noexcept
     {
@@ -872,14 +865,8 @@ class AbstractRequestableConnectionProcess:public AbstractConnectionProcess{
     virtual void on_write(std::error_code& err) noexcept override = 0;
     virtual void on_task_done(std::error_code& err) noexcept override = 0;
     virtual void on_stop_requested(std::error_code& err) noexcept override = 0;
-    virtual void on_push_request(std::error_code& err) noexcept{
-        err.clear();
-        if(requests_.empty()){
-            make_active_request();
-            on_write(err);
-        }
-    }
-    bool make_active_request() noexcept;
+    virtual void on_push_request(std::error_code& err) noexcept;
+    bool next_request() noexcept;
     void push_request(std::shared_ptr<Command<CommandType::RequestData>> request,
             std::error_code& err) noexcept;
 };

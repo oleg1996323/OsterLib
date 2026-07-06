@@ -46,4 +46,4 @@ CMakeFiles/
 .vs/
 .cmake/
 Makefile
-CMakePresets.json
+*/CMakePresets.json
