@@ -334,6 +334,23 @@ namespace network{
 				Event events,
 				std::error_code& err) noexcept
     {
+		if(events&Event::CanReadButHangUp){
+			std::cout<<"Handling hang up with read: id="<<hconn.id()<<std::endl;
+			if(state.proc_)
+				state.proc_->on_read(err);
+			state.conn_->state_ = Connection::State::Closed;
+			state.socket_->close();
+			state.proc_.reset();
+			state.connIO_.reset();
+			push_command(
+				std::make_shared<Command<CommandType::RemoveConnection>>(
+					hconn,0));
+			if(err){
+				std::lock_guard lk(mutex());
+				connections().erase(hconn.id());
+			}
+			return false;
+		}
 		if(events&Event::Error || events&Event::HangUp){
 			std::cout<<"Handling error: id="<<hconn.id()<<std::endl;
 			state.conn_->state_ = Connection::State::Closed;

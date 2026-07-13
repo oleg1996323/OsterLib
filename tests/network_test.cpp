@@ -21,7 +21,7 @@ class ClientPingProcess:public AbstractRequestableConnectionProcess{
         //std::cout<<"Client: receive ping"<<std::endl;
         using result_t = Frame<size_t,size_t,std::monostate>;
         result_t* result_ptr;
-        if(!active_request())
+        if(!is_active_request())
             return;
         auto recv = io_context().receive(err,*active_request_->received());
         if(err){
@@ -37,7 +37,7 @@ class ClientPingProcess:public AbstractRequestableConnectionProcess{
                 result.start_frame()<<" data="<<result.data_frame()<<std::endl;
             std::cout<<"Client expect receive: start="<<8<<
                 " data="<<server_ping_val.load()<<std::endl;
-            //if(active_request()){
+            //if(is_active_request()){
             if(server_ping_val.load()==static_cast<int>(result.data_frame()))
             {
                 server_ping_val.fetch_add(2,std::memory_order::relaxed);
@@ -66,7 +66,7 @@ class ClientPingProcess:public AbstractRequestableConnectionProcess{
             handle_sending_error(err);
             return;
         }
-        if(!active_request() && next_request()){
+        if(!is_active_request() && next_request()){
             auto sent = io_context().send(err,*active_request_->sent());
             if(err){
                 if(handle_sending_error(err))
@@ -258,7 +258,7 @@ TEST(Client_server,ping){
 //                 handle_sending_error(err);
 //                 return;
 //             }
-//             if(!active_request() && next_request()){
+//             if(!is_active_request() && next_request()){
 //                 auto sent = io_context().send(err,*active_request_->sent());
 //             }
 //             else return;
@@ -405,7 +405,7 @@ TEST(Client_server,ping){
 //                 handle_sending_error(err);
 //                 return;
 //             }
-//             if(!active_request() && next_request()){
+//             if(!is_active_request() && next_request()){
 //                 auto sent = io_context().send(err,*active_request_->sent());
 //             }
 //             else return;

@@ -23,6 +23,7 @@ enum class TaskMode{
 
 class AbstractTaskHandler{
     protected:
+    std::function<bool()> assigner_;
     std::function<void()> callback_=[](){};
     TaskMode mode_;
     AbstractTaskHandler(TaskMode mode,std::function<void()> callback=[](){}):
@@ -44,6 +45,8 @@ class AbstractTaskHandler{
     virtual ~AbstractTaskHandler() = default;
     virtual bool is_ready(std::error_code& err) const noexcept = 0;
     virtual bool is_busy(std::error_code& err) const noexcept = 0;
+    template<typename TYPE>
+    std::optional<TYPE> get_as(std::error_code& err) noexcept;
     TaskMode mode() const noexcept{
         return mode_;
     }
@@ -560,6 +563,30 @@ public:
     }
 };
 
+template<typename TYPE>
+std::optional<TYPE> AbstractTaskHandler::get_as(std::error_code& err) noexcept{
+    switch(mode_){
+        case TaskMode::Sync:{
+            if(TypedTaskHandler<TaskMode::Sync,TYPE>* casted = 
+                dynamic_cast<TypedTaskHandler<TaskMode::Sync,TYPE>*>(this);
+                casted!=nullptr)
+                return casted->get_result(err);
+            else return std::nullopt;
+        }
+        break;
+        case TaskMode::Thread:{
+            if(TypedTaskHandler<TaskMode::Thread,TYPE>* casted = 
+                dynamic_cast<TypedTaskHandler<TaskMode::Thread,TYPE>*>(this);
+                casted!=nullptr)
+                return casted->get_result(err);
+            else return std::nullopt;
+        }
+        break;
+        default:
+        return std::nullopt;
+    }
+}
+
 class Process{
     protected:
     std::unique_ptr<AbstractTaskHandler> task_;
@@ -572,7 +599,7 @@ class Process{
     }
     bool has_task() const{
         std::error_code err;
-        return (task_)?task_->is_busy(err):false;
+        return task_.get()!=nullptr;
     }
     Process() = default;
     Process(const Process&) = delete;
@@ -820,7 +847,7 @@ class AbstractRequestableConnectionProcess:public AbstractConnectionProcess{
         err.clear();
         io_context().clear_buffers();
     }
-    bool active_request() const noexcept;
+    bool is_active_request() const noexcept;
     bool handle_receive_error(
             std::error_code& err) noexcept
     {

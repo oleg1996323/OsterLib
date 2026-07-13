@@ -406,7 +406,10 @@ namespace network{
     }
 
     void Worker::handle_pending(std::error_code& err) noexcept{
+        std::list<std::shared_ptr<network::BaseCommand>> cmds;
         while(auto cmd = extract_command())
+            cmds.push_back(cmd);
+        for(auto& cmd:cmds)
             cmd->execute(this);
     }
 

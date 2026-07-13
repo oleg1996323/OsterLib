@@ -241,11 +241,12 @@ namespace network{
 			conn_stat!=nullptr &&
 			conn_stat->proc_!=nullptr &&
 			conn_stat->proc_->has_task()){
-			if(conn_stat->proc_->is_ready(err) && !err){
+			assert(conn_stat->proc_->is_ready(err));
+			if(!err){
 				conn_stat->proc_->handle_event(Event::EvTaskDone,err);
 				set_error(err);
 			}
-			else set_error(std::make_error_code(std::errc::operation_in_progress));			
+			else set_error(std::make_error_code(std::errc::operation_canceled));			
 		}
 		else set_error(std::make_error_code(std::errc::no_such_process));
 	}
