@@ -4,7 +4,7 @@
 #include <cstdint>
 #include <system_error>
 #include "msg.h"
-#include "serialization.h"
+#include "OsterLib/serialization.h"
 
 namespace network{
 // Парсер, накапливающий байты и возвращающий готовый фрейм

@@ -1,4 +1,4 @@
-#include "time_interval.h"
+#include "OsterLib/types/time_interval.h"
 
 bool TimeSequence::operator==(const TimeSequence& other) const{
     return std::equal_to<TimeSequence>()(*this,other);
@@ -40,7 +40,7 @@ std::expected<DateTimeDiff,std::exception> from_json<DateTimeDiff>(const boost::
     }
 }
 
-#include "parsing.h"
+#include "OsterLib/parsing.h"
 
 int32_t find_char(std::string_view input){
     if(input.empty())
@@ -135,4 +135,49 @@ std::string boost::lexical_cast(const DateTimeDiff& input){
     if(result.empty())
         result+="0s";
     return result;
+}
+
+template<>
+boost::json::value to_json(const TimeSequence& tp) {
+    boost::json::object result;
+    result["start"] = to_json(tp.get_interval().from());
+    result["end"] = to_json(tp.get_interval().to());
+    result["intervals"] = to_json(tp.number_of_intervals());
+    return result;
+}
+template<>
+std::expected<TimeSequence,std::exception> 
+    from_json(const boost::json::value& ts)
+{
+    if(ts.is_object()){
+        auto& obj = ts.as_object();
+        if(!obj.contains("start"))
+            return std::unexpected(std::invalid_argument(
+            "missing \"start\" field at parsing json data of TimeSequence type"));
+        if(!obj.contains("end"))
+            return std::unexpected(std::invalid_argument(
+            "missing \"end\" field at parsing json data of TimeSequence type"));
+        if(!obj.contains("intervals"))
+            return std::unexpected(std::invalid_argument(
+            "missing \"intervals\" field at parsing json data of TimeSequence type"));
+        auto start_parse = from_json<TimeSequence::from_t>(obj.at("start"));
+        auto end_parse = from_json<TimeSequence::to_t>(obj.at("end"));
+        auto intervals_parse = from_json<TimeSequence::intervals_t>(obj.at("intervals"));
+        if(!start_parse.has_value())
+            return std::unexpected(start_parse.error());
+        if(!end_parse.has_value())
+            return std::unexpected(end_parse.error());
+        if(!intervals_parse.has_value())
+            return std::unexpected(intervals_parse.error());
+        std::error_code err;
+        TimeSequence result(start_parse.value(),end_parse.value(),intervals_parse.value(),err);
+        if(err)
+            return std::unexpected(std::invalid_argument("invalid TimeSequence initialization from json data"));
+        else return result;
+    }
+    else if(ts.is_null()){
+        return TimeSequence();
+    }
+    else return std::unexpected(std::invalid_argument(
+        "not object-type detected at parsing json data for TimeSequence"));
 }

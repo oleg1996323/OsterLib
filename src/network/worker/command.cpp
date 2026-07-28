@@ -1,5 +1,5 @@
-#include "worker/command.h"
-#include "abstractworker.h"
+#include "OsterLib/network/worker/command.h"
+#include "OsterLib/network/abstractworker.h"
 
 namespace network{
 

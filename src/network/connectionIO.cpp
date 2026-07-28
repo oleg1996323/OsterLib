@@ -1,5 +1,5 @@
-#include "connectionIO.h"
-#include "abstractworker.h"
+#include "OsterLib/network/connectionIO.h"
+#include "OsterLib/network/abstractworker.h"
 
 namespace network{
     void ConnectionIO::enable_writable(

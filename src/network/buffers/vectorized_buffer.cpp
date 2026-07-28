@@ -1,4 +1,4 @@
-#include "buffers/vectorized_buffer.h"
+#include "OsterLib/network/buffers/vectorized_buffer.h"
 
 namespace network{
     #ifdef __unix__

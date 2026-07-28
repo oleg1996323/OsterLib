@@ -1,4 +1,4 @@
-#include "abstractworker.h"
+#include "OsterLib/network/abstractworker.h"
 
 namespace network{
 	AbstractWorker::AbstractWorker(uint32_t order_lenght,std::error_code& err):

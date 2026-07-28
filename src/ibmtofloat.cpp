@@ -1,5 +1,5 @@
 #include <float.h>
-#include "ibmtofloat.h"
+#include "OsterLib/ibmtofloat.h"
 
 double ibm2flt(unsigned char *ibm) noexcept{
 

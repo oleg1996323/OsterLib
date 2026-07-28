@@ -1,4 +1,4 @@
-#include "network/abstractserver.h"
+#include "OsterLib/network/abstractserver.h"
 
 using namespace network;
 

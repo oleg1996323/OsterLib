@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "types/time_interval.h"
+#include "OsterLib/types/time_interval.h"
 
 using namespace std::chrono;
 

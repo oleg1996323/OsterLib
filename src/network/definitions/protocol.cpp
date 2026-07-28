@@ -1,4 +1,4 @@
-#include "definitions/protocol.h"
+#include "OsterLib/network/definitions/protocol.h"
 #include <unordered_map>
 
 namespace network{

@@ -1,4 +1,4 @@
-#include "connection_options.h"
+#include "OsterLib/network/connection_options.h"
 
 bool network::ConnectionOptions::operator==(const ConnectionOptions& other) const noexcept{
     return  reuse_address_==other.reuse_address_ &&

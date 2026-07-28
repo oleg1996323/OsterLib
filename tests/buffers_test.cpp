@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
-#include "network/buffers/ring_buffer.h"
-#include "network/buffers/vectorized_buffer.h"
+#include "OsterLib/network/buffers/ring_buffer.h"
+#include "OsterLib/network/buffers/vectorized_buffer.h"
 
 TEST(Buffer,RingBufferSimple_test){
     network::RingBuffer<char> buffer(5);

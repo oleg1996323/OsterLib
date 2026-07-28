@@ -1,9 +1,9 @@
-#include "abstractclient.h"
-#include "abstractserver.h"
+#include "OsterLib/network/abstractclient.h"
+#include "OsterLib/network/abstractserver.h"
 #include <gtest/gtest.h>
-#include "send.h"
-#include "receive.h"
-#include "abstractprocess.h"
+#include "OsterLib/network/send.h"
+#include "OsterLib/network/receive.h"
+#include "OsterLib/network/abstractprocess.h"
 #include <linux/tls.h>
 
 using namespace network;
@@ -67,7 +67,9 @@ class ClientPingProcess:public AbstractRequestableConnectionProcess{
             return;
         }
         if(!is_active_request() && next_request()){
-            auto sent = io_context().send(err,*active_request_->sent());
+            auto sent = io_context().send(err,
+                [](const std::vector<char>&){return;},
+                *active_request_->sent());
             if(err){
                 if(handle_sending_error(err))
                     count_sent.fetch_add(1,std::memory_order::relaxed);
@@ -129,7 +131,8 @@ class ServerPingProcess:public AbstractConnectionProcess{
             ping.start_=serialization::serial_size(ping.data_);
             ping.data_=server_ping_val.load();
             std::cout<<"Server send: start="<<ping.start_<<" data="<<server_ping_val.load()<<std::endl;
-            io_context().send(err,ping.start_,static_cast<size_t>(server_ping_val.load()));
+            io_context().send(err,[](const std::vector<char>&){return;},
+                ping.start_,static_cast<size_t>(server_ping_val.load()));
             if(err || handle_sending_error(err))
                 count_sent.fetch_add(1,std::memory_order::relaxed);
         }
@@ -137,7 +140,8 @@ class ServerPingProcess:public AbstractConnectionProcess{
             ping.start_=serialization::serial_size(ping.data_);
             ping.data_=server_ping_val.load();
             std::cout<<"Server send: start="<<ping.start_<<" data="<<server_ping_val.load()<<std::endl;
-            io_context().send(err,ping.start_,static_cast<size_t>(server_ping_val.load()));
+            io_context().send(err,[](const std::vector<char>&){return;},
+                ping.start_,static_cast<size_t>(server_ping_val.load()));
             if(err || handle_sending_error(err))
                 count_sent.fetch_add(1,std::memory_order::relaxed);
         }

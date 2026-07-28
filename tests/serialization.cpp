@@ -1,4 +1,4 @@
-#include "serialization.h"
+#include "OsterLib/serialization.h"
 #include <gtest/gtest.h>
 #include <vector>
 #include <list>
@@ -294,6 +294,30 @@ TEST(Serialization, SerializeList){
     EXPECT_EQ(check_list,list_);
 }
 
+TEST(Serialization, SerializeForwardList){
+    using namespace serialization;
+    std::vector<char> buf;
+    std::forward_list<std::pair<int,int>> list_;
+    for(int i=0;i<50;++i)
+        list_.emplace_front(std::make_pair(std::rand(),std::rand()));
+    list_.reverse();
+    ASSERT_EQ(serialization::min_serial_size(list_),sizeof(size_t));
+    ASSERT_EQ(serialization::max_serial_size(list_),std::numeric_limits<size_t>::max());
+    ASSERT_EQ(serialize<true>(list_,buf),serialization::SerializationEC::NONE);
+    EXPECT_EQ(buf.size(),serial_size(list_));
+    std::vector<std::pair<int,int>> reversed_1;
+    for(auto& [f,s]:list_)
+        reversed_1.push_back(std::make_pair(std::byteswap(f),std::byteswap(s)));
+    EXPECT_EQ(std::memcmp(reversed_1.data(),buf.data()+serial_size(reversed_1.size()),sizeof(reversed_1.size())),0);
+    EXPECT_EQ(serial_size(reversed_1),buf.size());
+
+    std::forward_list<std::pair<int,int>> check_list{};
+    serialization::StreamSerializer mbv;
+    mbv.push_view(buf);
+    ASSERT_EQ(deserialize<true>(check_list,mbv),serialization::SerializationEC::NONE);
+    EXPECT_EQ(check_list,list_);
+}
+
 TEST(Serialization, SerializeVector){
     using namespace serialization;
     std::vector<char> buf;
@@ -579,7 +603,7 @@ TEST(Serialization,Variant){
         buf.clear();
     }
 }
-#include "filesystem.h"
+#include "OsterLib/filesystem.h"
 TEST(Serialization,SerializeVariadicFile){
     int _32 = 32;
     std::vector<int> range{15,30,50,40};

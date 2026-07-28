@@ -54,12 +54,12 @@ target_include_directories(images INTERFACE
                 "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/images>"
                 "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/images>")
 
-add_library(boost_functional STATIC ${CMAKE_CURRENT_SOURCE_DIR}/src/boost_functional/json.cpp)
+file(GLOB_RECURSE BOOST_FUNC_FILES ${CMAKE_CURRENT_SOURCE_DIR}/src/boost_functional/**.cpp)
+
+add_library(boost_functional STATIC ${BOOST_FUNC_FILES})
 target_link_libraries(boost_functional PRIVATE Boost::json)
 target_include_directories(boost_functional PUBLIC
-                "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/boost_functional>"
                 "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/>"
-                "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/boost_functional>"
                 "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>")
 
 file(GLOB_RECURSE Network_lib_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/network/**.cpp)
@@ -67,9 +67,7 @@ file(GLOB_RECURSE Network_lib_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/network/**
 add_library(network STATIC ${Network_lib_SOURCES})
 target_link_libraries(network PUBLIC serial bytes boost_functional)
 target_include_directories(network PUBLIC 
-		"$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/network>"
                 "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/>"
-                "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/network>"
                 "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>")
 
 add_library(types STATIC src/types/coord.cpp
@@ -78,7 +76,6 @@ add_library(types STATIC src/types/coord.cpp
                 src/types/time_interval.cpp
                 src/types/time_period.cpp)
 target_include_directories(types PUBLIC 
-                                "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/types>"
                                 "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
                                 "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>")
 target_link_libraries(types PUBLIC boost_functional)

@@ -1,4 +1,4 @@
-#include "time_period.h"
+#include "OsterLib/types/time_period.h"
 
 TimePeriod::TimePeriod(years y,months mo,days d,hours h,minutes m,std::chrono::seconds s) noexcept:
     years_(y),
@@ -178,7 +178,7 @@ std::expected<TimePeriod,std::exception> from_json(const boost::json::value& val
     return result;
 }
 
-#include "parsing.h"
+#include "OsterLib/parsing.h"
 #include <iostream>
 
 template<>

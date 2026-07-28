@@ -1,5 +1,5 @@
-#include "commonsocket.h"
-#include "byte_order.h"
+#include "OsterLib/network/commonsocket.h"
+#include "OsterLib/byte_order.h"
 #include <utility>
 
 namespace network{

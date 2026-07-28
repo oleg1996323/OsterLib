@@ -1,5 +1,5 @@
-#include "abstractprocess.h"
-#include "worker/command.h"
+#include "OsterLib/network/abstractprocess.h"
+#include "OsterLib/network/worker/command.h"
 
 namespace network{
     AbstractRequestableConnectionProcess::AbstractRequestableConnectionProcess(

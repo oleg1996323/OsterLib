@@ -1,4 +1,4 @@
-#include "CLI/CLInavig.h"
+#include "OsterLib/CLI/CLInavig.h"
 #include "linenoise.h"
 
 void CLIHandler::__add_to_history__(std::string_view str) noexcept{

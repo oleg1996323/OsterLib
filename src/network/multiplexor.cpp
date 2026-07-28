@@ -1,6 +1,6 @@
-#include "multiplexor.h"
-#include "commonsocket.h"
-#include "connection.h"
+#include "OsterLib/network/multiplexor.h"
+#include "OsterLib/network/commonsocket.h"
+#include "OsterLib/network/connection.h"
 
 void network::Multiplexor::__epoll_ctl_throw__(std::error_code& err){
     err = 

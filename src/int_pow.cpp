@@ -1,4 +1,4 @@
-#include "int_pow.h"
+#include "OsterLib/int_pow.h"
 
 extern double int_power(double x, int y) {
 

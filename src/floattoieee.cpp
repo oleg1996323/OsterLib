@@ -1,6 +1,6 @@
-#include "floattoieee.h"
-#include "math.h"
-#include "float.h"
+#include "OsterLib/floattoieee.h"
+#include <math.h>
+#include <float.h>
 /* ibm2flt       wesley ebisuzaki
  *
  * v1.1 .. faster

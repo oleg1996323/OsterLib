@@ -1,4 +1,4 @@
-#include "serversettings.h"
+#include "OsterLib/network/serversettings.h"
 
 template<>
 boost::json::value to_json(const network::server::Settings& val){

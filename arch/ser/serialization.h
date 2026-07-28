@@ -2,8 +2,8 @@
 #include <optional>
 #include <vector>
 #include <bit>
-#include "float_conv.h"
-#include "byte_order.h"
+#include "OsterLib/float_conv.h"
+#include "OsterLib/byte_order.h"
 #include <chrono>
 #include <cstring>
 #include <expected>
@@ -15,7 +15,7 @@
 #include <chrono>
 #include <variant>
 #include <cassert>
-#include "concepts.h"
+#include "OsterLib/concepts.h"
 #include "variant.h"
 #include "serialization/definitions.h"
 #include "serialization/multi_buffer.h"

@@ -1,6 +1,6 @@
-#include "connection.h"
-#include "abstractserver.h"
-#include "abstractworker.h"
+#include "OsterLib/network/connection.h"
+#include "OsterLib/network/abstractserver.h"
+#include "OsterLib/network/abstractworker.h"
 
 namespace network{
 

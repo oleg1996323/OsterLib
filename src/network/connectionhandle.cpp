@@ -1,7 +1,7 @@
-#include "connectionhandle.h"
-#include "abstractworker.h"
-#include "commonsocket.h"
-#include "abstractprocess.h"
+#include "OsterLib/network/connectionhandle.h"
+#include "OsterLib/network/abstractworker.h"
+#include "OsterLib/network/commonsocket.h"
+#include "OsterLib/network/abstractprocess.h"
 
 namespace network{
 std::atomic<ConnectionId> ConnectionHandle::id_counter{1};

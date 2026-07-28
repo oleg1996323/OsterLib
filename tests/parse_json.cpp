@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
-#include "boost_functional/json.h"
-#include "types/time_interval.h"
-#include "types/coord.h"
+#include "OsterLib/boost_functional/json.h"
+#include "OsterLib/types/time_interval.h"
+#include "OsterLib/types/coord.h"
 
 TEST(JsonParse,JsonArrayParseTest){
     {
@@ -92,7 +92,7 @@ TEST(JsonConversion, JsonMapTest){
 TEST(JsonConversion, JsonSetTest){
 
 }
-#include "network/clientsettings.h"
+#include "OsterLib/network/clientsettings.h"
 TEST(JsonConversion, JsonClientSettingsTest){
     network::client::Settings set;
     set.protocol_=network::Protocol::ETHERNET;
@@ -106,7 +106,7 @@ TEST(JsonConversion, JsonClientSettingsTest){
     second<<to_json(resolved_ref)<<std::endl;
     ASSERT_EQ(resolved.value(),set);
 }
-#include "network/serversettings.h"
+#include "OsterLib/network/serversettings.h"
 TEST(JsonConversion, JsonServerSettingsTest){
     network::server::Settings set;
     set.protocol_=network::Protocol::ETHERNET;

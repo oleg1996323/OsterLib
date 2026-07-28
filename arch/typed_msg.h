@@ -1,6 +1,6 @@
 #pragma once
 #include "msg.h"
-#include "serialization.h"
+#include "OsterLib/serialization.h"
 
 namespace network{
     template<MessageType MT, typename Payload>

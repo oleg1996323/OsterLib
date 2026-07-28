@@ -1,6 +1,6 @@
-#include "byte_read.h"
-#include "byte_order.h"
-#include "float_conv.h"
+#include "OsterLib/byte_read.h"
+#include "OsterLib/byte_order.h"
+#include "OsterLib/float_conv.h"
 #include <memory>
 #include <cstring>
 #include <limits>

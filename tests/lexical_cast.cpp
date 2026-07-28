@@ -1,4 +1,4 @@
-#include "types/time_interval.h"
+#include "OsterLib/types/time_interval.h"
 #include <gtest/gtest.h>
 #include <string>
 
