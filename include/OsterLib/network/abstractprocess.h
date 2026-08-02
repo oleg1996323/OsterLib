@@ -124,9 +124,12 @@ class TypedTaskHandler<TaskMode::Sync,Result>:public AbstractTaskHandler{
 
     result_return_t get_result(std::error_code& err) noexcept{
         if constexpr(!std::is_same_v<void,result_return_t>){
-            if(auto result = const_cast<Result*>(get_result_timeout(-1,err));
-                result!=nullptr)
-                return *result;
+            if(auto result_ptr = get_result_timeout(-1,err);
+                result_ptr!=nullptr)
+            {
+                auto result = *result_ptr;
+                return result;
+            }
             else return std::nullopt;
         }
         else{
@@ -270,9 +273,12 @@ class TypedTaskHandler<TaskMode::Thread,Result>:public AbstractTaskHandler{
     }
     virtual result_return_t get_result(std::error_code& err) noexcept{
         if constexpr(!std::is_same_v<void,result_return_t>){
-            if(auto result = const_cast<Result*>(get_result_timeout(-1,err));
-                result!=nullptr)
-                return *result;
+            if(auto result_ptr = get_result_timeout(-1,err);
+                result_ptr!=nullptr)
+            {
+                auto result = *result_ptr;
+                return result;
+            }
             else return std::nullopt;
         }
         else{

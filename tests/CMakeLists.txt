@@ -3,10 +3,10 @@ project(tests)
 enable_testing()
 
 add_executable(bytes_test bytes.cpp)
-target_link_libraries(bytes_test GTest::gtest bytes)
+target_link_libraries(bytes_test GTest::gtest)
 
 add_executable(serialization_test serialization.cpp)
-target_link_libraries(serialization_test GTest::gtest serial)
+target_link_libraries(serialization_test GTest::gtest)
 
 add_executable(time_interval_test time_interval.cpp)
 target_link_libraries(time_interval_test GTest::gtest types)
@@ -26,11 +26,16 @@ target_link_libraries(network_test network GTest::gtest)
 add_executable(buffers_test buffers_test.cpp)
 target_link_libraries(buffers_test network GTest::gtest)
 
-gtest_discover_tests(bytes_test WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-gtest_discover_tests(serialization_test WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-gtest_discover_tests(time_interval_test WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-gtest_discover_tests(time_sequence_test WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-gtest_discover_tests(parse_json_test WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-gtest_discover_tests(lexical_cast_test WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-gtest_discover_tests(network_test WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-gtest_discover_tests(buffers_test WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+add_executable(ctx_error_test contexted_error_test.cpp)
+target_link_libraries(ctx_error_test GTest::gtest)
+
+gtest_discover_tests(
+    bytes_test
+    serialization_test
+    time_interval_test
+    time_sequence_test
+    parse_json_test
+    lexical_cast_test
+    network_test
+    ctx_error_test
+    buffers_test WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})

@@ -11,6 +11,7 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-rpath,$ENV{LD_LIBRARY_PATH}")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lzip -static-libstdc++")
 add_compile_options("-fno-inline-functions" "-fPIC" "-O0" "-fconcepts-diagnostics-depth=10")
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 find_package(GTest CONFIG REQUIRED)
 include(GoogleTest)
 include(CMakePackageConfigHelpers)
@@ -18,18 +19,6 @@ include(GNUInstallDirs)
 find_package(PNG REQUIRED)
 find_package(ZLIB REQUIRED)
 find_package(Boost CONFIG 1.82 REQUIRED json)
-
-add_library(bytes INTERFACE)
-target_include_directories(bytes INTERFACE 
-                "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
-                "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>")
-
-add_library(serial INTERFACE)
-target_link_libraries(serial INTERFACE bytes)
-target_include_directories(serial INTERFACE 
-                "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
-                "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
-)
 
 add_library(lineNoise STATIC linenoise/linenoise.c)
 target_include_directories(lineNoise PUBLIC 
@@ -65,7 +54,7 @@ target_include_directories(boost_functional PUBLIC
 file(GLOB_RECURSE Network_lib_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/network/**.cpp)
 
 add_library(network STATIC ${Network_lib_SOURCES})
-target_link_libraries(network PUBLIC serial bytes boost_functional)
+target_link_libraries(network PUBLIC boost_functional)
 target_include_directories(network PUBLIC 
                 "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/>"
                 "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>")
@@ -88,14 +77,16 @@ target_include_directories(utilities PUBLIC
                                 "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
                                 "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>")
 
+
+
+add_library(headers INTERFACE)
+
 install(DIRECTORY include/
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
     FILES_MATCHING PATTERN "*.h"
 )
 
 install(TARGETS 
-        bytes 
-        serial 
         lineNoise 
         CLInput 
         compressor
