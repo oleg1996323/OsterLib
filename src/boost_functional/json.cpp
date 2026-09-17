@@ -7,7 +7,7 @@ std::expected<boost::json::value,std::error_code> parse_json_from_file(const fs:
         if(!file.is_open())
             return std::unexpected(std::make_error_code(std::errc::file_exists));
         json::stream_parser parser;
-        json::error_code err_code;
+        system::error_code err_code;
         std::vector<char> buffer;
         std::error_code err;
         size_t buf_sz = fs::file_size(path,err);
@@ -32,7 +32,7 @@ std::expected<boost::json::value,std::error_code> parse_json_from_file(const fs:
 std::expected<boost::json::value,std::error_code> parse_json_from_buffer(std::string_view input) noexcept{
     using namespace boost;
         json::stream_parser parser;
-        json::error_code err_code;
+        system::error_code err_code;
         parser.write(input.data(),input.size(),err_code);
         if(err_code)
             return std::unexpected(std::make_error_code(std::errc::bad_message));

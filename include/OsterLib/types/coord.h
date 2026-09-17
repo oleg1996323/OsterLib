@@ -1,8 +1,8 @@
 #pragma once
 #include "OsterLib/serialization.h"
 #include "OsterLib/float_conv.h"
-typedef float Lat;
-typedef float Lon;
+typedef double Lat;
+typedef double Lon;
 
 struct Coord
 {
@@ -22,12 +22,6 @@ struct Coord
     bool operator!=(const Coord& other) const{
         return !operator==(other);
     }
-};
-
-struct RawCoord
-{
-    uint32_t lat_ = -999;
-    uint32_t lon_ = -999;
 };
 
 extern bool is_correct_pos(const Coord* pos);

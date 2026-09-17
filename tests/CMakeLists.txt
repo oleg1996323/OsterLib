@@ -7,6 +7,7 @@ target_link_libraries(bytes_test GTest::gtest)
 
 add_executable(serialization_test serialization.cpp)
 target_link_libraries(serialization_test GTest::gtest)
+target_include_directories(serialization_test PRIVATE ${Boost_INCLUDE_DIRS})
 
 add_executable(time_interval_test time_interval.cpp)
 target_link_libraries(time_interval_test GTest::gtest types)

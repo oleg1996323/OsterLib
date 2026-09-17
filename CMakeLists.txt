@@ -11,6 +11,7 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-rpath,$ENV{LD_LIBRARY_PATH}")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lzip -static-libstdc++")
 add_compile_options("-fno-inline-functions" "-fPIC" "-O0" "-fconcepts-diagnostics-depth=10")
+add_custom_command(OUTPUT conan install . --profile ~/Mashroom/conan_profile.txt --build=missing )
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 find_package(GTest CONFIG REQUIRED)
 include(GoogleTest)
@@ -29,19 +30,22 @@ target_link_libraries(CLInput PRIVATE lineNoise)
 target_include_directories(CLInput PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
     "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
+    ${Boost_INCLUDE_DIRS}
 )
 
 add_library(compressor INTERFACE)
 target_link_libraries(compressor INTERFACE ${ZLIB_LIBRARIES})
 target_include_directories(compressor INTERFACE 
                 "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
-                "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>")
+                "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
+                ${Boost_INCLUDE_DIRS})
 
 add_library(images INTERFACE)
 target_link_libraries(images INTERFACE PNG::PNG)
 target_include_directories(images INTERFACE 
                 "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/images>"
-                "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/images>")
+                "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/images>"
+                ${Boost_INCLUDE_DIRS})
 
 file(GLOB_RECURSE BOOST_FUNC_FILES ${CMAKE_CURRENT_SOURCE_DIR}/src/boost_functional/**.cpp)
 
@@ -49,7 +53,9 @@ add_library(boost_functional STATIC ${BOOST_FUNC_FILES})
 target_link_libraries(boost_functional PRIVATE Boost::json)
 target_include_directories(boost_functional PUBLIC
                 "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/>"
-                "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>")
+                "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
+                ${Boost_INCLUDE_DIRS})
+                
 
 file(GLOB_RECURSE Network_lib_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/network/**.cpp)
 
@@ -57,16 +63,21 @@ add_library(network STATIC ${Network_lib_SOURCES})
 target_link_libraries(network PUBLIC boost_functional)
 target_include_directories(network PUBLIC 
                 "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/>"
-                "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>")
+                "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
+                ${Boost_INCLUDE_DIRS})
+                
 
-add_library(types STATIC src/types/coord.cpp
+add_library(types STATIC 
+                src/types/position.cpp
+                src/types/coord.cpp
                 src/types/rect.cpp
                 src/types/size.cpp
                 src/types/time_interval.cpp
                 src/types/time_period.cpp)
 target_include_directories(types PUBLIC 
                                 "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
-                                "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>")
+                                "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
+                                ${Boost_INCLUDE_DIRS})
 target_link_libraries(types PUBLIC boost_functional)
 add_library(utilities STATIC    src/directories.cpp
                                 src/floattoieee.cpp
@@ -75,7 +86,8 @@ add_library(utilities STATIC    src/directories.cpp
                                 src/interpolation.cpp)
 target_include_directories(utilities PUBLIC
                                 "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
-                                "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>")
+                                "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
+                                ${Boost_INCLUDE_DIRS})
 
 
 

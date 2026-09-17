@@ -5,9 +5,22 @@
             "defines": [],
             "cStandard": "c23",
             "cppStandard": "c++23",
+            "compileCommands":"/home/oster/OsterLib/build/compile_commands.json",
             "compilerPath": "/home/oster/gcc/gcc-install/bin/g++",
             "intelliSenseMode": "linux-gcc-x64",
             "configurationProvider": "ms-vscode.cmake-tools"
+        },
+        {
+            "name": "CMake",
+            "cStandard": "c23",
+            "cppStandard": "c++23",
+            "intelliSenseMode": "linux-gcc-x64",
+            "compilerPath": "/home/oster/gcc/gcc-install/bin/g++",
+            "configurationProvider": "ms-vscode.cmake-tools",
+            "compileCommands": [
+                "${config:cmake.buildDirectory}/Debug/compile_commands.json"
+            ],
+            "browse": {"limitSymbolsToIncludedHeaders": true}
         }
     ],
     "version": 4
