@@ -1,0 +1,531 @@
+#pragma once
+#include <vector>
+#include <cstdint>
+#include "OsterLib/geometry/Line.h"
+#include <future>
+#include <algorithm>
+#include <numeric>
+#include <unordered_set>
+#include <iostream>
+#include "OsterLib/geometry/algorithms.h"
+#include <cstdint>
+#include <limits>
+#include <span>
+#include <ranges>
+#include <future>
+#include <algorithm>
+#include <numeric>
+#include <functional>
+#include <thread>
+#include "OsterLib/geometry/Polyline.h"
+#include "OsterLib/geometry/Intersection.h"
+#include "OsterLib/geometry/Polyline_view.h"
+
+namespace geometry{
+
+class Polygon:public BasicGeometry<false,2>{
+    std::vector<Point<2>> vertices_;
+    std::vector<uint64_t> minX_;
+    std::vector<uint64_t> maxX_;
+    std::vector<uint64_t> minY_;
+    std::vector<uint64_t> maxY_;
+    mutable double area_ = 0;
+    mutable double perimeter_ = 0;
+    mutable bool area_defined_ = false;
+    mutable bool perimeter_defined_ = false;
+    mutable bool wise_defined_ = false;
+    mutable bool valid_defined_ = false;
+    mutable bool clockwise_ = false;
+    mutable bool is_valid_ = false;
+
+    static uint64_t vertices_per_thread_;
+    void update_minX(double X,uint64_t new_pos) noexcept{
+        if(!minX_.empty()){
+            auto X_loc = vertices_[minX_.front()].get<0>();
+            if(X_loc>X){
+                minX_.clear();
+                minX_.push_back(new_pos);
+            }
+            else if(X_loc==X)
+                minX_.push_back(new_pos);
+        }
+        else minX_.push_back(new_pos);
+    }
+    void update_minY(double Y,uint64_t new_pos) noexcept{
+        if(!minY_.empty()){
+            if(vertices_[minY_.front()].get<1>()>Y){
+                minY_.clear();
+                minY_.push_back(new_pos);
+            }
+            else if(vertices_[minY_.front()].get<1>()==Y)
+                minY_.push_back(new_pos);
+        }
+        else minY_.push_back(new_pos);
+    }
+    void update_maxX(double X,uint64_t new_pos) noexcept{
+        if(!maxX_.empty()){
+            if(vertices_[maxX_.front()].get<0>()<X){
+                maxX_.clear();
+                maxX_.push_back(new_pos);
+            }
+            else if(vertices_[maxX_.front()].get<0>()==X)
+                maxX_.push_back(new_pos);
+        }
+        else maxX_.push_back(new_pos);
+    }
+    void update_maxY(double Y,uint64_t new_pos) noexcept{
+        if(!maxY_.empty()){
+            if(vertices_[maxY_.front()].get<1>()<Y){
+                maxY_.clear();
+                maxY_.push_back(new_pos);
+            }
+            else if(vertices_[maxY_.front()].get<1>()==Y)
+                maxY_.push_back(new_pos);
+        }
+        else maxY_.push_back(new_pos);
+    }
+
+    bool is_clockwise() const noexcept{
+        if(wise_defined_)
+            return clockwise_;
+        else{
+            if(vertices_.size()<3)
+                return false;
+            else{
+                double result = 0.;
+                for(uint64_t i = 0,j=1;i<vertices_.size();++i,j=(j+1)%vertices_.size()){
+                    const Point<2>& first = vertices_[i];
+                    const Point<2>& second = vertices_[j];
+                    result+=second.get<1>()*first.get<0>()-first.get<1>()*second.get<0>();
+                }
+                double scale =  std::max(std::abs(vertices_[maxY_.front()].get<1>()),
+                                std::abs(vertices_[minY_.front()].get<1>()))*
+                                std::max(std::abs(vertices_[maxX_.front()].get<0>()),
+                                std::abs(vertices_[minX_.front()].get<0>()));
+                if(std::abs(result) < 
+                    std::numeric_limits<double>::epsilon()*scale*vertices_.size())
+                    return false;
+                else if(result>0){
+                    wise_defined_ = true;
+                    clockwise_ = false;
+                    return clockwise_;
+                }
+                else{
+                    wise_defined_ = true;
+                    clockwise_ = true;
+                    return clockwise_;
+                }
+            }
+        }
+    }
+
+    std::vector<Intersection<2>> line_intersections(const Line& cut_line) const noexcept{
+        std::vector<Intersection<2>> result;
+        for(uint64_t i = 0;i<vertices_.size();++i){
+            auto& first = vertices_[i];
+            auto& second = vertices_[(i+1)%vertices_.size()];
+            if(::intersects(first,second,
+                cut_line.first(),cut_line.second())){
+                if(auto found = cut_line.intersection(Line(first.lon_,first.lat_,second.lon_,second.lat_));
+                    found.has_value()){
+                    Point<2> coord{found.value().first,found.value().second};
+                    if(!result.empty()){
+                        if(result.back().point()!=coord && result.front().point()!=coord)
+                            result.push_back(Intersection(coord,i,0));
+                        else continue;
+                    }
+                    else result.push_back(Intersection(coord,i,0));
+                }
+                else continue;
+            }
+            else continue;
+        }
+        std::sort(result.begin(),result.end(),
+            [](const Intersection<2>& lhs,const Intersection<2>& rhs)
+        {
+            return lhs.first_elem_id()<rhs.first_elem_id();
+        });
+        return result;
+    }
+    std::vector<Intersection<2>> polyline_intersections(const Polyline<2>& cut_line) const noexcept{
+        std::vector<Intersection<2>> result;
+        for(Line::id i = 0;i<vertices_.size();++i){
+            auto& first = vertices_[i];
+            auto& second = vertices_[(i+1)%vertices_.size()];
+            if(::intersects(first,second,
+                cut_line.first(),cut_line.second())){
+                if(auto found = cut_line.intersection(Line(first.lon_,first.lat_,second.lon_,second.lat_));
+                    found.has_value()){
+                    Point<2> coord{  .lat_ = found.value().second,
+                            .lon_ = found.value().first};
+                    if(!result.empty()){
+                        if(result.back().point()!=coord && result.front().point()!=coord)
+                            result.push_back(Intersection(coord,i,0));
+                        else continue;
+                    }
+                    else result.push_back(std::make_pair(coord,i));
+                }
+                else continue;
+            }
+            else continue;
+        }
+        std::sort(result.begin(),result.end(),
+            [](const Intersection<2>& lhs,const Intersection<2>& rhs)
+        {
+            return lhs.first_elem_id()<rhs.first_elem_id();
+        });
+        return result;
+    }
+    uint64_t define_turn_id(
+        const std::vector<Intersection<2>>& turns,
+        const Intersection<2>& ti) const noexcept{
+        uint64_t result = std::lower_bound(turns.begin(),turns.end(),ti,
+            [](const Intersection<2>& t,const Intersection<2>& turn)
+        {
+            return t.first_elem_id()<turn.first_elem_id();
+        }) - turns.begin();
+        return result;
+    }
+
+    //@todo проверить касается ли секущая вершины
+    std::vector<Polygon> cut_impl(
+    const Line& segment,
+    bool left_forward,
+    bool clockwise
+    ) const noexcept;
+    public:
+    Polygon()=default;
+    Polygon(const Polygon& other):
+        vertices_(other.vertices_),
+        wise_defined_(other.wise_defined_),
+        area_defined_(other.area_defined_),
+        valid_defined_(other.valid_defined_),
+        area_(other.area_),
+        clockwise_(other.clockwise_),
+        is_valid_(other.is_valid_),
+        maxX_(other.maxX_),
+        maxY_(other.maxY_),
+        minX_(other.minX_),
+        minY_(other.minY_){}
+    Polygon(Polygon&& other) noexcept:
+        vertices_(std::move(other.vertices_)),
+        wise_defined_(other.wise_defined_),
+        area_defined_(other.area_defined_),
+        valid_defined_(other.valid_defined_),
+        area_(other.area_),
+        clockwise_(other.clockwise_),
+        is_valid_(other.is_valid_),
+        maxX_(std::move(other.maxX_)),
+        maxY_(std::move(other.maxY_)),
+        minX_(std::move(other.minX_)),
+        minY_(std::move(other.minY_)){}
+    Polygon& operator=(const Polygon& other){
+        if(this!=&other){
+            vertices_=other.vertices_;
+            wise_defined_ = other.wise_defined_;
+            area_defined_ = other.area_defined_;
+            valid_defined_ = other.valid_defined_;
+            area_ = other.area_;
+            clockwise_ = other.clockwise_;
+            is_valid_ = other.is_valid_;
+            maxX_ = other.maxX_;
+            maxY_ = other.maxY_;
+            minX_ = other.minX_;
+            minY_ = other.minY_;
+        }
+        return *this;
+    }
+    Polygon& operator=(Polygon&& other){
+        if(this!=&other){
+            vertices_=std::move(other.vertices_);
+            wise_defined_ = other.wise_defined_;
+            area_defined_ = other.area_defined_;
+            valid_defined_ = other.valid_defined_;
+            area_ = other.area_;
+            clockwise_ = other.clockwise_;
+            is_valid_ = other.is_valid_;
+            maxX_ = std::move(other.maxX_);
+            maxY_ = std::move(other.maxY_);
+            minX_ = std::move(other.minX_);
+            minY_ = std::move(other.minY_);
+        }
+        return *this;
+    }
+    bool operator==(const Polygon& other) const noexcept{
+        return this == &other ||
+            (vertices_.size()==other.vertices_.size() &&
+            is_valid()==other.is_valid() &&
+            is_clockwise()==other.is_clockwise() &&
+            area()==other.area() &&
+            perimeter()==other.perimeter() &&
+            minX_ == other.minX_ &&
+            minY_ == other.minY_ &&
+            maxX_ == other.maxX_ &&
+            maxY_ == other.maxY_);
+    }
+    std::optional<double> area(/*mode (cartesian/geographic)*/) const noexcept{
+        if(area_defined_)
+            return area_;
+        else{
+            if(is_valid()){
+                area_defined_ = false;
+                return std::nullopt;
+            }
+            long double result = 0;
+            for(uint64_t i = 0,j=i+1;i<vertices_.size();++i,j=(j+1)%vertices_.size())
+                result+=vertices_[j].get<1>()*vertices_[i].get<0>()-vertices_[j].get<0>()*vertices_[i].get<1>();
+            area_ = result/2.;
+            area_defined_ = true;
+            return area_;
+        }
+    }
+    std::optional<double> perimeter(/*mode (cartesian/geographic)*/) const noexcept{
+        if(perimeter_defined_)
+            return perimeter_;
+        else{
+            if(is_valid()){
+                perimeter_defined_ = false;
+                return std::nullopt;
+            }
+            long double result = 0;
+            for(uint64_t i = 0,j=i+1;i<vertices_.size();++i,j=(j+1)%vertices_.size()){
+                long double dX = vertices_[j].get<0>()-
+                        vertices_[i].get<0>();
+                long double dY = vertices_[j].get<1>()-
+                        vertices_[i].get<1>();
+                result+=std::sqrtl(dX*dX+dY*dY);
+            }
+            perimeter_ = result;
+            perimeter_defined_ = true;
+            return perimeter_;
+        }
+    }
+    bool is_valid() const noexcept{
+        if(valid_defined_)
+            return is_valid_;
+        else{
+            valid_defined_ = true;
+            if(vertices_.size()<3){
+                is_valid_ = false;
+                return is_valid_;
+            }
+            else{
+                //if self-intersections are not allowed
+                uint64_t last_segment = vertices_.size()-1;
+                while(last_segment>1 &&
+                    (vertices_[last_segment]==
+                    vertices_[(last_segment-1+
+                    vertices_.size())%vertices_.size()] || 
+                    vertices_[last_segment] == vertices_[0]))
+                {
+                    --last_segment;
+                }
+                if(last_segment<2){
+                    is_valid_ = false;
+                    return is_valid_;
+                }
+                uint64_t first_segment = 0;
+                while(first_segment<last_segment && 
+                    vertices_[first_segment]==
+                        vertices_[first_segment+1])
+                    ++first_segment;
+                for(uint64_t i=first_segment;i<=last_segment;++i){
+                    while(i<=last_segment && vertices_[i]==vertices_[i+1])
+                        ++i;
+                    if(i>last_segment)
+                        break;
+                    uint64_t j_last = last_segment;
+                    if(i==first_segment)
+                        --j_last;
+                    uint64_t j = i+2;
+                    while(j<=j_last && vertices_[i+1]==vertices_[j])
+                        ++j;
+                    if(j>j_last)
+                        break;
+                    Line init_line(vertices_[i],vertices_[i+1]);
+                    for(;j<=j_last;++j){
+                        while(j<=last_segment && 
+                                (vertices_[j]==vertices_[(j+1)%vertices_.size()]))/* ||
+                                vertices_[j]==vertices_[j-1]))*/
+                            ++j;
+                        if(j>last_segment)
+                            break;
+                        else{
+                            if(init_line.intersects(Line(vertices_[j],vertices_[(j+1)%vertices_.size()]))){
+                                is_valid_ = false;
+                                return is_valid_;
+                            }
+                            else continue;
+                        }
+                    }
+                }
+                is_valid_ = true;
+                return is_valid_;
+            }
+        }
+    }
+    void append(Point<2> coord) noexcept{
+        if(!vertices_.empty()){
+            if(vertices_.back()!=coord &&
+                vertices_.front()!=coord)
+            {
+                area_defined_ = false;
+                valid_defined_ = false;
+                wise_defined_ = false;
+            }
+        }
+        else{
+            area_defined_ = false;
+            valid_defined_ = false;
+            wise_defined_ = false;
+        }
+        update_minX(coord.lon_,vertices_.size());
+        update_minY(coord.lat_,vertices_.size());
+        update_maxX(coord.lon_,vertices_.size());
+        update_maxY(coord.lat_,vertices_.size());
+        vertices_.push_back(std::move(coord));
+    }
+    void insert(uint64_t coord_id,Point<2> coord) noexcept{
+        if(coord_id>=vertices_.size())
+            append(coord);
+        else{
+            if(vertices_[(coord_id-1+vertices_.size())%
+                vertices_.size()]!=coord &&
+            vertices_[(coord_id+1)%vertices_.size()]!=coord)
+            {
+                area_defined_ = false;
+                valid_defined_ = false;
+                wise_defined_ = false;
+            }
+            vertices_.insert(vertices_.begin()+coord_id,std::move(coord));
+            std::for_each(minX_.begin(),minX_.end(),[coord_id](uint64_t& id){
+                if(id>=coord_id)
+                    ++id;
+            });
+            std::for_each(maxX_.begin(),maxX_.end(),[coord_id](uint64_t& id){
+                if(id>=coord_id)
+                    ++id;
+            });
+            std::for_each(minY_.begin(),minY_.end(),[coord_id](uint64_t& id){
+                if(id>=coord_id)
+                    ++id;
+            });
+            std::for_each(maxY_.begin(),maxY_.end(),[coord_id](uint64_t& id){
+                if(id>=coord_id)
+                    ++id;
+            });
+            update_minX(coord.lon_,coord_id);
+            update_maxX(coord.lon_,coord_id);
+            update_minY(coord.lat_,coord_id);
+            update_maxY(coord.lat_,coord_id);
+        }
+    }
+    void erase(uint32_t coord_id) noexcept{
+        if(vertices_.empty())
+            return;
+        uint64_t erased_id = coord_id>=vertices_.size()?vertices_.size()-1:coord_id;
+        Point<2> coord = vertices_[erased_id];
+        bool erase_maxX = (coord.lon_ == vertices_[maxX_.front()].get<0>());
+        bool erase_maxY = (coord.lat_ == vertices_[maxY_.front()].get<1>());
+        bool erase_minX = (coord.lon_ == vertices_[minX_.front()].get<0>());
+        bool erase_minY = (coord.lat_ == vertices_[minY_.front()].get<1>());
+        wise_defined_ = false;
+        valid_defined_ = false;
+        vertices_.erase(vertices_.begin()+erased_id);
+        area_defined_ = false;
+        if(erase_maxX || erase_minX || erase_maxY || erase_minY){
+            maxX_.clear();
+            minX_.clear();
+            maxY_.clear();
+            minY_.clear();
+            for(uint64_t i = 0;i<vertices_.size();++i){
+                update_minX(vertices_[i].get<0>(),i);
+                update_maxX(vertices_[i].get<0>(),i);
+                update_minY(vertices_[i].get<1>(),i);
+                update_maxY(vertices_[i].get<1>(),i);
+            }
+        }
+        else{
+            std::for_each(minX_.begin(),minX_.end(),[erased_id](uint64_t& id){
+                if(id>erased_id)
+                    --id;
+            });
+            std::for_each(maxX_.begin(),maxX_.end(),[erased_id](uint64_t& id){
+                if(id>erased_id)
+                    --id;
+            });
+            std::for_each(minY_.begin(),minY_.end(),[erased_id](uint64_t& id){
+                if(id>erased_id)
+                    --id;
+            });
+            std::for_each(maxY_.begin(),maxY_.end(),[erased_id](uint64_t& id){
+                if(id>erased_id)
+                    --id;
+            });
+        }
+    }
+    size_t number_vertices() const noexcept{
+        return vertices_.size();
+    }
+    const std::vector<Point<2>>& vertices() const noexcept{
+        return vertices_;
+    }
+    bool point_inside(const Point<2>& point,
+            uint32_t max_threads = std::thread::hardware_concurrency()) const noexcept;
+    std::vector<Polygon> intersection(const Polygon& other) const noexcept;
+    static std::vector<Polygon> cut(
+        const Line& line,
+        const Polygon& pg,
+        bool left_forward
+        ) noexcept;
+    std::vector<Polygon> cut(
+        const Line& line,
+        bool left_forward
+        ) const noexcept;
+    bool equivalent(const Polygon& other,bool multithread) const noexcept{
+        uint64_t number_threads = vertices_.size()/vertices_per_thread_;
+        int8_t other_inc = is_clockwise()==other.is_clockwise()?1:-1;
+        if((!maxX_.empty() && vertices_[maxX_.front()].get<0>()!=other.vertices_[other.maxX_.front()].get<0>()) ||
+            (!maxY_.empty() && vertices_[maxY_.front()].get<1>()!=other.vertices_[other.maxY_.front()].get<1>()) ||
+            (!minX_.empty() && vertices_[minX_.front()].get<0>()!=other.vertices_[other.minX_.front()].get<0>()) ||
+            (!minY_.empty() && vertices_[minY_.front()].get<1>()!=other.vertices_[other.minY_.front()].get<1>()))
+            return false;
+        else{
+            std::vector<Point<2>>::const_iterator iter = 
+                std::find(other.vertices_.begin(),other.vertices_.end(),
+                vertices_.front());
+            if(iter==other.vertices_.end())
+                return false;
+            else{
+                uint64_t last = vertices_.size()-1;
+                for(uint64_t i = 0, j = std::distance(other.vertices_.begin(),iter);
+                    i<=last;++i,j=(j+other_inc+other.vertices_.size())%other.vertices_.size())
+                {
+                    uint64_t j_loc = (j+other_inc+other.vertices_.size())%other.vertices_.size();
+                    uint64_t i_loc = (i+1+vertices_.size())%vertices_.size();
+                    while(other.vertices_[j]==other.vertices_[j_loc]){
+                        j=(j+other_inc+other.vertices_.size())%other.vertices_.size();
+                        j_loc = (j+other_inc+other.vertices_.size())%other.vertices_.size();
+                    }
+                    while(vertices_[i]==vertices_[i_loc] && i<last){
+                        ++i;
+                        ++i_loc;
+                    }
+                    if(vertices_[i]!=other.vertices_[j])
+                        return false;
+                    continue;
+                }
+                return true;
+            }
+        }
+    }
+};
+
+template<typename Point<2>>
+void print(const std::vector<Intersection<2>>& turns);
+template<typename Point<2>>
+void print(const Point<2>& point,std::string_view desc="");
+template<typename Point<2>>
+void print(const Polygon<Point<2>>& pg);
+
+}

@@ -2,6 +2,17 @@ cmake_minimum_required(VERSION 3.16)
 project(tests)
 enable_testing()
 
+add_executable(polygon_test polygon_test.cpp ${CMAKE_CURRENT_SOURCE_DIR}/../src/geometry/Polygon.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/../src/geometry/algorithms.cpp)
+add_executable(line_test line_test.cpp ${CMAKE_CURRENT_SOURCE_DIR}/../src/geometry/Line.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/../src/geometry/algorithms.cpp)
+add_executable(polyline_test polyline_test.cpp ${CMAKE_CURRENT_SOURCE_DIR}/../src/geometry/Polyline.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/../src/geometry/algorithms.cpp)
+target_include_directories(polyline_test PUBLIC ${COMMON_DIRS})
+
+add_executable(matrix_test matrix_test.cpp)
+add_executable(vector_test vector_test.cpp)
+
 add_executable(bytes_test bytes.cpp)
 target_link_libraries(bytes_test GTest::gtest)
 
@@ -39,4 +50,9 @@ gtest_discover_tests(
     lexical_cast_test
     network_test
     ctx_error_test
-    buffers_test WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+    buffers_test 
+    polygon_test 
+    line_test 
+    polyline_test
+    vector_test
+    matrix_test WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})

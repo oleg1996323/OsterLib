@@ -77,5 +77,5 @@
         "variant": "cpp"
     },
     "cmake.launchBehavior":"reuseTerminal",
-    "cmake.buildTask": true
+    "cmake.clearOutputBeforeBuild": true
 }
