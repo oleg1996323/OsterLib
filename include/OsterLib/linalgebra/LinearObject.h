@@ -1,47 +1,10 @@
 #pragma once
 #include "OsterLib/linalgebra/definitions.h"
+#include "OsterLib/linalgebra/RankDissolve.h"
 
 namespace linalgebra{
     template<bool VIEW,typename VALUE_T,std::size_t... RANKS>
     class LinearObject;
-    
-    namespace __detail__{
-        template<typename VALUE_T,std::size_t First,std::size_t... RANKS>
-        struct RankDropper;
-
-        template<typename VALUE_T,std::size_t... RANKS>
-        struct RankDropper<VALUE_T,0,RANKS...>{
-            using type = LinearObject<true,VALUE_T,RANKS...>;
-        };
-
-        template<typename VALUE_T,std::size_t SKIP,std::size_t FIRST,std::size_t... RANKS>
-        struct RankDropper<VALUE_T,SKIP,FIRST,RANKS...>:RankDropper<VALUE_T,SKIP-1,RANKS...>{};
-
-        template<size_t CUR,size_t Last,typename OBJ1,typename OBJ2>
-        struct CommonRank;
-
-        template<size_t CUR,size_t Last,size_t... RANKS1,size_t... RANKS2,
-                bool V1,bool V2,typename VAL1,typename VAL2,
-                template<bool,typename,size_t...> typename LINOBJ1,
-                template<bool,typename,size_t...> typename LINOBJ2>
-        struct CommonRank<CUR,osterlib::Min<LinearObject<V1,VAL1,RANKS1...>::order_,
-                        LinearObject<V2,VAL2,RANKS2...>::order_>::value,
-                        LinearObject<V1,VAL1,RANKS1...>,
-                        LinearObject<V2,VAL2,RANKS2...>>
-        {
-            
-        };
-
-        template<size_t First1,size_t First2,size_t... RANKS1,size_t... RANKS2,
-                bool V1,bool V2,typename VAL1,typename VAL2,
-                template<bool,typename,size_t...> typename LINOBJ1,
-                template<bool,typename,size_t...> typename LINOBJ2>
-        struct CommonRank<First1,First2,LinearObject<V1,VAL1,RANKS1...>,LinearObject<V2,VAL2,RANKS2...>>
-        {
-            std::integer_sequence<std::size_t,
-        };
-
-    }
 
     template<typename VALUE_T,std::size_t SKIP,std::size_t... RANKS>
     using DropRanks = typename __detail__::RankDropper<VALUE_T,SKIP,RANKS...>::type;
@@ -239,7 +202,7 @@ namespace linalgebra{
             }
         }
         template<bool OTHER_VIEW,typename OTHER_VALUE_T,std::size_t... OTHER_RANKS>
-        LinearObject<false,std::common_type_t<VALUE_T,OTHER_VALUE_T>,/*new ranks*/> operator*(
+        LinearObject<false,std::common_type_t<VALUE_T,OTHER_VALUE_T>,/*new ranks*/> cross_production(
                 const LinearObject<OTHER_VIEW,OTHER_VALUE_T,OTHER_RANKS...>& other)
         {
             LinearObject<false,std::common_type_t<VALUE_T,OTHER_VALUE_T>,Min<RANKS,OTHER_RANKS>::value...> result;

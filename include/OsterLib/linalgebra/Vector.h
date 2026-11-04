@@ -1,5 +1,6 @@
 #pragma once
 #include "OsterLib/linalgebra/LinearObject.h"
+#include "OsterLib/linalgebra/operators.h"
 
 namespace linalgebra{
     template<typename VALUE_T,std::size_t RANK>

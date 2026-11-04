@@ -1,10 +1,10 @@
 #pragma once
 #include "OsterLib/linalgebra/LinearObject.h"
+#include "OsterLib/linalgebra/operators.h"
 
 namespace linalgebra{
     template<std::size_t H_RANK, std::size_t V_RANK,typename VALUE_T>
     class Matrix;
-    class MatrixWrapper;
 
     template<std::size_t H_RANK, std::size_t V_RANK,typename VALUE_T>
     class Matrix:public LinearObject<false,VALUE_T,H_RANK,V_RANK>{
