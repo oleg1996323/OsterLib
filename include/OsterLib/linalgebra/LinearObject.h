@@ -1,11 +1,9 @@
 #pragma once
 #include "OsterLib/linalgebra/definitions.h"
 #include "OsterLib/linalgebra/RankDissolve.h"
+#include "OsterLib/traits.h"
 
 namespace linalgebra{
-    template<bool VIEW,typename VALUE_T,std::size_t... RANKS>
-    class LinearObject;
-
     template<typename VALUE_T,std::size_t SKIP,std::size_t... RANKS>
     using DropRanks = typename __detail__::RankDropper<VALUE_T,SKIP,RANKS...>::type;
 
@@ -18,15 +16,6 @@ namespace linalgebra{
         static constexpr std::array<std::size_t, order_> ranks_{RANKS...};
         std::conditional_t<VIEW,VALUE_T*,std::array<VALUE_T, total_>> data_{};
         private:
-        template<size_t DEPTH,bool OTHER_VIEW,typename OTHER_VALUE_T,std::size_t... OTHER_RANKS>
-        LinearObject<false,std::common_type_t<VALUE_T,OTHER_VALUE_T>,RANK,OTHER_RANK> operator*(
-                const LinearObject<OTHER_VIEW,OTHER_VALUE_T,OTHER_RANKS...>& other)
-        {
-            static_assert((RANK==OTHER_RANKS)&&...,"Ranks must be consistent");
-            if constexpr
-            for(std::size_t i = 0;i<RANK;++i)
-                data_[]
-        }
         template<std::size_t... IDS>
         static constexpr std::size_t compute_offset() noexcept {
             constexpr std::array<std::size_t, sizeof...(IDS)> ids{IDS...};
@@ -48,6 +37,14 @@ namespace linalgebra{
         template<bool, typename, std::size_t...> friend class LinearObject;
         public:
         using element_type = VALUE_T;
+
+        std::decay_t<decltype(data_)>& data() noexcept{
+            return data_;
+        }
+
+        const std::decay_t<decltype(data_)>& data() const noexcept{
+            return data_;
+        }
         constexpr LinearObject(){
             if constexpr(VIEW)
                 data_ = nullptr;
@@ -57,11 +54,14 @@ namespace linalgebra{
                 data_ = other.data_;
             else std::copy_n(other.data_,total_,data_.begin());
         }
-        template<bool B = VIEW, std::enable_if_t<!B, int> = 0>
         constexpr LinearObject(const LinearObject<false,VALUE_T,RANKS...>& other){
-            std::copy_n(other.data_.begin(),total_,data_.begin());
+            if constexpr(VIEW)
+                *this = other.take_view();
+            else std::copy_n(other.data_.begin(),total_,data_.begin());
         }
-        template<bool B = VIEW, std::enable_if_t<!B, int> = 0>
+        template<std::size_t N = sizeof...(RANKS), std::enable_if_t<N == 0 && !VIEW, int> = 0>
+        constexpr explicit LinearObject(VALUE_T val) : data_{val} {}
+        template<bool B = VIEW,std::enable_if_t<!B, int> = 0>
         constexpr LinearObject(LinearObject<false,VALUE_T,RANKS...>&& other):
             data_(other.data_){}
         LinearObject<true,VALUE_T,RANKS...> take_view() noexcept{
@@ -77,6 +77,10 @@ namespace linalgebra{
                 view.data_ = data_.data();
             else view.data_ = data_;
             return view;
+        }
+        constexpr LinearObject<false,VALUE_T>& operator=(VALUE_T val){
+            data_[0] = val;
+            return *this;
         }
         template<bool OTHER_VIEW, std::enable_if_t<VIEW == OTHER_VIEW, int> = 0>
         constexpr LinearObject& operator=(LinearObject<OTHER_VIEW, VALUE_T, RANKS...>&& other) {
@@ -200,19 +204,6 @@ namespace linalgebra{
                     return result;
                 }
             }
-        }
-        template<bool OTHER_VIEW,typename OTHER_VALUE_T,std::size_t... OTHER_RANKS>
-        LinearObject<false,std::common_type_t<VALUE_T,OTHER_VALUE_T>,/*new ranks*/> cross_production(
-                const LinearObject<OTHER_VIEW,OTHER_VALUE_T,OTHER_RANKS...>& other)
-        {
-            LinearObject<false,std::common_type_t<VALUE_T,OTHER_VALUE_T>,Min<RANKS,OTHER_RANKS>::value...> result;
-            auto multiplication = [&]<std::size_t... Is>(std::index_sequence<Is...>)
-            {
-                if constexpr (DEPTH<Min<order_,other.order_>::value)
-                    return ((element<Is>()*other.element<Is>())+...);
-                else return element<>()*other.element<>();
-            };
-            return multiplication(std::make_index_sequence<this->ranks_[0]>());
         }
     };
 }

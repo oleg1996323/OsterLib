@@ -11,7 +11,14 @@ add_executable(polyline_test polyline_test.cpp ${CMAKE_CURRENT_SOURCE_DIR}/../sr
 target_include_directories(polyline_test PUBLIC ${COMMON_DIRS})
 
 add_executable(matrix_test matrix_test.cpp)
+target_link_libraries(matrix_test GTest::gtest)
+target_include_directories(matrix_test PUBLIC ${COMMON_DIRS})
 add_executable(vector_test vector_test.cpp)
+target_link_libraries(vector_test GTest::gtest)
+target_include_directories(vector_test PUBLIC ${COMMON_DIRS})
+add_executable(tensor_test tensor_test.cpp)
+target_link_libraries(tensor_test GTest::gtest)
+target_include_directories(tensor_test PUBLIC ${COMMON_DIRS})
 
 add_executable(bytes_test bytes.cpp)
 target_link_libraries(bytes_test GTest::gtest)
@@ -55,4 +62,5 @@ gtest_discover_tests(
     line_test 
     polyline_test
     vector_test
-    matrix_test WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+    matrix_test
+    tensor_test WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
