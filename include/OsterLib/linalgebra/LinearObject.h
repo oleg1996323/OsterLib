@@ -36,6 +36,12 @@ namespace linalgebra{
         }
         template<bool, typename, std::size_t...> friend class LinearObject;
         public:
+        static constexpr std::array<std::size_t, order_>& ranks() noexcept{
+            return ranks_;
+        }
+        static constexpr std::size_t total() noexcept{
+            return total_;
+        }
         using element_type = VALUE_T;
 
         std::decay_t<decltype(data_)>& data() noexcept{

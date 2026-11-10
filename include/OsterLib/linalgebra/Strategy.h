@@ -44,8 +44,19 @@ namespace linalgebra{
             iterators.fill(0);
             constexpr std::array<std::size_t,sizeof...(RANKS)> upper_bounds{RANKS...};
             constexpr std::array<std::size_t,sizeof...(IDS)> ids{IDS...};
+            constexpr std::size_t cycle_offset = [](){
+                std::size_t result = 0;
+                for(std::size_t i = 0;i<lo.order();++i)
+                    for(std::size_t j=0;j<ids.size();++j)
+                        if(i==j){
+                            //std::min (minimum offset for flat id)
+                            result = result * lo.ranks()[k] + v;
+                            break;
+                        }
+            }();
             VALUE_T tmp_val = 0;
             for(std::size_t j=0, i=0,m=0;;){
+                //m=(++m)&result.data().size() (ringing to result)
                 if(j<ids.front())
                     tmp_val = 0;
                 if(iterators[j]==upper_bounds[j]){
