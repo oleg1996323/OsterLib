@@ -2,6 +2,7 @@
 #include "OsterLib/linalgebra/definitions.h"
 #include "OsterLib/linalgebra/RankDissolve.h"
 #include "OsterLib/traits.h"
+#include <iostream>
 
 namespace linalgebra{
     template<typename VALUE_T,std::size_t SKIP,std::size_t... RANKS>
@@ -36,7 +37,7 @@ namespace linalgebra{
         }
         template<bool, typename, std::size_t...> friend class LinearObject;
         public:
-        static constexpr std::array<std::size_t, order_>& ranks() noexcept{
+        static constexpr const std::array<std::size_t, order_>& ranks() noexcept{
             return ranks_;
         }
         static constexpr std::size_t total() noexcept{
@@ -212,4 +213,60 @@ namespace linalgebra{
             }
         }
     };
+
+    namespace detail {
+
+    template<typename T>
+    void print_rec(std::ostream& os, const T* data, const std::size_t* ranks,
+                std::size_t depth, std::size_t total_dims)
+    {
+        if (depth == total_dims) {           // скаляр — дно
+            os << *data;
+            return;
+        }
+        // stride[depth] = произведение рангов всех более глубоких осей
+        std::size_t stride = 1;
+        for (std::size_t k = depth + 1; k < total_dims; ++k)
+            stride *= ranks[k];
+
+        os << '[';
+        for (std::size_t i = 0; i < ranks[depth]; ++i) {
+            if (i > 0) os << ", ";
+            print_rec(os, data + i * stride, ranks, depth + 1, total_dims);
+        }
+        os << ']';
+    }
+
+    } // namespace detail
+
+    template<bool VIEW, typename VALUE_T, std::size_t... RANKS>
+    void print(const LinearObject<VIEW, VALUE_T, RANKS...>& lo,
+            std::ostream& os = std::cout)
+    {
+        constexpr std::size_t dims = sizeof...(RANKS);
+        constexpr std::array<std::size_t, dims> ranks{RANKS...};
+
+        const VALUE_T* ptr;
+        if constexpr (VIEW) ptr = lo.data();           // view: T*
+        else                ptr = lo.data().data();    // owner: std::array::data()
+
+        detail::print_rec(os, ptr, ranks.data(), 0, dims);
+        os << '\n';
+    }
+
+    // Опционально — operator<<
+    template<bool VIEW, typename VALUE_T, std::size_t... RANKS>
+    std::ostream& operator<<(std::ostream& os,
+                            const LinearObject<VIEW, VALUE_T, RANKS...>& lo)
+    {
+        constexpr std::size_t dims = sizeof...(RANKS);
+        constexpr std::array<std::size_t, dims> ranks{RANKS...};
+
+        const VALUE_T* ptr;
+        if constexpr (VIEW) ptr = lo.data();
+        else                ptr = lo.data().data();
+
+        detail::print_rec(os, ptr, ranks.data(), 0, dims);
+        return os;
+    }
 }

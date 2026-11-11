@@ -40,45 +40,44 @@ namespace linalgebra{
             using result_t = FromIntegerSequence::LinearObject<false,VALUE_T,matched>;
             constexpr std::size_t total = osterlib::Product<matched>::value;
             result_t result{};
-            std::array<std::size_t,sizeof...(RANKS)> iterators;
-            iterators.fill(0);
-            constexpr std::array<std::size_t,sizeof...(RANKS)> upper_bounds{RANKS...};
-            constexpr std::array<std::size_t,sizeof...(IDS)> ids{IDS...};
-            constexpr std::size_t cycle_offset = [](){
-                std::size_t result = 0;
-                for(std::size_t i = 0;i<lo.order();++i)
-                    for(std::size_t j=0;j<ids.size();++j)
-                        if(i==j){
-                            //std::min (minimum offset for flat id)
-                            result = result * lo.ranks()[k] + v;
+            // constexpr std::size_t cycle_offset = [&lo](){
+                std::array<std::size_t,sizeof...(IDS)> ids{IDS...};
+                std::size_t cycle_offset = 1;
+                std::size_t min_free_id = 0;
+                //define the minimal free axis-order
+                for(std::size_t i=0;i<lo.order();++i){
+                    bool matched = false;
+                    for(std::size_t j=0;j<sizeof...(IDS);++j){
+                        if(ids[j]==i){
+                            matched = true;
                             break;
                         }
-            }();
-            VALUE_T tmp_val = 0;
-            for(std::size_t j=0, i=0,m=0;;){
-                //m=(++m)&result.data().size() (ringing to result)
-                if(j<ids.front())
-                    tmp_val = 0;
-                if(iterators[j]==upper_bounds[j]){
-                    if(j>0){
-                        iterators[j]=0;
-                        --j;
-                        ++iterators[j];
-                        result.data()[m]=tmp_val;
-                        ++m; //только когда j==ids.front()
                     }
-                    else break;
+                    if(!matched)
+                        min_free_id = i;
                 }
-                else{
-                    if(j<sizeof...(RANKS)-1)
-                        ++j;
-                    else{
-                        tmp_val+=lo.data()[i];
-                        ++iterators[j];
-                        ++i;
+                //define the offset of contracted axis with id less than minimal free axis-order
+                //here the minimal must be bigger due to the flat data disposition (bigger id -> first)
+                // for(std::size_t i=0;i<lo.order();++i){
+                    for(std::size_t j=0;j<sizeof...(IDS);++j){
+                        if(ids[j]>min_free_id){
+                            cycle_offset*=lo.ranks()[ids[j]];
+                        }
                     }
-                    continue;
-                }
+                // }
+            //     return cycle_offset;
+            // }();
+            std::size_t num_sum = lo.total()/result.total();
+            for(std::size_t i = 0;i<result.total();++i){
+                //add cycle_offset*block_offset
+                for(std::size_t j = 0;j<cycle_offset;++j)
+                    for(std::size_t off = 0;off<cycle_offset;++off){
+                        std::size_t id = off*j;
+                        result.data()[i]+=lo.data()[id];
+                    }
+                        
+                // std::size_t id = (i/cycle_offset)%result.total();
+                // result.data()[id]+=lo.data()[i];
             }
             return result;
         }
