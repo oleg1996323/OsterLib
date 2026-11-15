@@ -73,6 +73,29 @@ TEST(LinAlgebra,ContractionTest_Tensor_5_Rank_1){
     //[[84, 100], [148, 164]]
 }
 
+TEST(LinAlgebra,InnerProductTest_Tensor_5_Rank_1){
+    linalgebra::LinearObject<false, long double, 2, 2, 2, 2, 2> t1;
+    // flat: i*16 + j*8 + k*4 + l*2 + m
+    for (std::size_t i = 0; i < 32; ++i) t1.data()[i] = static_cast<long double>(i);
+
+    linalgebra::LinearObject<false, long double, 2, 2, 2, 2, 2> t2;
+    // flat: i*16 + j*8 + k*4 + l*2 + m
+    for (std::size_t i = 0; i < 32; ++i) t2.data()[i] = static_cast<long double>(i);
+
+    std::cout<<linalgebra::InnerProduct()(t1,t2)<<std::endl;
+    //[[84, 100], [148, 164]]
+}
+
+TEST(LinAlgebra,TransposeTest_Tensor_5_Rank_1){
+    linalgebra::LinearObject<false, long double, 2, 2, 2, 2, 2> t;
+    // flat: i*16 + j*8 + k*4 + l*2 + m
+    for (std::size_t i = 0; i < 32; ++i) t.data()[i] = static_cast<long double>(i);
+
+    linalgebra::print(t);
+    linalgebra::print(linalgebra::Transpose()(t));
+    //[[84, 100], [148, 164]]
+}
+
 int main(int argc,char* argv[]){
     testing::InitGoogleTest(&argc,argv);
     return RUN_ALL_TESTS();

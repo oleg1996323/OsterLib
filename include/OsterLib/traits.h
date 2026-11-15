@@ -26,9 +26,9 @@ namespace osterlib{
     };
 
     template<typename S1, typename S2>
-    using MatchedIdx = PickImpl<S1, S2>;
+    using MatchedIdx = typename PickImpl<S1, S2>::type;
 
-    static_assert(std::is_same_v<MatchedIdx<std::integer_sequence<std::size_t,1,2,3>,std::integer_sequence<std::size_t,0,2>>::type,
+    static_assert(std::is_same_v<MatchedIdx<std::integer_sequence<std::size_t,1,2,3>,std::integer_sequence<std::size_t,0,2>>,
                     std::integer_sequence<std::size_t,1,3>>);
 
     template<typename S1, typename S2>
@@ -67,6 +67,22 @@ namespace osterlib{
 
         using type = decltype(make(std::make_index_sequence<count>{}));
     };
+
+    template<std::size_t... IDS>
+    struct ReverseSequence {
+        static constexpr std::size_t N = sizeof...(IDS);
+
+        template<std::size_t... Is>
+        static constexpr auto make(std::index_sequence<Is...>) {
+            constexpr std::array<std::size_t, N> arr{IDS...};
+            return std::integer_sequence<std::size_t, arr[N - 1 - Is]...>{};
+        }
+
+        using type = decltype(make(std::make_index_sequence<N>{}));
+    };
+
+    template<std::size_t... IDS>
+    using ReverseSequence_t = typename ReverseSequence<IDS...>::type;
 
     template<typename S1, typename S2>
     using ExcludedIdx = typename ExcludeImpl<S1, S2>::type;
