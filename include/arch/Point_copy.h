@@ -62,15 +62,15 @@ namespace geometry{
     }
 
     //specified point
-    template<uint64_t DIMENSIONS,typename VALUE_T = long double>
+    template<uint64_t DIMENSIONS,typename DOMAIN,typename VALUE_T = long double>
     class BasicPoint;
 
-    template<uint64_t DIMENSIONS,typename VALUE_T = long double>
+    template<uint64_t DIMENSIONS,typename DOMAIN,typename VALUE_T = long double>
     class BasicPointRef;
 
     //specified point
-    template<uint64_t DIMENSIONS,typename VALUE_T = long double>
-    class BasicPoint:public BasicGeometry<false,DIMENSIONS>{
+    template<uint64_t DIMENSIONS,typename DOMAIN,typename VALUE_T = long double>
+    class BasicPoint:public BasicGeometry<false,DIMENSIONS,DOMAIN>{
         std::array<VALUE_T,DIMENSIONS> data_;
         public:
         BasicPoint() = default;
@@ -102,7 +102,7 @@ namespace geometry{
         BasicPoint(const BasicPointRef<DIMENSIONS,VALUE_T>& point);
         BasicPoint(BasicPointRef<DIMENSIONS,VALUE_T>&& point) noexcept;
         BasicPoint& operator=(const BasicPointRef<DIMENSIONS,VALUE_T>& other);
-        BasicPoint& operator=(BasicPoint<DIMENSIONS,VALUE_T>&& other) noexcept;
+        BasicPoint& operator=(BasicPoint<DIMENSIONS,DOMAIN,VALUE_T>&& other) noexcept;
         template<uint64_t DIMENSION>
         const auto& get() const noexcept{
             static_assert(DIMENSION<BasicGeometry::dimensions(),
@@ -123,18 +123,18 @@ namespace geometry{
         }
     };
 
-    template<uint64_t DIMENSION,uint64_t DIMENSIONS,typename VALUE_T>
-    struct Get<DIMENSION,BasicPoint<DIMENSIONS,VALUE_T>>{
-        const auto& operator()(const BasicPoint<DIMENSIONS,VALUE_T>& point) const noexcept{
+    template<uint64_t DIMENSION,uint64_t DIMENSIONS,typename DOMAIN,typename VALUE_T>
+    struct Get<DIMENSION,BasicPoint<DIMENSIONS,DOMAIN,VALUE_T>>{
+        const auto& operator()(const BasicPoint<DIMENSIONS,DOMAIN,VALUE_T>& point) const noexcept{
             return point.get<DIMENSION>();
         }
-        auto& operator()(const BasicPoint<DIMENSIONS,VALUE_T>& point) noexcept{
+        auto& operator()(const BasicPoint<DIMENSIONS,DOMAIN,VALUE_T>& point) noexcept{
             return point.get<DIMENSION>();
         }
     };
 
-    template<uint64_t DIMENSIONS,typename VALUE_T = long double>
-    class BasicPointRef:public BasicGeometry<true,DIMENSIONS>{
+    template<uint64_t DIMENSIONS,typename DOMAIN,typename VALUE_T = long double>
+    class BasicPointRef:public BasicGeometry<true,DIMENSIONS,DOMAIN>{
         std::array<VALUE_T,DIMENSIONS>& data_;
         public:
         BasicPointRef(const BasicPointRef& other):
@@ -168,8 +168,8 @@ namespace geometry{
         }
     };
 
-    template<uint64_t DIMENSION,uint64_t DIMENSIONS,typename VALUE_T>
-    struct Get<DIMENSION,BasicPoint<DIMENSIONS,VALUE_T>>{
+    template<uint64_t DIMENSION,uint64_t DIMENSIONS,typename DOMAIN,typename VALUE_T>
+    struct Get<DIMENSION,BasicPoint<DIMENSIONS,DOMAIN,VALUE_T>>{
         const auto& operator()(const BasicPointRef<DIMENSIONS,VALUE_T>& point) const noexcept{
             return point.get<DIMENSION>();
         }
@@ -178,8 +178,8 @@ namespace geometry{
         }
     };
 
-    template<uint64_t DIMENSIONS,typename VALUE_T>
-    BasicPoint<DIMENSIONS,VALUE_T>::BasicPoint(const BasicPointRef<DIMENSIONS,VALUE_T>& other)
+    template<uint64_t DIMENSIONS,typename DOMAIN,typename VALUE_T>
+    BasicPoint<DIMENSIONS,DOMAIN,VALUE_T>::BasicPoint(const BasicPointRef<DIMENSIONS,VALUE_T>& other)
     {
         if(this!=&other){
             if constexpr(std::is_assignable_v<POINT_T,OTHER_POINT_T>)
@@ -198,16 +198,16 @@ namespace geometry{
         return *this;
     }
 
-    template<uint64_t DIMENSIONS,typename VALUE_T>
-    BasicPoint<DIMENSIONS,VALUE_T>::BasicPoint(BasicPointRef<DIMENSIONS,VALUE_T>&& other) noexcept
+    template<uint64_t DIMENSIONS,typename DOMAIN,typename VALUE_T>
+    BasicPoint<DIMENSIONS,DOMAIN,VALUE_T>::BasicPoint(BasicPointRef<DIMENSIONS,VALUE_T>&& other) noexcept
     {
         data_.swap(other.data_);
         return *this;
     }
 
-    template<uint64_t DIMENSIONS,typename VALUE_T>
-    BasicPoint<DIMENSIONS,VALUE_T>& 
-        BasicPoint<DIMENSIONS,VALUE_T>::operator=(
+    template<uint64_t DIMENSIONS,typename DOMAIN,typename VALUE_T>
+    BasicPoint<DIMENSIONS,DOMAIN,VALUE_T>& 
+        BasicPoint<DIMENSIONS,DOMAIN,VALUE_T>::operator=(
             const BasicPointRef<DIMENSIONS,VALUE_T>& other)
     {
         if(this!=&other)
@@ -275,8 +275,8 @@ namespace geometry{
     static_assert(!std::is_move_constructible_v<BasicPointRef<2>>);
     static_assert(std::is_copy_assignable_v<BasicPointRef<2>>);
     static_assert(!std::is_move_assignable_v<BasicPointRef<2>>);
-    template<uint64_t DIMENSIONS,typename VALUE_T = long double>
-    using Point = BasicPoint<DIMENSIONS,VALUE_T>;
+    template<uint64_t DIMENSIONS,typename DOMAIN,typename VALUE_T = long double>
+    using Point = BasicPoint<DIMENSIONS,DOMAIN,VALUE_T>;
 }
 
 #include "distance.h"

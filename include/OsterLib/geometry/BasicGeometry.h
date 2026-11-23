@@ -3,10 +3,9 @@
 #include <utility>
 #include <cstdint>
 #include <cmath>
-#include <vector>
-#include <span>
 #include <format>
 #include "OsterLib/traits.h"
+#include "OsterLib/geometry/Domain.h"
 
 #define MAX_ALLOWABLE_DIMENSIONS 4
 #define STRINGIFY_IMPL(x) #x
@@ -15,13 +14,13 @@
 #define MAX_ALLOWABLE_DIMENSIONS_STR(MAX) "Overflow maximum allowed dimensions " STRINGIFY(MAX)
 
 namespace geometry{
-template<uint64_t DIMENSIONS,typename VALUE_T>
+template<uint64_t DIMENSIONS,typename DOMAIN,typename VALUE_T>
 class BasicPoint;
 
-template<uint64_t DIMENSIONS,typename VALUE_T>
+template<uint64_t DIMENSIONS,typename DOMAIN,typename VALUE_T>
 class BasicPointRef;
 
-template<uint64_t DIMENSIONS,typename VALUE_T = long double>
+template<uint64_t DIMENSIONS,typename DOMAIN,typename VALUE_T = long double>
 class BasicLine;
 
 template<typename,typename,typename = void>
@@ -80,10 +79,12 @@ struct ValueTypeCheck{
     static_assert(has_operator_division<VALUE_T,std::float_t>::value);
 };
 
-template<bool VIEW,uint64_t DIMENSIONS>
-class BasicGeometry{
+template<bool VIEW,uint64_t DIMENSIONS,typename DOMAIN>
+class BasicGeometry:public DOMAIN{
     static_assert(DIMENSIONS>0,"Not all Get::operator() are defined");
+    static_assert(std::is_base_of_v<Domain,DOMAIN>,"Geometry domain must be defined");
     public:
+    using domain = DOMAIN;
     BasicGeometry() = default;
     BasicGeometry(const BasicGeometry&) = default;
     BasicGeometry(BasicGeometry&&) noexcept = default;

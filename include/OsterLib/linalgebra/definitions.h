@@ -8,7 +8,7 @@
 #include "OsterLib/traits.h"
 
 namespace linalgebra{
-    template<bool VIEW,typename VALUE_T,std::size_t... RANKS>
+    template<bool VIEW,typename VALUE_T,bool CONST,std::size_t... RANKS>
     class LinearObject;
 
     namespace FromIntegerSequence{
@@ -22,15 +22,13 @@ namespace linalgebra{
             using type = ::linalgebra::LinearObject<VIEW, VALUE_T, RANKS...>;
         };
 
-        template<bool VIEW, typename VALUE_T, typename RANKS>
+        template<bool VIEW, typename VALUE_T, bool CONST, typename RANKS>
         using LinearObject = typename ToLOImpl<VIEW, VALUE_T, RANKS>::type;
     }
 
-    template<typename VALUE_T,std::size_t RANK>
-    class Vector;
+    template<std::size_t DIM, bool VIEW,typename VALUE_T, bool CONST>
+    using Vector = LinearObject<VIEW,VALUE_T,CONST,DIM>;
 
-    template<std::size_t H_RANK, std::size_t V_RANK,typename VALUE_T>
-    class Matrix;
-    template<std::size_t H_RANK, std::size_t V_RANK,typename VALUE_T>
-    class MatrixWrapper;
+    template<std::size_t H_DIM, std::size_t V_DIM,bool VIEW,typename VALUE_T, bool CONST>
+    using Matrix = LinearObject<VIEW,VALUE_T,CONST,H_DIM,V_DIM>;
 }

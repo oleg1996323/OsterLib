@@ -5,10 +5,11 @@ namespace geometry{
     template<typename GEOM>
     auto length(const GEOM& geom);
 
-    template<typename GEOM>
+    template<uint64_t DIMENSION>
     struct Length
     {
-        bool operator()(const GEOM& geom) 
+        template<typename GEOM>
+        auto operator()(const GEOM& geom) 
             const noexcept(noexcept(length(geom)))
         {
             return length(geom);

@@ -8,31 +8,38 @@
 #include "OsterLib/geometry/Point.h"
 #include "OsterLib/geometry/cut.h"
 #include "OsterLib/geometry/intersects.h"
+#include "OsterLib/geometry/clip.h"
 
 
 namespace geometry{
-    template<uint64_t DIMENSIONS,typename VALUE_T = long double>
-    class BasicLine:public BasicGeometry<false,DIMENSIONS>{
-        BasicPoint<DIMENSIONS,VALUE_T> first_;
-        BasicPoint<DIMENSIONS,VALUE_T> second_;
+    template<uint64_t DIMENSIONS,typename DOMAIN,typename VALUE_T>
+    class BasicLine:public BasicGeometry<false,DIMENSIONS,DOMAIN>{
+        BasicPoint<DIMENSIONS,DOMAIN,VALUE_T> first_;
+        BasicPoint<DIMENSIONS,DOMAIN,VALUE_T> second_;
         public:
         using id = uint64_t;
         BasicLine() = default;
-        BasicLine(const Point<DIMENSIONS,VALUE_T>& first,
-            const Point<DIMENSIONS,VALUE_T>& second) noexcept:
+        BasicLine(const Point<DOMAIN,DIMENSIONS,VALUE_T>& first,
+            const Point<DOMAIN,DIMENSIONS,VALUE_T>& second) noexcept:
         first_(first),second_(second){}
-        BasicLine(Point<DIMENSIONS,VALUE_T>&& first,
-                Point<DIMENSIONS,VALUE_T>&& second) noexcept:
+        BasicLine(Point<DOMAIN,DIMENSIONS,VALUE_T>&& first,
+                Point<DOMAIN,DIMENSIONS,VALUE_T>&& second) noexcept:
         first_(std::move(first)),second_(std::move(second)){}
         BasicLine(const BasicLine& other) = default;
         BasicLine(BasicLine&& other) noexcept = default;
         BasicLine& operator=(const BasicLine& other) = default;
         BasicLine& operator=(BasicLine&& other) noexcept = default;
         bool operator==(const BasicLine&) = delete;
-        const Point<DIMENSIONS,VALUE_T>& first() const noexcept{
+        const Point<DOMAIN,DIMENSIONS,VALUE_T>& first() const noexcept{
             return first_;
         }
-        const Point<DIMENSIONS,VALUE_T>& second() const noexcept{
+        const Point<DOMAIN,DIMENSIONS,VALUE_T>& second() const noexcept{
+            return second_;
+        }
+        Point<DOMAIN,DIMENSIONS,VALUE_T>& first() noexcept{
+            return first_;
+        }
+        Point<DOMAIN,DIMENSIONS,VALUE_T>& second() noexcept{
             return second_;
         }
         double k() const noexcept{
@@ -135,18 +142,24 @@ namespace geometry{
         bool intersects(const BasicLine& other) const noexcept{
             return exec<Intersects,2>(*this,other);
         }
-        std::vector<BasicLine> cut(
+        std::vector<std::pair<BasicLine,BasicLine>> cut(
+                const BasicLine& other
+                ) noexcept
+        {
+            return exec<Cut,DIMENSIONS>(*this,other);
+        }
+        std::vector<BasicLine> clip(
                 const BasicLine& other,
                 bool left_forward
                 ) noexcept
         {
-            return exec<Cut,DIMENSIONS>(*this,other,left_forward);
+            return exec<Clip,DIMENSIONS>(*this,other,left_forward);
         }
     };
 
-    template<typename VALUE1_T,typename VALUE2_T>
-    bool equivalent(const BasicLine<2,VALUE1_T>& first,
-                    const BasicLine<2,VALUE1_T>& second){
+    template<typename VALUE1_T,typename VALUE2_T,typename DOMAIN>
+    bool equivalent(const BasicLine<2,DOMAIN,VALUE1_T>& first,
+                    const BasicLine<2,DOMAIN,VALUE1_T>& second){
         using value_result_t = std::common_type_t<VALUE1_T,VALUE2_T>;
         using max_prec_t = std::common_type_t<value_result_t,long double>;
         if(&first!=&second){
@@ -170,10 +183,10 @@ namespace geometry{
         else return true;
     }
 
-    template<typename VALUE1_T,typename VALUE2_T>
-    std::vector<Intersection<2>> intersections(
-        const BasicLine<2,VALUE1_T>& first,
-        const BasicLine<2,VALUE2_T>& second) noexcept
+    template<typename VALUE1_T,typename VALUE2_T,typename DOMAIN>
+    std::vector<Intersection<DOMAIN,2>> intersections(
+        const BasicLine<2,DOMAIN,VALUE1_T>& first,
+        const BasicLine<2,DOMAIN,VALUE2_T>& second) noexcept
     {
         if(&first==&second)
             return {};
@@ -194,21 +207,21 @@ namespace geometry{
         if (scale == 0.0 || std::abs(denominator) < 1e-12 * scale)
             return {};
         max_prec_t u_a = ((X22 - X21) * (Y11 - Y21) - (Y22 - Y21) * (X11 - X21)) / denominator;
-        return {Intersection<2>(Point<2>({X11+u_a*(X12-X11),Y11+u_a*(Y12 - Y11)}),0,0)};
+        return {Intersection<Euclid,2>(Point<Euclid,2>({X11+u_a*(X12-X11),Y11+u_a*(Y12 - Y11)}),0,0)};
     }
 
-    template<uint64_t DIMENSIONS,typename VALUE_T = long double>
-    VALUE_T length(const BasicLine<DIMENSIONS,VALUE_T>& line){
+    template<uint64_t DIMENSIONS,typename DOMAIN,typename VALUE_T = long double>
+    VALUE_T length(const BasicLine<DIMENSIONS,DOMAIN,VALUE_T>& line){
         exec<Distance,DIMENSIONS>(line.first(),line.second());
     }
 
 
-    template<typename VALUE1_T,typename VALUE2_T>
+    template<typename VALUE1_T,typename VALUE2_T,typename DOMAIN>
     std::vector<BasicLine<
             2,
             std::common_type_t<VALUE1_T,VALUE2_T>>> cut(
-        const BasicLine<2,VALUE1_T>& cutted,
-        const BasicLine<2,VALUE2_T>& cutting,
+        const BasicLine<2,DOMAIN,VALUE1_T>& cutted,
+        const BasicLine<2,DOMAIN,VALUE2_T>& cutting,
         bool left_forward)
     {
         using value_result_t = std::common_type_t<VALUE1_T,VALUE2_T>;
@@ -216,7 +229,7 @@ namespace geometry{
         auto point = exec<Intersections,2>(cutted,cutting);
         if(point.empty())
             return {cutted};
-        Point<2,max_prec_t> intersection_point
+        Point<DOMAIN,2,max_prec_t> intersection_point
             ({point.front().point().template get<0>(),
                 point.front().point().template get<1>()});
         if(!geometry::on_segment(cutted.first(),cutted.second(),intersection_point))
@@ -236,8 +249,8 @@ namespace geometry{
         }
     }
 
-    template<typename VALUE1_T,typename VALUE2_T>
-    bool intersects(const BasicLine<2,VALUE1_T>& l1, const BasicLine<2,VALUE2_T>& l2) noexcept{
+    template<typename VALUE1_T,typename VALUE2_T,typename DOMAIN>
+    bool intersects(const BasicLine<2,DOMAIN,VALUE1_T>& l1, const BasicLine<2,DOMAIN,VALUE2_T>& l2) noexcept{
         long double d1 = cross(l1.first(), l1.second(), l2.first());
         long double d2 = cross(l1.first(), l1.second(), l2.second());
         long double d3 = cross(l2.first(), l2.second(), l1.first());
@@ -251,4 +264,7 @@ namespace geometry{
         if (d4 == 0 && on_segment(l2.first(), l2.second(), l1.second())) return true;
         return false;
     }
+
+    template<uint64_t D,typename DOMAIN,typename VALUE_T=long double>
+    using Line = BasicLine<D,DOMAIN,VALUE_T>;
 }

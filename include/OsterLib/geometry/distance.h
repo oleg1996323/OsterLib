@@ -11,6 +11,8 @@ namespace geometry{
         auto operator()(const G1& geom1,const G2& geom2) 
             const noexcept(noexcept(distance(geom1,geom2)))
         {
+            static_assert(G1::dimensions()==G2::dimensions() && 
+                std::is_same_v<typename G1::domain,typename G2::domain>);
             return distance(geom1,geom2);
         }
     };

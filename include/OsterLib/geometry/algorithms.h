@@ -1,39 +1,39 @@
 #pragma once
 #include "OsterLib/geometry/BasicGeometry.h"
-#include "OsterLib/linalgebra/matrix.h"
+#include "OsterLib/geometry/Point.h"
 
 namespace geometry{
     template<uint64_t DIMENSIONS1,typename VALUE1_T,
         uint64_t DIMENSIONS2,typename VALUE2_T,
-        uint64_t DIMENSIONS3,typename VALUE3_T>
-    long double cross(const BasicPoint<DIMENSIONS1,VALUE1_T>& a,
-            const BasicPoint<DIMENSIONS2,VALUE2_T>& b, 
-            const BasicPoint<DIMENSIONS3,VALUE3_T>& c);
+        uint64_t DIMENSIONS3,typename VALUE3_T,typename DOMAIN>
+    long double cross(const BasicPoint<DIMENSIONS1,DOMAIN,VALUE1_T>& a,
+            const BasicPoint<DIMENSIONS2,DOMAIN,VALUE2_T>& b, 
+            const BasicPoint<DIMENSIONS3,DOMAIN,VALUE3_T>& c);
     template<uint64_t DIMENSIONS1,typename VALUE1_T,
         uint64_t DIMENSIONS2,typename VALUE2_T,
-        uint64_t DIMENSIONS3,typename VALUE3_T>
-    bool on_segment(const BasicPoint<DIMENSIONS1,VALUE1_T>& a,
-            const BasicPoint<DIMENSIONS2,VALUE2_T>& b, 
-            const BasicPoint<DIMENSIONS3,VALUE3_T>& c);
+        uint64_t DIMENSIONS3,typename VALUE3_T,typename DOMAIN>
+    bool on_segment(const BasicPoint<DIMENSIONS1,DOMAIN,VALUE1_T>& a,
+            const BasicPoint<DIMENSIONS2,DOMAIN,VALUE2_T>& b, 
+            const BasicPoint<DIMENSIONS3,DOMAIN,VALUE3_T>& c);
     template<uint64_t DIMENSIONS1,typename VALUE1_T,
-        uint64_t DIMENSIONS2,typename VALUE2_T>
-    bool on_segment(const BasicPoint<DIMENSIONS1,VALUE1_T>& seg,
-            const BasicPoint<DIMENSIONS2,VALUE2_T>& point);
+        uint64_t DIMENSIONS2,typename VALUE2_T,typename DOMAIN>
+    bool on_segment(const BasicPoint<DIMENSIONS1,DOMAIN,VALUE1_T>& seg,
+            const BasicPoint<DIMENSIONS2,DOMAIN,VALUE2_T>& point);
     template<uint64_t DIMENSIONS1,typename VALUE1_T,
-        uint64_t DIMENSIONS2,typename VALUE2_T>
-    long double pythagoras(const BasicLine<DIMENSIONS1,VALUE1_T>& first,
-                        const BasicLine<DIMENSIONS2,VALUE2_T>& second) noexcept;
+        uint64_t DIMENSIONS2,typename VALUE2_T,typename DOMAIN>
+    long double pythagoras(const BasicLine<DIMENSIONS1,DOMAIN,VALUE1_T>& first,
+                        const BasicLine<DIMENSIONS2,DOMAIN,VALUE2_T>& second) noexcept;
     template<uint64_t DIMENSIONS1,typename VALUE1_T,
-        uint64_t DIMENSIONS2,typename VALUE2_T>
-    long double pythagoras2(const BasicLine<DIMENSIONS1,VALUE1_T>& first,
-                        const BasicLine<DIMENSIONS2,VALUE2_T>& second) noexcept;
+        uint64_t DIMENSIONS2,typename VALUE2_T,typename DOMAIN>
+    long double pythagoras2(const BasicLine<DIMENSIONS1,DOMAIN,VALUE1_T>& first,
+                        const BasicLine<DIMENSIONS2,DOMAIN,VALUE2_T>& second) noexcept;
 
     template<uint64_t DIMENSIONS1,typename VALUE1_T,
         uint64_t DIMENSIONS2,typename VALUE2_T,
-        uint64_t DIMENSIONS3,typename VALUE3_T>
-    long double cross(const BasicPoint<DIMENSIONS1,VALUE1_T>& a,
-            const BasicPoint<DIMENSIONS2,VALUE2_T>& b, 
-            const BasicPoint<DIMENSIONS3,VALUE3_T>& c) {
+        uint64_t DIMENSIONS3,typename VALUE3_T,typename DOMAIN>
+    long double cross(const BasicPoint<DIMENSIONS1,DOMAIN,VALUE1_T>& a,
+            const BasicPoint<DIMENSIONS2,DOMAIN,VALUE2_T>& b, 
+            const BasicPoint<DIMENSIONS3,DOMAIN,VALUE3_T>& c) {
         using value_result_t = std::common_type_t<
             std::common_type_t<VALUE1_T,VALUE2_T>,VALUE3_T>;
         using max_prec_t = std::common_type_t<value_result_t,long double>;
@@ -49,10 +49,10 @@ namespace geometry{
 
     template<uint64_t DIMENSIONS1,typename VALUE1_T,
         uint64_t DIMENSIONS2,typename VALUE2_T,
-        uint64_t DIMENSIONS3,typename VALUE3_T>
-    bool on_segment(const BasicPoint<DIMENSIONS1,VALUE1_T>& first,
-                    const BasicPoint<DIMENSIONS2,VALUE2_T>& second,
-                    const BasicPoint<DIMENSIONS3,VALUE3_T>& to_check) 
+        uint64_t DIMENSIONS3,typename VALUE3_T,typename DOMAIN>
+    bool on_segment(const BasicPoint<DIMENSIONS1,DOMAIN,VALUE1_T>& first,
+                    const BasicPoint<DIMENSIONS2,DOMAIN,VALUE2_T>& second,
+                    const BasicPoint<DIMENSIONS3,DOMAIN,VALUE3_T>& to_check) 
     {
         using value_result_t = std::common_type_t<VALUE1_T,VALUE2_T>;
         using max_prec_t = std::common_type_t<value_result_t,long double>;

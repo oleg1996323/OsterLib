@@ -2,150 +2,152 @@
 #include "OsterLib/geometry/Point.h"
 #include <gtest/gtest.h>
 
+using namespace geometry;
+
 TEST(OsterLib_polygon,cut_test_counter){
     {
         Line line = {
-            {.lat_=21, .lon_=7},
-            {.lat_=-1, .lon_=7}
+            Point<Euclid,2>{7,21},
+            Point<Euclid,2>{7,-1}
         };
         {           
             {
-                Polygon pg;
-                pg.append({.lat_=0,.lon_=0});
-                pg.append({.lat_=0,.lon_=10});
-                pg.append({.lat_=3,.lon_=10});
-                pg.append({.lat_=3,.lon_=5});
-                pg.append({.lat_=5.5,.lon_=5});
-                pg.append({.lat_=5.5,.lon_=10});
-                pg.append({.lat_=5,.lon_=10});
-                pg.append({.lat_=5,.lon_=6});
-                pg.append({.lat_=4,.lon_=6});
-                pg.append({.lat_=4,.lon_=11});
-                pg.append({.lat_=7,.lon_=11});
-                pg.append({.lat_=9,.lon_=10});
-                pg.append({.lat_=9,.lon_=6.5});
-                pg.append({.lat_=10,.lon_=6.5});
-                pg.append({.lat_=10,.lon_=8});
-                pg.append({.lat_=10.5,.lon_=8});
-                pg.append({.lat_=10.5,.lon_=6});
-                pg.append({.lat_=8,.lon_=6});
-                pg.append({.lat_=8,.lon_=9});
-                pg.append({.lat_=5.75,.lon_=9});
-                pg.append({.lat_=5.75,.lon_=8});
-                pg.append({.lat_=6.75,.lon_=8});
-                pg.append({.lat_=6.75,.lon_=6.75});
-                pg.append({.lat_=6.5,.lon_=6.75});
-                pg.append({.lat_=6.5,.lon_=7.5});
-                pg.append({.lat_=6,.lon_=7.5});
-                pg.append({.lat_=6,.lon_=6.25});
-                pg.append({.lat_=6.25,.lon_=6.25});
-                pg.append({.lat_=6.25,.lon_=7.25});
-                pg.append({.lat_=6.375,.lon_=7.25});
-                pg.append({.lat_=6.375,.lon_=6.5});
-                pg.append({.lat_=7,.lon_=6.5});
-                pg.append({.lat_=7,.lon_=3});
-                pg.append({.lat_=8,.lon_=3});
-                pg.append({.lat_=12,.lon_=7});
-                pg.append({.lat_=12,.lon_=10});
-                pg.append({.lat_=16,.lon_=10});
-                pg.append({.lat_=16,.lon_=5});
-                pg.append({.lat_=18,.lon_=5});
-                pg.append({.lat_=18,.lon_=10});
-                pg.append({.lat_=20,.lon_=10});
-                pg.append({.lat_=20,.lon_=3});
-                pg.append({.lat_=14,.lon_=3});
-                pg.append({.lat_=14,.lon_=8});
-                pg.append({.lat_=13,.lon_=8});
-                pg.append({.lat_=13,.lon_=0});
-                pg.append({.lat_=0,.lon_=0});
+                Polygon<2,Euclid> pg;
+                pg.append({0,0});
+                pg.append({0,10});
+                pg.append({3,10});
+                pg.append({3,5});
+                pg.append({5.5,5});
+                pg.append({5.5,10});
+                pg.append({5,10});
+                pg.append({5,6});
+                pg.append({4,6});
+                pg.append({4,11});
+                pg.append({7,11});
+                pg.append({9,10});
+                pg.append({9,6.5});
+                pg.append({10,6.5});
+                pg.append({10,8});
+                pg.append({10.5,8});
+                pg.append({10.5,6});
+                pg.append({8,6});
+                pg.append({8,9});
+                pg.append({5.75,9});
+                pg.append({5.75,8});
+                pg.append({6.75,8});
+                pg.append({6.75,6.75});
+                pg.append({6.5,6.75});
+                pg.append({6.5,7.5});
+                pg.append({6,7.5});
+                pg.append({6,6.25});
+                pg.append({6.25,6.25});
+                pg.append({6.25,7.25});
+                pg.append({6.375,7.25});
+                pg.append({6.375,6.5});
+                pg.append({7,6.5});
+                pg.append({7,3});
+                pg.append({8,3});
+                pg.append({12,7});
+                pg.append({12,10});
+                pg.append({16,10});
+                pg.append({16,5});
+                pg.append({18,5});
+                pg.append({18,10});
+                pg.append({20,10});
+                pg.append({20,3});
+                pg.append({14,3});
+                pg.append({14,8});
+                pg.append({13,8});
+                pg.append({13,0});
+                pg.append({0,0});
                 ASSERT_TRUE(pg.is_valid());
                 //print(pg);
                 std::cout<<std::endl;
                 {
                     std::cout<<"test #1"<<std::endl;
-                    auto res = pg.cut(line,pg, true);
+                    auto res = pg.clip(line, true);
                     ASSERT_FALSE(res.empty());
-                    for(const Polygon& polyg:res)
+                    for(const Polygon<2,Euclid>& polyg:res)
                         print(polyg);
-                    std::vector<Polygon> etalon = {
+                    std::vector<Polygon<2,Euclid>> etalon = {
                         [](){
-                            Polygon result;
-                            result.append({.lat_=9,.lon_=7});
-                            result.append({.lat_=9,.lon_=10});
-                            result.append({.lat_=7,.lon_=11});
-                            result.append({.lat_=4,.lon_=11});
-                            result.append({.lat_=4,.lon_=7});
-                            result.append({.lat_=5,.lon_=7});
-                            result.append({.lat_=5,.lon_=10});
-                            result.append({.lat_=5.5,.lon_=10});
-                            result.append({.lat_=5.5,.lon_=7});
-                            result.append({.lat_=6,.lon_=7});
-                            result.append({.lat_=6,.lon_=7.5});
-                            result.append({.lat_=6.5,.lon_=7.5});
-                            result.append({.lat_=6.5,.lon_=7});
-                            result.append({.lat_=6.75,.lon_=7});
-                            result.append({.lat_=6.75,.lon_=8});
-                            result.append({.lat_=5.75,.lon_=8});
-                            result.append({.lat_=5.75,.lon_=9});
-                            result.append({.lat_=8,.lon_=9});
-                            result.append({.lat_=8,.lon_=7});
-                            result.append({.lat_=9,.lon_=7});
+                            Polygon<2,Euclid> result;
+                            result.append({9,7});
+                            result.append({9,10});
+                            result.append({7,11});
+                            result.append({4,11});
+                            result.append({4,7});
+                            result.append({5,7});
+                            result.append({5,10});
+                            result.append({5.5,10});
+                            result.append({5.5,7});
+                            result.append({6,7});
+                            result.append({6,7.5});
+                            result.append({6.5,7.5});
+                            result.append({6.5,7});
+                            result.append({6.75,7});
+                            result.append({6.75,8});
+                            result.append({5.75,8});
+                            result.append({5.75,9});
+                            result.append({8,9});
+                            result.append({8,7});
+                            result.append({9,7});
                             return result;
                         }(),
                         [](){
-                            Polygon result;
-                            result.append({.lat_=6.375,.lon_=7});
-                            result.append({.lat_=6.375,.lon_=7.25});
-                            result.append({.lat_=6.25,.lon_=7.25});
-                            result.append({.lat_=6.25,.lon_=7});
-                            result.append({.lat_=6.375,.lon_=7});
+                            Polygon<2,Euclid> result;
+                            result.append({6.375,7});
+                            result.append({6.375,7.25});
+                            result.append({6.25,7.25});
+                            result.append({6.25,7});
+                            result.append({6.375,7});
                             return result;
                         }(),
                         [](){
-                            Polygon result;
-                            result.append({.lat_=10.5,.lon_=7});
-                            result.append({.lat_=10.5,.lon_=8});
-                            result.append({.lat_=10,.lon_=8});
-                            result.append({.lat_=10,.lon_=7});
-                            result.append({.lat_=10.5,.lon_=7});
+                            Polygon<2,Euclid> result;
+                            result.append({10.5,7});
+                            result.append({10.5,8});
+                            result.append({10,8});
+                            result.append({10,7});
+                            result.append({10.5,7});
                             return result;
                         }(),
                         [](){
-                            Polygon result;
-                            result.append({.lat_=16,.lon_=7});
-                            result.append({.lat_=16,.lon_=10});
-                            result.append({.lat_=12,.lon_=10});
-                            result.append({.lat_=12,.lon_=7});
-                            result.append({.lat_=13,.lon_=7});
-                            result.append({.lat_=13,.lon_=8});
-                            result.append({.lat_=14,.lon_=8});
-                            result.append({.lat_=14,.lon_=7});
-                            result.append({.lat_=16,.lon_=7});
+                            Polygon<2,Euclid> result;
+                            result.append({16,7});
+                            result.append({16,10});
+                            result.append({12,10});
+                            result.append({12,7});
+                            result.append({13,7});
+                            result.append({13,8});
+                            result.append({14,8});
+                            result.append({14,7});
+                            result.append({16,7});
                             return result;
                         }(),
                         [](){
-                            Polygon result;
-                            result.append({.lat_=20,.lon_=7});
-                            result.append({.lat_=20,.lon_=10});
-                            result.append({.lat_=18,.lon_=10});
-                            result.append({.lat_=18,.lon_=7});
-                            result.append({.lat_=20,.lon_=7});
+                            Polygon<2,Euclid> result;
+                            result.append({20,7});
+                            result.append({20,10});
+                            result.append({18,10});
+                            result.append({18,7});
+                            result.append({20,7});
                             return result;
                         }(),
                         [](){
-                            Polygon result;
-                            result.append({.lat_=3,.lon_=7});
-                            result.append({.lat_=3,.lon_=10});
-                            result.append({.lat_=0,.lon_=10});
-                            result.append({.lat_=0,.lon_=7});
-                            result.append({.lat_=3,.lon_=7});
+                            Polygon<2,Euclid> result;
+                            result.append({3,7});
+                            result.append({3,10});
+                            result.append({0,10});
+                            result.append({0,7});
+                            result.append({3,7});
                             return result;
                         }()
                     };
                     int counter = 0;
                     for(auto& new_pg:res){
                         if(auto found = std::find_if(etalon.begin(),etalon.end(),
-                            [&new_pg](const Polygon& pg){
+                            [&new_pg](const Polygon<2,Euclid>& pg){
                             return pg.equivalent(new_pg,false);
                         });found==etalon.end()){
                             std::cout<<"polygon №: "<<counter<<std::endl;
@@ -159,83 +161,83 @@ TEST(OsterLib_polygon,cut_test_counter){
                 }
                 {
                     std::cout<<"test #2"<<std::endl;
-                    auto res = pg.cut(line,pg, false);
+                    auto res = pg.clip(line, false);
                     ASSERT_FALSE(res.empty());
-                    for(const Polygon& polyg:res)
+                    for(const Polygon<2,Euclid>& polyg:res)
                         print(polyg);
-                    std::vector<Polygon> etalon = {
+                    std::vector<Polygon<2,Euclid>> etalon = {
                         [](){
-                            Polygon result;
-                            result.append({.lat_=20,.lon_=7});
-                            result.append({.lat_=20,.lon_=3});
-                            result.append({.lat_=14,.lon_=3});
-                            result.append({.lat_=14,.lon_=7});
-                            result.append({.lat_=16,.lon_=7});
-                            result.append({.lat_=16,.lon_=5});
-                            result.append({.lat_=18,.lon_=5});
-                            result.append({.lat_=18,.lon_=7});
-                            result.append({.lat_=20,.lon_=7});
+                            Polygon<2,Euclid> result;
+                            result.append({20,7});
+                            result.append({20,3});
+                            result.append({14,3});
+                            result.append({14,7});
+                            result.append({16,7});
+                            result.append({16,5});
+                            result.append({18,5});
+                            result.append({18,7});
+                            result.append({20,7});
                             return result;
                         }(),
                         [](){
-                            Polygon result;
-                            result.append({.lat_=10.5,.lon_=7});
-                            result.append({.lat_=10.5,.lon_=6});
-                            result.append({.lat_=8,.lon_=6});
-                            result.append({.lat_=8,.lon_=7});
-                            result.append({.lat_=9,.lon_=7});
-                            result.append({.lat_=9,.lon_=6.5});
-                            result.append({.lat_=10,.lon_=6.5});
-                            result.append({.lat_=10,.lon_=7});
-                            result.append({.lat_=10.5,.lon_=7});
+                            Polygon<2,Euclid> result;
+                            result.append({10.5,7});
+                            result.append({10.5,6});
+                            result.append({8,6});
+                            result.append({8,7});
+                            result.append({9,7});
+                            result.append({9,6.5});
+                            result.append({10,6.5});
+                            result.append({10,7});
+                            result.append({10.5,7});
                             return result;
                         }(),
                         [](){
-                            Polygon result;
-                            result.append({.lat_=6.75,.lon_=6.75});
-                            result.append({.lat_=6.5,.lon_=6.75});
-                            result.append({.lat_=6.5,.lon_=7});
-                            result.append({.lat_=6.75,.lon_=7});
-                            result.append({.lat_=6.75,.lon_=6.75});
+                            Polygon<2,Euclid> result;
+                            result.append({6.75,6.75});
+                            result.append({6.5,6.75});
+                            result.append({6.5,7});
+                            result.append({6.75,7});
+                            result.append({6.75,6.75});
                             return result;
                         }(),
                         [](){
-                            Polygon result;
-                            result.append({.lat_=5,.lon_=6});
-                            result.append({.lat_=4,.lon_=6});
-                            result.append({.lat_=4,.lon_=7});
-                            result.append({.lat_=5,.lon_=7});
-                            result.append({.lat_=5,.lon_=6});
+                            Polygon<2,Euclid> result;
+                            result.append({5,6});
+                            result.append({4,6});
+                            result.append({4,7});
+                            result.append({5,7});
+                            result.append({5,6});
                             return result;
                         }(),
                         [](){
-                            Polygon result;
-                            result.append({.lat_=0,.lon_=0});
-                            result.append({.lat_=0,.lon_=7});
-                            result.append({.lat_=3,.lon_=7});
-                            result.append({.lat_=3,.lon_=5});
-                            result.append({.lat_=5.5,.lon_=5});
-                            result.append({.lat_=5.5,.lon_=7});
-                            result.append({.lat_=6,.lon_=7});
-                            result.append({.lat_=6,.lon_=6.25});
-                            result.append({.lat_=6.25,.lon_=6.25});
-                            result.append({.lat_=6.25,.lon_=7});
-                            result.append({.lat_=6.375,.lon_=7});
-                            result.append({.lat_=6.375,.lon_=6.5});
-                            result.append({.lat_=7,.lon_=6.5});
-                            result.append({.lat_=7,.lon_=3});
-                            result.append({.lat_=8,.lon_=3});
-                            result.append({.lat_=12,.lon_=7});
-                            result.append({.lat_=13,.lon_=7});
-                            result.append({.lat_=13,.lon_=0});
-                            result.append({.lat_=0,.lon_=0});
+                            Polygon<2,Euclid> result;
+                            result.append({0,0});
+                            result.append({0,7});
+                            result.append({3,7});
+                            result.append({3,5});
+                            result.append({5.5,5});
+                            result.append({5.5,7});
+                            result.append({6,7});
+                            result.append({6,6.25});
+                            result.append({6.25,6.25});
+                            result.append({6.25,7});
+                            result.append({6.375,7});
+                            result.append({6.375,6.5});
+                            result.append({7,6.5});
+                            result.append({7,3});
+                            result.append({8,3});
+                            result.append({12,7});
+                            result.append({13,7});
+                            result.append({13,0});
+                            result.append({0,0});
                             return result;
                         }()
                     };
                     int counter = 0;
                     for(auto& new_pg:res){
                         if(auto found = std::find_if(etalon.begin(),etalon.end(),
-                            [&new_pg](const Polygon& pg){
+                            [&new_pg](const Polygon<2,Euclid>& pg){
                             return pg.equivalent(new_pg,false);
                         });found==etalon.end()){
                             std::cout<<"polygon №: "<<counter<<std::endl;
@@ -253,141 +255,141 @@ TEST(OsterLib_polygon,cut_test_counter){
             //////////////////////////////////////////////////////////////////////////////////
             //////////////////////////////////////////////////////////////////////////////////
             {
-                Polygon pg;
-                pg.append({.lat_=0,.lon_=0});
-                pg.append({.lat_=0,.lon_=10});
-                pg.append({.lat_=3,.lon_=10});
-                pg.append({.lat_=3,.lon_=5});
-                pg.append({.lat_=5.5,.lon_=5});
-                pg.append({.lat_=5.5,.lon_=10});
-                pg.append({.lat_=5,.lon_=10});
-                pg.append({.lat_=5,.lon_=6});
-                pg.append({.lat_=4,.lon_=6});
-                pg.append({.lat_=4,.lon_=11});
-                pg.append({.lat_=7,.lon_=11});
-                pg.append({.lat_=9,.lon_=10});
-                pg.append({.lat_=9,.lon_=6.5});
-                pg.append({.lat_=10,.lon_=6.5});
-                pg.append({.lat_=10,.lon_=8});
-                pg.append({.lat_=10.5,.lon_=8});
-                pg.append({.lat_=10.5,.lon_=6});
-                pg.append({.lat_=8,.lon_=6});
-                pg.append({.lat_=8,.lon_=9});
-                pg.append({.lat_=5.75,.lon_=9});
-                pg.append({.lat_=5.75,.lon_=8});
-                pg.append({.lat_=6.75,.lon_=8});
-                pg.append({.lat_=6.75,.lon_=6.75});
-                pg.append({.lat_=6.5,.lon_=6.75});
-                pg.append({.lat_=6.5,.lon_=7.5});
-                pg.append({.lat_=6,.lon_=7.5});
-                pg.append({.lat_=6,.lon_=6.25});
-                pg.append({.lat_=6.25,.lon_=6.25});
-                pg.append({.lat_=6.25,.lon_=7.25});
-                pg.append({.lat_=6.375,.lon_=7.25});
-                pg.append({.lat_=6.375,.lon_=6.5});
-                pg.append({.lat_=7,.lon_=6.5});
-                pg.append({.lat_=7,.lon_=3});
-                pg.append({.lat_=8,.lon_=3});
-                pg.append({.lat_=12,.lon_=7});
-                pg.append({.lat_=12,.lon_=10});
-                pg.append({.lat_=16,.lon_=10});
-                pg.append({.lat_=16,.lon_=5});
-                pg.append({.lat_=18,.lon_=5});
-                pg.append({.lat_=18,.lon_=10});
-                pg.append({.lat_=20,.lon_=10});
-                pg.append({.lat_=20,.lon_=3});
-                pg.append({.lat_=14,.lon_=3});
-                pg.append({.lat_=14,.lon_=8});
-                pg.append({.lat_=13,.lon_=8});
-                pg.append({.lat_=13,.lon_=0});
-                pg.append({.lat_=0,.lon_=0});
+                Polygon<2,Euclid> pg;
+                pg.append({0,0});
+                pg.append({0,10});
+                pg.append({3,10});
+                pg.append({3,5});
+                pg.append({5.5,5});
+                pg.append({5.5,10});
+                pg.append({5,10});
+                pg.append({5,6});
+                pg.append({4,6});
+                pg.append({4,11});
+                pg.append({7,11});
+                pg.append({9,10});
+                pg.append({9,6.5});
+                pg.append({10,6.5});
+                pg.append({10,8});
+                pg.append({10.5,8});
+                pg.append({10.5,6});
+                pg.append({8,6});
+                pg.append({8,9});
+                pg.append({5.75,9});
+                pg.append({5.75,8});
+                pg.append({6.75,8});
+                pg.append({6.75,6.75});
+                pg.append({6.5,6.75});
+                pg.append({6.5,7.5});
+                pg.append({6,7.5});
+                pg.append({6,6.25});
+                pg.append({6.25,6.25});
+                pg.append({6.25,7.25});
+                pg.append({6.375,7.25});
+                pg.append({6.375,6.5});
+                pg.append({7,6.5});
+                pg.append({7,3});
+                pg.append({8,3});
+                pg.append({12,7});
+                pg.append({12,10});
+                pg.append({16,10});
+                pg.append({16,5});
+                pg.append({18,5});
+                pg.append({18,10});
+                pg.append({20,10});
+                pg.append({20,3});
+                pg.append({14,3});
+                pg.append({14,8});
+                pg.append({13,8});
+                pg.append({13,0});
+                pg.append({0,0});
                 ASSERT_TRUE(pg.is_valid());
                 //print(pg);
                 {
                     std::cout<<"test #3"<<std::endl;
-                    auto res = pg.cut(line,pg, true);
+                    auto res = pg.clip(line,true);
                     ASSERT_FALSE(res.empty());
-                    for(const Polygon& polyg:res)
+                    for(const Polygon<2,Euclid>& polyg:res)
                         print(polyg);
-                    std::vector<Polygon> etalon = {
+                    std::vector<Polygon<2,Euclid>> etalon = {
                         [](){
-                            Polygon result;
-                            result.append({.lat_=9,.lon_=7});
-                            result.append({.lat_=9,.lon_=10});
-                            result.append({.lat_=7,.lon_=11});
-                            result.append({.lat_=4,.lon_=11});
-                            result.append({.lat_=4,.lon_=7});
-                            result.append({.lat_=5,.lon_=7});
-                            result.append({.lat_=5,.lon_=10});
-                            result.append({.lat_=5.5,.lon_=10});
-                            result.append({.lat_=5.5,.lon_=7});
-                            result.append({.lat_=6,.lon_=7});
-                            result.append({.lat_=6,.lon_=7.5});
-                            result.append({.lat_=6.5,.lon_=7.5});
-                            result.append({.lat_=6.5,.lon_=7});
-                            result.append({.lat_=6.75,.lon_=7});
-                            result.append({.lat_=6.75,.lon_=8});
-                            result.append({.lat_=5.75,.lon_=8});
-                            result.append({.lat_=5.75,.lon_=9});
-                            result.append({.lat_=8,.lon_=9});
-                            result.append({.lat_=8,.lon_=7});
-                            result.append({.lat_=9,.lon_=7});
+                            Polygon<2,Euclid> result;
+                            result.append({9,7});
+                            result.append({9,10});
+                            result.append({7,11});
+                            result.append({4,11});
+                            result.append({4,7});
+                            result.append({5,7});
+                            result.append({5,10});
+                            result.append({5.5,10});
+                            result.append({5.5,7});
+                            result.append({6,7});
+                            result.append({6,7.5});
+                            result.append({6.5,7.5});
+                            result.append({6.5,7});
+                            result.append({6.75,7});
+                            result.append({6.75,8});
+                            result.append({5.75,8});
+                            result.append({5.75,9});
+                            result.append({8,9});
+                            result.append({8,7});
+                            result.append({9,7});
                             return result;
                         }(),
                         [](){
-                            Polygon result;
-                            result.append({.lat_=6.375,.lon_=7});
-                            result.append({.lat_=6.375,.lon_=7.25});
-                            result.append({.lat_=6.25,.lon_=7.25});
-                            result.append({.lat_=6.25,.lon_=7});
-                            result.append({.lat_=6.375,.lon_=7});
+                            Polygon<2,Euclid> result;
+                            result.append({6.375,7});
+                            result.append({6.375,7.25});
+                            result.append({6.25,7.25});
+                            result.append({6.25,7});
+                            result.append({6.375,7});
                             return result;
                         }(),
                         [](){
-                            Polygon result;
-                            result.append({.lat_=10.5,.lon_=7});
-                            result.append({.lat_=10.5,.lon_=8});
-                            result.append({.lat_=10,.lon_=8});
-                            result.append({.lat_=10,.lon_=7});
-                            result.append({.lat_=10.5,.lon_=7});
+                            Polygon<2,Euclid> result;
+                            result.append({10.5,7});
+                            result.append({10.5,8});
+                            result.append({10,8});
+                            result.append({10,7});
+                            result.append({10.5,7});
                             return result;
                         }(),
                         [](){
-                            Polygon result;
-                            result.append({.lat_=16,.lon_=7});
-                            result.append({.lat_=16,.lon_=10});
-                            result.append({.lat_=12,.lon_=10});
-                            result.append({.lat_=12,.lon_=7});
-                            result.append({.lat_=13,.lon_=7});
-                            result.append({.lat_=13,.lon_=8});
-                            result.append({.lat_=14,.lon_=8});
-                            result.append({.lat_=14,.lon_=7});
-                            result.append({.lat_=16,.lon_=7});
+                            Polygon<2,Euclid> result;
+                            result.append({16,7});
+                            result.append({16,10});
+                            result.append({12,10});
+                            result.append({12,7});
+                            result.append({13,7});
+                            result.append({13,8});
+                            result.append({14,8});
+                            result.append({14,7});
+                            result.append({16,7});
                             return result;
                         }(),
                         [](){
-                            Polygon result;
-                            result.append({.lat_=20,.lon_=7});
-                            result.append({.lat_=20,.lon_=10});
-                            result.append({.lat_=18,.lon_=10});
-                            result.append({.lat_=18,.lon_=7});
-                            result.append({.lat_=20,.lon_=7});
+                            Polygon<2,Euclid> result;
+                            result.append({20,7});
+                            result.append({20,10});
+                            result.append({18,10});
+                            result.append({18,7});
+                            result.append({20,7});
                             return result;
                         }(),
                         [](){
-                            Polygon result;
-                            result.append({.lat_=3,.lon_=7});
-                            result.append({.lat_=3,.lon_=10});
-                            result.append({.lat_=0,.lon_=10});
-                            result.append({.lat_=0,.lon_=7});
-                            result.append({.lat_=3,.lon_=7});
+                            Polygon<2,Euclid> result;
+                            result.append({3,7});
+                            result.append({3,10});
+                            result.append({0,10});
+                            result.append({0,7});
+                            result.append({3,7});
                             return result;
                         }()
                     };
                     int counter = 0;
                     for(auto& new_pg:res){
                         if(auto found = std::find_if(etalon.begin(),etalon.end(),
-                            [&new_pg](const Polygon& pg){
+                            [&new_pg](const Polygon<2,Euclid>& pg){
                             return pg.equivalent(new_pg,false);
                         });found==etalon.end()){
                             std::cout<<"polygon №: "<<counter<<std::endl;
@@ -400,83 +402,83 @@ TEST(OsterLib_polygon,cut_test_counter){
                 }
                 {
                     std::cout<<"test #4"<<std::endl;
-                    auto res = pg.cut(line,pg, false);
+                    auto res = pg.clip(line, false);
                     ASSERT_FALSE(res.empty());
-                    for(const Polygon& polyg:res)
+                    for(const Polygon<2,Euclid>& polyg:res)
                         print(polyg);
-                    std::vector<Polygon> etalon = {
+                    std::vector<Polygon<2,Euclid>> etalon = {
                         [](){
-                            Polygon result;
-                            result.append({.lat_=20,.lon_=7});
-                            result.append({.lat_=20,.lon_=3});
-                            result.append({.lat_=14,.lon_=3});
-                            result.append({.lat_=14,.lon_=7});
-                            result.append({.lat_=16,.lon_=7});
-                            result.append({.lat_=16,.lon_=5});
-                            result.append({.lat_=18,.lon_=5});
-                            result.append({.lat_=18,.lon_=7});
-                            result.append({.lat_=20,.lon_=7});
+                            Polygon<2,Euclid> result;
+                            result.append({20,7});
+                            result.append({20,3});
+                            result.append({14,3});
+                            result.append({14,7});
+                            result.append({16,7});
+                            result.append({16,5});
+                            result.append({18,5});
+                            result.append({18,7});
+                            result.append({20,7});
                             return result;
                         }(),
                         [](){
-                            Polygon result;
-                            result.append({.lat_=10.5,.lon_=7});
-                            result.append({.lat_=10.5,.lon_=6});
-                            result.append({.lat_=8,.lon_=6});
-                            result.append({.lat_=8,.lon_=7});
-                            result.append({.lat_=9,.lon_=7});
-                            result.append({.lat_=9,.lon_=6.5});
-                            result.append({.lat_=10,.lon_=6.5});
-                            result.append({.lat_=10,.lon_=7});
-                            result.append({.lat_=10.5,.lon_=7});
+                            Polygon<2,Euclid> result;
+                            result.append({10.5,7});
+                            result.append({10.5,6});
+                            result.append({8,6});
+                            result.append({8,7});
+                            result.append({9,7});
+                            result.append({9,6.5});
+                            result.append({10,6.5});
+                            result.append({10,7});
+                            result.append({10.5,7});
                             return result;
                         }(),
                         [](){
-                            Polygon result;
-                            result.append({.lat_=6.75,.lon_=6.75});
-                            result.append({.lat_=6.5,.lon_=6.75});
-                            result.append({.lat_=6.5,.lon_=7});
-                            result.append({.lat_=6.75,.lon_=7});
-                            result.append({.lat_=6.75,.lon_=6.75});
+                            Polygon<2,Euclid> result;
+                            result.append({6.75,6.75});
+                            result.append({6.5,6.75});
+                            result.append({6.5,7});
+                            result.append({6.75,7});
+                            result.append({6.75,6.75});
                             return result;
                         }(),
                         [](){
-                            Polygon result;
-                            result.append({.lat_=5,.lon_=7});
-                            result.append({.lat_=5,.lon_=6});
-                            result.append({.lat_=4,.lon_=6});
-                            result.append({.lat_=4,.lon_=7});
-                            result.append({.lat_=5,.lon_=7});
+                            Polygon<2,Euclid> result;
+                            result.append({5,7});
+                            result.append({5,6});
+                            result.append({4,6});
+                            result.append({4,7});
+                            result.append({5,7});
                             return result;
                         }(),
                         [](){
-                            Polygon result;
-                            result.append({.lat_=0,.lon_=0});
-                            result.append({.lat_=0,.lon_=7});
-                            result.append({.lat_=3,.lon_=7});
-                            result.append({.lat_=3,.lon_=5});
-                            result.append({.lat_=5.5,.lon_=5});
-                            result.append({.lat_=5.5,.lon_=7});
-                            result.append({.lat_=6,.lon_=7});
-                            result.append({.lat_=6,.lon_=6.25});
-                            result.append({.lat_=6.25,.lon_=6.25});
-                            result.append({.lat_=6.25,.lon_=7});
-                            result.append({.lat_=6.375,.lon_=7});
-                            result.append({.lat_=6.375,.lon_=6.5});
-                            result.append({.lat_=7,.lon_=6.5});
-                            result.append({.lat_=7,.lon_=3});
-                            result.append({.lat_=8,.lon_=3});
-                            result.append({.lat_=12,.lon_=7});
-                            result.append({.lat_=13,.lon_=7});
-                            result.append({.lat_=13,.lon_=0});
-                            result.append({.lat_=0,.lon_=0});
+                            Polygon<2,Euclid> result;
+                            result.append({0,0});
+                            result.append({0,7});
+                            result.append({3,7});
+                            result.append({3,5});
+                            result.append({5.5,5});
+                            result.append({5.5,7});
+                            result.append({6,7});
+                            result.append({6,6.25});
+                            result.append({6.25,6.25});
+                            result.append({6.25,7});
+                            result.append({6.375,7});
+                            result.append({6.375,6.5});
+                            result.append({7,6.5});
+                            result.append({7,3});
+                            result.append({8,3});
+                            result.append({12,7});
+                            result.append({13,7});
+                            result.append({13,0});
+                            result.append({0,0});
                             return result;
                         }()
                     };
                     int counter = 0;
                     for(auto& new_pg:res){
                         if(auto found = std::find_if(etalon.begin(),etalon.end(),
-                            [&new_pg](const Polygon& pg){
+                            [&new_pg](const Polygon<2,Euclid>& pg){
                             return pg.equivalent(new_pg,false);
                         });found==etalon.end()){
                             std::cout<<"polygon №: "<<counter<<std::endl;
@@ -492,34 +494,34 @@ TEST(OsterLib_polygon,cut_test_counter){
     }
     {
         {
-            Line polyline = {
-                {.lat_=0, .lon_=0},
-                {.lat_=55, .lon_=55}
+            Line<2,Euclid> polyline = {
+                {0, 0},
+                {55, 55}
             };
-            Polygon pg;
-            pg.append({.lat_=0,.lon_=0});
-            pg.append({.lat_=0,.lon_=2});
-            pg.append({.lat_=2,.lon_=2});
-            pg.append({.lat_=2,.lon_=0});
-            pg.append({.lat_=0,.lon_=0});
+            Polygon<2,Euclid> pg;
+            pg.append({0,0});
+            pg.append({0,2});
+            pg.append({2,2});
+            pg.append({2,0});
+            pg.append({0,0});
             std::cout<<"test #5"<<std::endl;
-            auto res = pg.cut(polyline,pg, false);
-            for(const Polygon& polyg:res)
+            auto res = pg.clip(polyline, false);
+            for(const Polygon<2,Euclid>& polyg:res)
                 print(polyg);
-            std::vector<Polygon> etalon = {
+            std::vector<Polygon<2,Euclid>> etalon = {
                 [](){
-                    Polygon result;
-                    result.append({.lat_=2,.lon_=2});
-                    result.append({.lat_=0,.lon_=2});
-                    result.append({.lat_=0,.lon_=0});
-                    result.append({.lat_=2,.lon_=2});
+                    Polygon<2,Euclid> result;
+                    result.append({2,2});
+                    result.append({0,2});
+                    result.append({0,0});
+                    result.append({2,2});
                     return result;
                 }()
             };
             int counter = 0;
             for(auto& new_pg:res){
                 if(auto found = std::find_if(etalon.begin(),etalon.end(),
-                    [&new_pg](const Polygon& pg){
+                    [&new_pg](const Polygon<2,Euclid>& pg){
                     return pg.equivalent(new_pg,false);
                 });found==etalon.end()){
                     std::cout<<"polygon №: "<<counter<<std::endl;
@@ -535,35 +537,35 @@ TEST(OsterLib_polygon,cut_test_counter){
 
 TEST(polygon,is_valid_test){
     {
-        Polygon pg;
-        pg.append({.lat_=0, .lon_=0});  // A
-        pg.append({.lat_=0, .lon_=2});  // B
-        pg.append({.lat_=2, .lon_=0});  // C
-        pg.append({.lat_=2, .lon_=2});  // D
-        pg.append({.lat_=0, .lon_=0});  // A — close сработал, ring замкнут
-        pg.append({.lat_=0, .lon_=0});  // A — close сработал ещё раз, получили [A,B,C,D,A,A]
+        Polygon<2,Euclid> pg;
+        pg.append({0, 0});  // A
+        pg.append({0, 2});  // B
+        pg.append({2, 0});  // C
+        pg.append({2, 2});  // D
+        pg.append({0, 0});  // A — close сработал, ring замкнут
+        pg.append({0, 0});  // A — close сработал ещё раз, получили [A,B,C,D,A,A]
         ASSERT_TRUE(!pg.is_valid());     // ← упадёт
     }
     {
-        Polygon pg;
-        pg.append({.lat_=0, .lon_=0});  // A
-        pg.append({.lat_=0, .lon_=2});  // B
-        pg.append({.lat_=2, .lon_=2});  // C
-        pg.append({.lat_=2, .lon_=2});  // C
-        pg.append({.lat_=2, .lon_=0});  // D
-        pg.append({.lat_=1, .lon_=0});  // E
-        pg.append({.lat_=0.5, .lon_=0});  // E
-        pg.append({.lat_=0, .lon_=0});  // A — close сработал, ring замкнут
-        pg.append({.lat_=0, .lon_=0});  // A — close сработал ещё раз, получили [A,B,C,D,A,A]
+        Polygon<2,Euclid> pg;
+        pg.append({0, 0});  // A
+        pg.append({0, 2});  // B
+        pg.append({2, 2});  // C
+        pg.append({2, 2});  // C
+        pg.append({2, 0});  // D
+        pg.append({1, 0});  // E
+        pg.append({0.5, 0});  // E
+        pg.append({0, 0});  // A — close сработал, ring замкнут
+        pg.append({0, 0});  // A — close сработал ещё раз, получили [A,B,C,D,A,A]
         ASSERT_TRUE(pg.is_valid());     // ← упадёт
     }
     {
-        Polygon pg;
-        pg.append({.lat_=0, .lon_=0});  // A
-        pg.append({.lat_=0, .lon_=2});  // B
-        pg.append({.lat_=2, .lon_=0});  // C
-        pg.append({.lat_=2, .lon_=2});  // C
-        pg.append({.lat_=0, .lon_=0});  // A
+        Polygon<2,Euclid> pg;
+        pg.append({0, 0});  // A
+        pg.append({0, 2});  // B
+        pg.append({2, 0});  // C
+        pg.append({2, 2});  // C
+        pg.append({0, 0});  // A
         ASSERT_TRUE(!pg.is_valid());
     }
 }

@@ -218,3 +218,11 @@ boost::json::value to_json(const timeval& val);
 
 template<>
 std::expected<timeval,std::exception> from_json(const boost::json::value& val);
+
+#include "OsterLib/types/coord.h"
+
+template<>
+boost::json::value to_json<Coord>(const Coord& coord);
+
+template<>
+std::expected<Coord,std::exception> from_json<Coord>(const boost::json::value& json);

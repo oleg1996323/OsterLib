@@ -72,11 +72,3 @@ struct std::hash<Coord>{
         return static_cast<size_t>(::to_integer(val.lat_))<<sizeof(Lat)|static_cast<size_t>(::to_integer(val.lon_));
     }
 };
-
-#include "OsterLib/boost_functional/json.h"
-
-template<>
-boost::json::value to_json<Coord>(const Coord& coord);
-
-template<>
-std::expected<Coord,std::exception> from_json<Coord>(const boost::json::value& json);

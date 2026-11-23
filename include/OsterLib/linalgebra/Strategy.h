@@ -6,9 +6,10 @@ namespace linalgebra{
     struct Strategy{};
 
     struct Sum:Strategy{
-        template<bool V1,bool V2,typename VAL1,typename VAL2,
+        template<bool V1,bool V2,typename VAL1,typename VAL2,bool CONST1,bool CONST2,
             std::size_t... RANKS>
-        auto operator()(const LinearObject<V1,VAL1,RANKS...>& lo1,const LinearObject<V2,VAL2,RANKS...>& lo2) const{
+        auto operator()(const LinearObject<V1,VAL1,CONST1,RANKS...>& lo1,
+                const LinearObject<V2,VAL2,CONST2,RANKS...>& lo2) const{
             using result_t = LinearObject<false,std::common_type_t<VAL1,VAL2>,RANKS...>;
             result_t result = {};
             for(std::size_t i=0;i<LinearObject<V1,VAL1,RANKS...>::total();++i)
@@ -18,9 +19,10 @@ namespace linalgebra{
     };
 
     struct Sub:Strategy{
-        template<bool V1,bool V2,typename VAL1,typename VAL2,
+        template<bool V1,bool V2,typename VAL1,typename VAL2,bool CONST1,bool CONST2,
             std::size_t... RANKS>
-        auto operator()(const LinearObject<V1,VAL1,RANKS...>& lo1,const LinearObject<V2,VAL2,RANKS...>& lo2) const{
+        auto operator()(const LinearObject<V1,VAL1,CONST1,RANKS...>& lo1,
+                const LinearObject<V2,VAL2,CONST2,RANKS...>& lo2) const{
             using result_t = LinearObject<false,std::common_type_t<VAL1,VAL2>,RANKS...>;
             result_t result = {};
             for(std::size_t i=0;i<LinearObject<V1,VAL1,RANKS...>::total();++i)
@@ -30,9 +32,10 @@ namespace linalgebra{
     };
 
     struct ElementMultiplies:Strategy{
-        template<bool V1,bool V2,typename VAL1,typename VAL2,
+        template<bool V1,bool V2,typename VAL1,typename VAL2,bool CONST1,bool CONST2,
             std::size_t... RANKS>
-        auto operator()(const LinearObject<V1,VAL1,RANKS...>& lo1,const LinearObject<V2,VAL2,RANKS...>& lo2) const{
+        auto operator()(const LinearObject<V1,VAL1,CONST1,RANKS...>& lo1,
+                const LinearObject<V2,VAL2,CONST2,RANKS...>& lo2) const{
             using result_t = LinearObject<false,std::common_type_t<VAL1,VAL2>,RANKS...>;
             result_t result = {};
             for(std::size_t i=0;i<LinearObject<V1,VAL1,RANKS...>::total();++i)
@@ -41,9 +44,10 @@ namespace linalgebra{
         }
     };
     struct OuterProduct:Strategy{
-        template<bool V1,bool V2,typename VAL1,typename VAL2,
+        template<bool V1,bool V2,typename VAL1,typename VAL2,bool CONST1,bool CONST2,
             std::size_t... RANKS1,std::size_t... RANKS2>
-        auto operator()(const LinearObject<V1,VAL1,RANKS1...>& lo1,const LinearObject<V2,VAL2,RANKS2...>& lo2) const{
+        auto operator()(const LinearObject<V1,VAL1,CONST1,RANKS1...>& lo1,
+                const LinearObject<V2,VAL2,CONST2,RANKS2...>& lo2) const{
             using result_t = LinearObject<false,std::common_type_t<VAL1,VAL2>,RANKS1...,RANKS2...>;
             constexpr std::size_t total_1 = (RANKS1 * ... * 1);
             constexpr std::size_t total_2 = (RANKS2 * ... * 1);
@@ -59,10 +63,11 @@ namespace linalgebra{
     
     template<std::size_t... IDS>
     struct Contraction:Strategy{
-        template<bool VIEW,typename VALUE_T,std::size_t... RANKS>
+        template<bool VIEW,typename VALUE_T,bool CONST,std::size_t... RANKS>
         FromIntegerSequence::LinearObject<false, VALUE_T, osterlib::ExcludedIdx<
                 std::integer_sequence<std::size_t, RANKS...>,
-                std::integer_sequence<std::size_t, IDS...>>> operator()(const LinearObject<VIEW,VALUE_T,RANKS...>& lo) const{
+                std::integer_sequence<std::size_t, IDS...>>> operator()(
+                    const LinearObject<VIEW,VALUE_T,CONST,RANKS...>& lo) const{
             static_assert(sizeof...(IDS) > 0);
             using matched = osterlib::ExcludedIdx<
                 std::integer_sequence<std::size_t, RANKS...>,
@@ -127,14 +132,15 @@ namespace linalgebra{
     };
     template<std::size_t... IDS>
     struct CrossMultiplies:Strategy{
-        template<bool V1,bool V2,typename VAL1,typename VAL2,
+        template<bool V1,bool V2,typename VAL1,typename VAL2,bool CONST1,bool CONST2,
             std::size_t... RANKS1,std::size_t... RANKS2>
-        std::common_type_t<VAL1,VAL2> operator()(const LinearObject<V1,VAL1,RANKS1...>& lo1,const LinearObject<V2,VAL2,RANKS2...>& lo2) const{
+        std::common_type_t<VAL1,VAL2> operator()(const LinearObject<V1,VAL1,CONST1,RANKS1...>& lo1,
+                const LinearObject<V2,VAL2,CONST2,RANKS2...>& lo2) const{
             return Contraction<IDS...>()(OuterProduct()(lo1,lo2));
         }
     };
     struct InnerProduct:Strategy{
-        template<bool V1,bool V2,typename VAL1,typename VAL2,
+        template<bool V1,bool V2,typename VAL1,typename VAL2,bool CONST1,bool CONST2,
             std::size_t... RANKS>
         std::common_type_t<VAL1,VAL2> operator()(const LinearObject<V1,VAL1,RANKS...>& lo1,const LinearObject<V2,VAL2,RANKS...>& lo2) const{
             using result_t = std::common_type_t<VAL1,VAL2>;
@@ -146,8 +152,8 @@ namespace linalgebra{
     };
     
     struct Transpose:Strategy{
-        template<bool VIEW,typename VALUE_T,std::size_t... RANKS>
-        FromIntegerSequence::LinearObject<false,VALUE_T,osterlib::ReverseSequence_t<RANKS...>> 
+        template<bool VIEW,typename VALUE_T,bool CONST,std::size_t... RANKS>
+        FromIntegerSequence::LinearObject<false,VALUE_T,CONST,osterlib::ReverseSequence_t<RANKS...>> 
             operator()(const LinearObject<VIEW,VALUE_T,RANKS...>& lo) const
         {
             using result_t = FromIntegerSequence::LinearObject<false, VALUE_T,
@@ -193,4 +199,25 @@ namespace linalgebra{
             return result;
         }
     };
+
+    // template<std::size_t I, std::size_t J>
+    // struct Minor:Strategy{
+    //     template<bool VIEW,typename VALUE_T,bool CONST,std::size_t DIM,std::enable_if_t<((DIM>0) && (I<DIM) && (J<DIM)),int>=0>
+    //     LinearObject<false,VALUE_T,CONST,DIM-1,DIM-1> 
+    //         operator()(const LinearObject<VIEW,VALUE_T,DIM,DIM>& lo) const
+    //     {
+    //         return []<std::size_t... ROW_IS>(std::integer_sequence<ROW_IS...>){
+
+    //         }(std::make_integer_sequence<>());
+    //     }
+    // };
+
+    // struct AlgebraicComplement:Strategy{
+    //     template<bool VIEW,typename VALUE_T,bool CONST,std::size_t... RANKS>
+    //     FromIntegerSequence::LinearObject<false,VALUE_T,CONST,osterlib::ReverseSequence_t<RANKS...>> 
+    //         operator()(const LinearObject<VIEW,VALUE_T,RANKS...>& lo) const
+    //     {
+
+    //     }
+    // };
 }

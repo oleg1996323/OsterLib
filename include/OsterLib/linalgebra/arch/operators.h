@@ -22,7 +22,7 @@ namespace linalgebra{
     struct OperationResult:std::false_type{};
 
     template<typename STRATEGY,size_t... IDS,size_t... RANKS1,size_t... RANKS2,
-            bool V1,bool V2,typename VAL1,typename VAL2>
+            bool V1,bool V2,typename VAL1,typename VAL2,bool CONST1,bool CONST2>
     struct OperationResult<LinearObject<V1,VAL1,RANKS1...>,
                     LinearObject<V2,VAL2,RANKS2...>,STRATEGY,IDS...>
     {
@@ -32,7 +32,8 @@ namespace linalgebra{
                         LinearObject<V2,VAL2,RANKS2...>>;
     };
 
-    template<bool V1,bool V2,typename VAL1, typename VAL2,std::size_t... R1,std::size_t... R2>
+    template<bool V1,bool V2,typename VAL1, typename VAL2,
+        bool CONST1,bool CONST2,std::size_t... R1,std::size_t... R2>
     struct Multiplies<LinearObject<V1,VAL1,R1...>,LinearObject<V2,VAL2,R2...>>{
         const LinearObject<V1,VAL1,R1...>& lo1_;
         const LinearObject<V2,VAL2,R2...>& lo2_;

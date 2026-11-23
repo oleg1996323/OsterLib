@@ -4,7 +4,7 @@
         "name": "(gdb) Launch",
         "type": "cppdbg",
         "request": "launch",
-        "program": "/home/oster/OsterLib/build/Debug/tests/tensor_test",
+        "program": "/home/oster/OsterLib/build/Debug/tests/polyline_test",
         "args": [],
         "stopAtEntry": false,
         "cwd": "${cwd}",

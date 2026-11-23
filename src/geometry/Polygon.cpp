@@ -2,7 +2,7 @@
 
 // uint64_t Polygon::vertices_per_thread_ = std::max(1u,std::thread::hardware_concurrency());
 
-// void print(const std::vector<Intersection<2>>& turns){
+// void print(const std::vector<Intersection<DOMAIN,2>>& turns){
 //     uint64_t i = 0;       
 //     for(auto& turn:turns){
 //         std::cout<<i<<" point: ("<<turn.point().lon_<<","<<turn.point().lat_<<")"<<std::endl;

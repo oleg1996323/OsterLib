@@ -82,25 +82,50 @@ namespace geometry{
             std::cout << std::endl;
     }
 
+    template<typename DOMAIN, typename... Ts>
+    auto make_point(Ts&&... ts)
+        -> BasicPoint<sizeof...(Ts), DOMAIN,
+                    std::common_type_t<std::decay_t<Ts>...>>;
+
     //specified point
-    template<uint64_t DIMENSIONS,typename VALUE_T = long double>
-    class BasicPoint:public BasicGeometry<false,DIMENSIONS>{
+    template<uint64_t DIMENSIONS,typename DOMAIN,typename VALUE_T = long double>
+    class BasicPoint:public BasicGeometry<false,DIMENSIONS,DOMAIN>{
         std::array<VALUE_T,DIMENSIONS> data_;
+        
+        template<typename DOM, typename... Ts>
+        friend auto make_point(Ts&&... ts);
         public:
         BasicPoint() = default;
-        BasicPoint(std::array<VALUE_T,DIMENSIONS> values):
-            data_{values}{}
+        template<typename First, typename... Rest,
+            typename = std::enable_if_t<
+                sizeof...(Rest) + 1 == DIMENSIONS &&
+                (std::is_convertible_v<First, Rest> && ...) &&
+                (std::is_convertible_v<Rest, First> && ...)>>
+        constexpr BasicPoint(First first, Rest... rest)
+            : data_{static_cast<VALUE_T>(first), static_cast<VALUE_T>(rest)...} {}
+        template<typename T, std::size_t N,
+                typename = std::enable_if_t<N == DIMENSIONS>>
+        BasicPoint(const T (&arr)[N]) {
+            for (std::size_t i = 0; i < N; ++i)
+                data_[i] = static_cast<VALUE_T>(arr[i]);
+        }
         BasicPoint(const BasicPoint& other)
         {
             [this,&other]<uint64_t... Is>(std::index_sequence<Is...> is){
                 ((data_[Is]=other.data_[Is]),...);
-            }(std::make_index_sequence<BasicGeometry<false,DIMENSIONS>::dimensions()>());
+            }(std::make_index_sequence<BasicGeometry<false,DIMENSIONS,DOMAIN>::dimensions()>());
         }
-        template<typename P>
-        BasicPoint(const P& point){
-            [this,&point]<uint64_t... Is>(std::index_sequence<Is...> is){
-                ((data_[Is]=exec<Get,Is>(point)),...);
-            }(std::make_index_sequence<BasicGeometry<false,DIMENSIONS>::dimensions()>());
+        template<typename P,
+                typename = std::void_t<
+                    decltype(exec<Get, 0>(std::declval<const P&>()))>,
+                typename = std::enable_if_t<
+                    !std::is_same_v<P, BasicPoint> &&
+                    !std::is_same_v<P, BasicPointRef<DIMENSIONS, DOMAIN,VALUE_T>>>>
+        BasicPoint(const P& point)
+        {
+            [this,&point]<uint64_t... Is>(std::index_sequence<Is...>) {
+                ((data_[Is] = exec<Get, Is>(point)), ...);
+            }(std::make_index_sequence<DIMENSIONS>());
         }
         BasicPoint(BasicPoint&& other) noexcept
         {
@@ -113,7 +138,7 @@ namespace geometry{
                 [this,&other]<uint64_t... Is>(std::index_sequence<Is...> is){
                     ((data_[Is]=other.data_[Is]),...);
                 }(std::make_index_sequence<
-                    BasicGeometry<false, DIMENSIONS>::dimensions()>());
+                    BasicGeometry<false, DIMENSIONS,DOMAIN>::dimensions()>());
             }
             return *this;
         }
@@ -122,11 +147,11 @@ namespace geometry{
                 data_.swap(other.data_);
             return *this;
         }
-        BasicPoint(const BasicPointRef<DIMENSIONS,VALUE_T>& point);
-        BasicPoint(BasicPointRef<DIMENSIONS,VALUE_T>&& point) noexcept;
-        BasicPoint& operator=(const BasicPointRef<DIMENSIONS,VALUE_T>& other);
-        BasicPoint& operator=(BasicPointRef<DIMENSIONS,VALUE_T>&& other) noexcept;
-        bool operator==(const BasicPoint<DIMENSIONS,VALUE_T>& other) const{
+        BasicPoint(const BasicPointRef<DIMENSIONS,DOMAIN,VALUE_T>& point);
+        BasicPoint(BasicPointRef<DIMENSIONS,DOMAIN,VALUE_T>&& point) noexcept;
+        BasicPoint& operator=(const BasicPointRef<DIMENSIONS,DOMAIN,VALUE_T>& other);
+        BasicPoint& operator=(BasicPointRef<DIMENSIONS,DOMAIN,VALUE_T>&& other) noexcept;
+        bool operator==(const BasicPoint<DIMENSIONS,DOMAIN,VALUE_T>& other) const{
             auto cmp = [this,&other]<uint64_t... Is>(std::index_sequence<Is...>)
             {
                 return ((get<Is>()==other.get<Is>()) && ...);
@@ -134,13 +159,13 @@ namespace geometry{
             return cmp(std::make_index_sequence<DIMENSIONS>());
         }
         template<uint64_t DIMENSION>
-        std::enable_if_t<DIMENSION<DIMENSIONS,const VALUE_T&> get() const noexcept{
+        std::enable_if_t<(DIMENSION<DIMENSIONS),const VALUE_T&> get() const noexcept{
             static_assert(DIMENSION<DIMENSIONS,
             "Not existing dimension");
             return data_[DIMENSION];
         }
         template<uint64_t DIMENSION>
-        std::enable_if_t<DIMENSION<DIMENSIONS,VALUE_T&> get() noexcept{
+        std::enable_if_t<(DIMENSION<DIMENSIONS),VALUE_T&> get() noexcept{
             static_assert(DIMENSION<DIMENSIONS,
             "Not existing dimension");
             return data_[DIMENSION];
@@ -151,22 +176,39 @@ namespace geometry{
             "Not existing dimension");
             data_[DIMENSION] = value;
         }
+
+        std::array<VALUE_T,DIMENSIONS>& data() noexcept{
+            return data_;
+        }
+        const std::array<VALUE_T,DIMENSIONS>& data() const noexcept{
+            return data_;
+        }
     };
 
-    template<uint64_t DIMENSION,uint64_t DIMENSIONS,typename VALUE_T>
+    template<typename DOMAIN, typename... Ts>
+    auto make_point(Ts&&... ts)
+        -> BasicPoint<sizeof...(Ts), DOMAIN,
+                    std::common_type_t<std::decay_t<Ts>...>>
+    {
+        return BasicPoint<sizeof...(Ts), DOMAIN,
+                        std::common_type_t<std::decay_t<Ts>...>>(
+                        std::forward<Ts>(ts)...);
+    }
+
+    template<uint64_t DIMENSION,uint64_t DIMENSIONS,typename DOMAIN,typename VALUE_T>
     std::enable_if_t<DIMENSION<DIMENSIONS,
-        const VALUE_T&> get(const BasicPoint<DIMENSIONS,VALUE_T>& point){
+        const VALUE_T&> get(const BasicPoint<DIMENSIONS,DOMAIN,VALUE_T>& point){
         return point.template get<DIMENSION>();
     }
 
-    template<uint64_t DIMENSION,uint64_t DIMENSIONS,typename VALUE_T>
+    template<uint64_t DIMENSION,uint64_t DIMENSIONS,typename DOMAIN,typename VALUE_T>
     std::enable_if_t<DIMENSION<DIMENSIONS,
-        VALUE_T&> get(BasicPoint<DIMENSIONS,VALUE_T>& point){
+        VALUE_T&> get(BasicPoint<DIMENSIONS,DOMAIN,VALUE_T>& point){
         return point.template get<DIMENSION>();
     }
 
-    template<uint64_t DIMENSIONS,typename VALUE_T = long double>
-    class BasicPointRef:public BasicGeometry<true,DIMENSIONS>{
+    template<uint64_t DIMENSIONS,typename DOMAIN,typename VALUE_T = long double>
+    class BasicPointRef:public BasicGeometry<true,DIMENSIONS,DOMAIN>{
         std::array<VALUE_T,DIMENSIONS>& data_;
         public:
         BasicPointRef(const BasicPointRef& other):
@@ -174,9 +216,8 @@ namespace geometry{
         {}
         BasicPointRef(BasicPointRef&& other) = delete;
         BasicPointRef& operator=(const BasicPointRef& other){
-            if(this!=&other){
+            if(this!=&other)
                 data_ = other.data_;
-            }
             return *this;
         }
         BasicPointRef& operator=(BasicPointRef&& other) = delete;
@@ -188,63 +229,69 @@ namespace geometry{
         }
     };
 
-    template<uint64_t DIMENSION,uint64_t DIMENSIONS,typename VALUE_T>
-    const auto& get(const BasicPointRef<DIMENSIONS,VALUE_T>& point){
+    template<uint64_t DIMENSION,uint64_t DIMENSIONS,typename DOMAIN,typename VALUE_T>
+    const VALUE_T& get(const BasicPointRef<DIMENSIONS,VALUE_T>& point){
         return point.template get<DIMENSION>();
     }
 
-    template<uint64_t DIMENSIONS,typename VALUE_T>
-    BasicPoint<DIMENSIONS,VALUE_T>::BasicPoint(const BasicPointRef<DIMENSIONS,VALUE_T>& other)
+    template<uint64_t DIMENSIONS,typename DOMAIN,typename VALUE_T>
+    BasicPoint<DIMENSIONS,DOMAIN,VALUE_T>::BasicPoint(const BasicPointRef<DIMENSIONS,DOMAIN,VALUE_T>& other)
     {
         
         [this,&other]<uint64_t... Is>(std::index_sequence<Is...> is){
             ((set<Is>(other.template get<Is>())),...);
-        }(std::make_index_sequence<BasicGeometry<false,DIMENSIONS>::dimensions()>());
+        }(std::make_index_sequence<BasicGeometry<false,DIMENSIONS,DOMAIN>::dimensions()>());
     }
 
-    template<uint64_t DIMENSIONS,typename VALUE_T>
-    BasicPoint<DIMENSIONS,VALUE_T>::BasicPoint(BasicPointRef<DIMENSIONS,VALUE_T>&& other) noexcept
+    template<uint64_t DIMENSIONS,typename DOMAIN,typename VALUE_T>
+    BasicPoint<DIMENSIONS,DOMAIN,VALUE_T>::BasicPoint(BasicPointRef<DIMENSIONS,DOMAIN,VALUE_T>&& other) noexcept
     {
         data_.swap(other.data_);
     }
 
-    template<uint64_t DIMENSIONS,typename VALUE_T>
-    BasicPoint<DIMENSIONS,VALUE_T>& 
-        BasicPoint<DIMENSIONS,VALUE_T>::operator=(
-            const BasicPointRef<DIMENSIONS,VALUE_T>& other)
+    template<uint64_t DIMENSIONS,typename DOMAIN,typename VALUE_T>
+    BasicPoint<DIMENSIONS,DOMAIN,VALUE_T>& 
+        BasicPoint<DIMENSIONS,DOMAIN,VALUE_T>::operator=(
+            const BasicPointRef<DIMENSIONS,DOMAIN,VALUE_T>& other)
     {
         [this,&other]<uint64_t... Is>(std::index_sequence<Is...> is){
             ((set<Is>(other.template get<Is>())),...);
-        }(std::make_index_sequence<BasicGeometry<false,DIMENSIONS>::dimensions()>());
+        }(std::make_index_sequence<BasicGeometry<false,DIMENSIONS,DOMAIN>::dimensions()>());
         return *this;
     }
-    static_assert(std::is_default_constructible_v<BasicPoint<2>>);
-    static_assert(std::is_copy_constructible_v<BasicPoint<2>>);
-    static_assert(std::is_move_constructible_v<BasicPoint<2>>);
-    static_assert(std::is_copy_assignable_v<BasicPoint<2>>);
-    static_assert(std::is_move_assignable_v<BasicPoint<2>>);
-    static_assert(std::is_assignable_v<BasicPoint<2>,const BasicPointRef<2>&>);
-    static_assert(std::is_assignable_v<BasicPoint<2>,BasicPointRef<2>&&>);
-    static_assert(!std::is_default_constructible_v<BasicPointRef<2>>);
-    static_assert(std::is_copy_constructible_v<BasicPointRef<2>>);
-    static_assert(!std::is_move_constructible_v<BasicPointRef<2>>);
-    static_assert(std::is_copy_assignable_v<BasicPointRef<2>>);
-    static_assert(!std::is_move_assignable_v<BasicPointRef<2>>);
-    static_assert(dimensions<BasicPoint<2>>() == 2);
-    template<uint64_t DIMENSIONS,typename VALUE_T = long double>
-    using Point = BasicPoint<DIMENSIONS,VALUE_T>;
+    static_assert(std::is_default_constructible_v<BasicPoint<2,Euclid>>);
+    static_assert(std::is_copy_constructible_v<BasicPoint<2,Euclid>>);
+    static_assert(std::is_move_constructible_v<BasicPoint<2,Euclid>>);
+    static_assert(std::is_copy_assignable_v<BasicPoint<2,Euclid>>);
+    static_assert(std::is_move_assignable_v<BasicPoint<2,Euclid>>);
+    static_assert(std::is_assignable_v<BasicPoint<2,Euclid>,const BasicPointRef<2,Euclid>&>);
+    static_assert(std::is_assignable_v<BasicPoint<2,Euclid>,BasicPointRef<2,Euclid>&&>);
+    static_assert(!std::is_default_constructible_v<BasicPointRef<2,Euclid>>);
+    static_assert(std::is_copy_constructible_v<BasicPointRef<2,Euclid>>);
+    static_assert(!std::is_move_constructible_v<BasicPointRef<2,Euclid>>);
+    static_assert(std::is_copy_assignable_v<BasicPointRef<2,Euclid>>);
+    static_assert(!std::is_move_assignable_v<BasicPointRef<2,Euclid>>);
+    static_assert(dimensions<BasicPoint<2,Euclid>>() == 2);
+    template<typename DOMAIN,uint64_t DIMENSIONS,typename VALUE_T = long double>
+    using Point = BasicPoint<DIMENSIONS,DOMAIN,VALUE_T>;
 }
 
 #include "distance.h"
 
 namespace geometry{
-    template<>
-    inline auto distance<Point<2>,Point<2>>(
-        const Point<2>& first,
-        const Point<2>& second) noexcept
+    template<std::size_t DIMENSIONS,typename V1,typename V2>
+    inline auto distance(
+        const Point<Euclid,DIMENSIONS,V1>& first,
+        const Point<Euclid,DIMENSIONS,V2>& second) noexcept
     {
-        long double dX = static_cast<long double>(exec<Get,0>(second)) - exec<Get,0>(first);
-        long double dY = static_cast<long double>(exec<Get,1>(second)) - exec<Get,1>(first);
-        return std::sqrt(dX*dX+dY*dY);
+        static_assert(DIMENSIONS>0,"Dimmensions cannot be 0");
+        return std::sqrt([&]<std::size_t... IS>(std::index_sequence<IS...>) -> long double{
+            auto summarize_inner = [&]<std::size_t FIRST_IS>()->long double
+            {
+                long double delta = static_cast<long double>(exec<Get,FIRST_IS>(second)) - exec<Get,FIRST_IS>(first);
+                return delta*delta;
+            };
+            return (0.0L+...+summarize_inner.template operator()<IS>());
+        }(std::make_index_sequence<DIMENSIONS>()));
     }
 }
