@@ -200,17 +200,27 @@ namespace linalgebra{
         }
     };
 
-    // template<std::size_t I, std::size_t J>
-    // struct Minor:Strategy{
-    //     template<bool VIEW,typename VALUE_T,bool CONST,std::size_t DIM,std::enable_if_t<((DIM>0) && (I<DIM) && (J<DIM)),int>=0>
-    //     LinearObject<false,VALUE_T,CONST,DIM-1,DIM-1> 
-    //         operator()(const LinearObject<VIEW,VALUE_T,DIM,DIM>& lo) const
-    //     {
-    //         return []<std::size_t... ROW_IS>(std::integer_sequence<ROW_IS...>){
-
-    //         }(std::make_integer_sequence<>());
-    //     }
-    // };
+    struct Determinant:Strategy{
+        template<bool VIEW,typename VALUE_T,bool CONST,std::size_t DIM>
+        long double 
+            operator()(const LinearObject<VIEW,VALUE_T,DIM,DIM>& lo) const
+        {
+            if constexpr(DIM==2)
+                return lo.element<0,0>*lo.element<1,1>()-
+                    lo.element<0,1>()*lo.element<1,0>();
+            else if constexpr(DIM==3)
+                return lo.element<0,0>*(lo.element<1,1>()*lo.element<2,2>()-
+                lo.element<2,1>()*lo.element<1,2>())+
+                lo.element<0,1>*(lo.element<1,2>()*lo.element<2,0>()-
+                lo.element<1,0>()*lo.element<2,2>())+
+                lo.element<0,2>*(lo.element<1,0>()*lo.element<2,1>()-
+                lo.element<2,0>()*lo.element<1,1>());
+            else {
+                for
+                for(lo.element(0))
+            }
+        }
+    };
 
     // struct AlgebraicComplement:Strategy{
     //     template<bool VIEW,typename VALUE_T,bool CONST,std::size_t... RANKS>

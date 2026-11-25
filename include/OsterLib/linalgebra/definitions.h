@@ -11,6 +11,9 @@ namespace linalgebra{
     template<bool VIEW,typename VALUE_T,bool CONST,std::size_t... RANKS>
     class LinearObject;
 
+    template<template<bool,typename,bool,std::size_t...> typename LO,std::size_t... IDS>
+    class LinearSubObject:std::false_type{};
+
     namespace FromIntegerSequence{
         template<bool VIEW, typename VALUE_T, typename RANKS>
         struct ToLOImpl{

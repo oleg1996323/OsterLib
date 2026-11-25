@@ -3,6 +3,7 @@
 #include "OsterLib/linalgebra/RankDissolve.h"
 #include "OsterLib/traits.h"
 #include <iostream>
+#include "OsterLib/linalgebra/LinearSubObject.h"
 
 namespace linalgebra{
     template<typename VALUE_T,std::size_t SKIP,std::size_t... RANKS>
@@ -35,6 +36,9 @@ namespace linalgebra{
                 idx = idx * ranks_[k] + v;
             }
             return idx;
+        }
+        static std::size_t dynamic_compute_offset(std::size_t id) noexcept {
+            return ranks_[k] * id;
         }
         template<std::size_t... IDS>
         static constexpr bool bounds_ok() noexcept {
@@ -221,6 +225,11 @@ namespace linalgebra{
                 }
             }
         }
+        DropRanks<VALUE_T,1,RANKS...> element(std::size_t id) const{
+            DropRanks<VALUE_T,1,RANKS...> result;
+            result.data_ = data_+dynamic_compute_offset(id);
+            return result;
+        }
     };
 
     template<std::size_t DIM,typename VALUE_T>
@@ -231,6 +240,16 @@ namespace linalgebra{
     template<std::size_t DIM,typename VALUE_T>
     Vector<DIM,true,VALUE_T,true> as_vector(const std::array<VALUE_T,DIM>& data){
         return Vector<DIM,true,VALUE_T,true>().data_ = data.data();
+    }
+
+    template<std::size_t DIM,typename VALUE_T>
+    Vector<DIM,true,VALUE_T,false> as_vector(VALUE_T* data){
+        return Vector<DIM,true,VALUE_T,false>().data_ = data;
+    }
+
+    template<std::size_t DIM,typename VALUE_T>
+    Vector<DIM,true,VALUE_T,true> as_vector(const VALUE_T* data){
+        return Vector<DIM,true,VALUE_T,true>().data_ = data;
     }
 
     namespace detail {

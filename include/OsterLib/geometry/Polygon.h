@@ -556,12 +556,17 @@ bool BasicPolygon<DIM,DOMAIN,VALUE_T>::is_plane() const{
         if(number_vertices()<4)
             return true;
         //@todo
-        linalgebra::Vector<DIM,true,VALUE_T,true> v1(
-            linalgebra::as_vector(vertices()[0].data()));
-        linalgebra::Vector<DIM,true,VALUE_T,true> v2(
-            linalgebra::as_vector(vertices()[1].data()));
-        linalgebra::Vector<DIM,true,VALUE_T,true> v3(
-            linalgebra::as_vector(vertices()[2].data()));
+        
+        for(uint64_t i=0;i;number_vertices();++i){
+            for(uint64_t j=0){
+                linalgebra::Vector<DIM,true,VALUE_T,true> v1(
+                    linalgebra::as_vector(vertices()[i].data()));
+                linalgebra::Vector<DIM,true,VALUE_T,true> v2(
+                    linalgebra::as_vector(vertices()[(i+1)%number_vertices()].data()));
+                
+            }
+        }
+        
         auto f = [](){
             
         };     
